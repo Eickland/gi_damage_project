@@ -50,8 +50,9 @@ DA6 = "da6"
 VODYA_LEAD  = "vodya_lead"     # 1-й потраченный стак Lead Vocal
 VODYA_CHORUS = "vodya_chorus"  # 1-й потраченный стак Chorus
 
-# 10с увеличение атаки
-TTDS = "ttds"
+#Эпос, 10с увеличение атаки
+TTDS_HALF = "ttds_half"
+
 
 __all__ = ["ON", "OFF", "INST", "DREAM", "FROSTGLOW", "BREEZEBORNE",
-           "ARMED", "DA1", "DA2", "DA3", "DA4", "DA5", "DA6","VODYA_LEAD","VODYA_CHORUS","TTDS"]
+           "ARMED", "DA1", "DA2", "DA3", "DA4", "DA5", "DA6","VODYA_LEAD","VODYA_CHORUS","TTDS_HALF"]

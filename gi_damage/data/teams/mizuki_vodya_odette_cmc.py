@@ -10,7 +10,7 @@ from ...core.buffs import OTHERS, SELF, TEAM, Buff, temp
 from ...core.entities import Character, Constellation
 from ...core.sources import Occurrence, elemental, occ, stellar_swirl
 from ...core.stats import S
-from ..tags import DREAM, INST, OFF, ON, FROSTGLOW,BREEZEBORNE, VODYA_LEAD, VODYA_CHORUS, TTDS
+from ..tags import DREAM, INST, OFF, ON, FROSTGLOW,BREEZEBORNE, VODYA_LEAD, VODYA_CHORUS, TTDS_HALF
 
 # =========================================================================== #
 #  Мидзуки — анемо, main dps
@@ -298,11 +298,11 @@ ODETTE = Character(
         elemental("Навык (АТК), Wing Dance", "atk", 0.9264, "cryo", "skill",
                   [occ(1, OFF,),occ(3, OFF, DREAM)]),
         stellar_swirl("Навык — SSW, Plume Dance", "atk", 0.7295, "cryo",
-                      [occ(1, OFF, TTDS), occ(2, OFF, INST,DREAM,FROSTGLOW,BREEZEBORNE,VODYA_CHORUS, TTDS),occ(2, OFF,FROSTGLOW,BREEZEBORNE)], multipliers=("mp",)),
+                      [occ(1, OFF, TTDS_HALF), occ(2, OFF, INST,DREAM,FROSTGLOW,BREEZEBORNE,VODYA_CHORUS, TTDS_HALF),occ(2, OFF,FROSTGLOW,BREEZEBORNE)], multipliers=("mp",)),
         stellar_swirl("Навык — SSW, Wing Dance", "atk", 0.8724, "cryo",
-                      [occ(1, OFF, TTDS), occ(2, OFF, INST,DREAM,FROSTGLOW,BREEZEBORNE,VODYA_CHORUS, TTDS),occ(1, OFF,FROSTGLOW,BREEZEBORNE)], multipliers=("mp",)),
+                      [occ(1, OFF, TTDS_HALF), occ(2, OFF, INST,DREAM,FROSTGLOW,BREEZEBORNE,VODYA_CHORUS, TTDS_HALF),occ(1, OFF,FROSTGLOW,BREEZEBORNE)], multipliers=("mp",)),
         stellar_swirl("Особый навык — SSW", "atk", 8.2555, "cryo",
-                      [occ(1, ON, INST,FROSTGLOW, VODYA_LEAD, TTDS)], multipliers=("mp",)),
+                      [occ(1, ON, INST,FROSTGLOW, VODYA_LEAD, TTDS_HALF)], multipliers=("mp",)),
     ),
     constellations={
         1: Constellation(
@@ -313,7 +313,7 @@ ODETTE = Character(
             sources=(
                 stellar_swirl("C1: доп. атака после особого навыка",
                               "atk", 4.50, "cryo",
-                              [occ(1, ON, INST,FROSTGLOW, TTDS)], multipliers=("mp",)),
+                              [occ(1, ON, INST,FROSTGLOW, TTDS_HALF)], multipliers=("mp",)),
             ),
             # Усиление A4: при призыве двойника ещё 2 стака Splendor.
             buffs=(
@@ -365,7 +365,7 @@ ODETTE = Character(
             sources=(
                 stellar_swirl("C4: доп. атака",
                               "atk", 0.99, "cryo",
-                              [occ(1, OFF, TTDS), occ(2, OFF, INST,DREAM,FROSTGLOW,BREEZEBORNE, TTDS),occ(1, OFF,DREAM,FROSTGLOW,BREEZEBORNE)], multipliers=("mp",)),
+                              [occ(1, OFF, TTDS_HALF), occ(2, OFF, INST,DREAM,FROSTGLOW,BREEZEBORNE, TTDS_HALF),occ(1, OFF,DREAM,FROSTGLOW,BREEZEBORNE)], multipliers=("mp",)),
             ),
         ),
         5: Constellation(
@@ -404,6 +404,9 @@ def vodyanitsa_stack_bonus(max_hp: float) -> float:
     """+260 доп. базового урона за каждую 1000 Max HP Водяницы свыше 40000,
     максимум 6500 (A4 «Dirge of the Fandyr»)."""
     return min(260.0 * max(0.0, max_hp - 40000.0) / 1000.0, 6500.0)
+
+def vodyanitsa_c1_bonus(max_hp: float) -> float:
+    return 0.008*max_hp
  
  
 VODYANITSA = Character(
@@ -415,20 +418,85 @@ VODYANITSA = Character(
     stats={
         S.BASE_HP: 14818.0,
         S.CRIT_VALUE: 0.6,
+        S.HP_PCT: 0.288
     },
     buffs=(Buff(S.FLAT_BASE_DMG, lambda ctx: vodyanitsa_stack_bonus(
              ctx.stat("Водяница", "hp", frozenset({OFF}))),
-         target=SELF, requires=(VODYA_LEAD,),
+         target="Мидзуки", requires=(VODYA_LEAD,),
          source="Водяница: Lead Vocal (SSW навыка)"),
             Buff(S.FLAT_BASE_DMG, lambda ctx: vodyanitsa_stack_bonus(
              ctx.stat("Водяница", "hp", frozenset({OFF}))),
-         target=SELF, requires=(VODYA_CHORUS,),
+         target="Крио ГГ", requires=(VODYA_CHORUS,),
          source="Водяница: Chorus (SSW навыка)"),
         Buff("res_reduction.anemo", 0.35, target=TEAM,
                     source="-35% анемо сопротивления"),
         Buff("res_reduction.cryo", 0.3, target=TEAM,
-                    source="-30% крио сопротивления")),
-    sources=(),
+                    source="-30% крио сопротивления"),
+        Buff("res_reduction.hydro", 0.3, target=TEAM,
+                    source="-30% гидро сопротивления"),
+        Buff("res_reduction.anemo", -1000, target=SELF,
+                    source="Нет вклада в звездные реакции"),
+        Buff("res_reduction.cryo", -1000, target=SELF,
+                    source="Нет вклада в звездные реакции")
+),
+    
+    sources=(elemental("Использование навыка", "hp", 0.589, "hydro", "skill",
+                  [occ(1, ON,)]),
+        elemental("Навык, Horn of Spring", "hp", 0.589, "hydro", "skill",
+                  [occ(5, OFF,),]),),
+    constellations={
+        1: Constellation(
+            number=1,
+            name="C1",
+            buffs=(
+                Buff(S.FLAT_ATK, lambda ctx: vodyanitsa_c1_bonus(
+             ctx.stat("Водяница", "hp", frozenset({OFF}))),
+                     target=OTHERS,
+                     source="C1"),
+            ),
+        ),
+        2: Constellation(
+            number=2,
+            name="C2",
+            buffs=(
+                Buff("crit_value.stellar_swirl",
+                     0.6,
+                     target=OTHERS, requires=(ON,),
+                     source="C2: +60% К криту урону звездного рассеивания"),
+            ),
+        ),
+        3: Constellation(
+            number=3,
+            name="C3",
+            buffs=(Buff("res_reduction.cryo", 0.054, target=TEAM,
+                    source="C3: Бонус к срезу крио сопротивления"),
+            Buff("res_reduction.hydro", 0.054, target=TEAM,
+                    source="C3: Бонус к срезу сопротивления")
+            ),
+        ),
+        4: Constellation(
+            number=4,
+            name="C4",
+            buffs=(Buff(S.HP_PCT, 0.6, target=SELF,
+                    source="C4: Бонус к хп"),
+            ),
+        ),
+        5: Constellation(
+            number=5,
+            name="C5",
+        ),         
+        6: Constellation(
+            number=6,
+            name="C6",
+            buffs=(
+                Buff("elevation.stellar_swirl", 0.25, target=TEAM,
+                    source="C6: +25% возвышения урона SSW всем"),
+                Buff("crit_value.stellar_swirl",0.6,
+                     target=OTHERS, requires=(OFF,),
+                     source="C6: +60% К криту урону звездного рассеивания"),
+            ),
+        ),
+    },
     note="",
 )
 

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
 
-Запуск:  python -m scripts.run_mizuki_vodya            (режим по формуле)
-         python -m scripts.run_mizuki_vodya --details   (разбивка по ударам)
+Запуск:  python -m scripts.run_vesna_vodya            (режим по формуле)
+         python -m scripts.run_vesna_vodya --details   (разбивка по ударам)
 """
 
 from __future__ import annotations
@@ -17,21 +17,10 @@ from gi_damage.core.report import (compare, hit_details, source_breakdown,
 from gi_damage.core.roster import Roster, Variation
 from gi_damage.data.weapons import *
 from gi_damage.data.artifacts import *
-from gi_damage.presets.mizuki_vodya_odette_cmc import all_teams, make_team, vodya_build, mizuki_build,odette_build
+from gi_damage.presets.vesna_vodya_odette_cmc import all_teams, make_team, vodya_build, vesna_build,odette_build
 from gi_damage.core.report import roster_report
 
 from dataclasses import replace
-
-def c6_mizuki_main_stats(team):
-    """С C6 корона на МС лучше короны на криты."""
-    mizuki = team.build("Мидзуки")
-    if mizuki.constellation < 6:
-        return team
-    stats = dict(mizuki.extra_stats)
-    stats[S.CRIT_VALUE] = stats.get(S.CRIT_VALUE, 0) - 0.622   # снять корону на крит
-    stats[S.BASE_EM] = stats.get(S.BASE_EM, 0) + 187            # надеть на МС
-    return replace(team, builds=[replace(mizuki, extra_stats=stats)
-                                 if b.name == "Мидзуки" else b for b in team.builds])
     
 SHOW_ALL_TEAMS = True
 
@@ -60,23 +49,28 @@ def main(argv: list[str]) -> int:
     #  Пример 1: перебор оружия Мидзуки                                    #
     # ------------------------------------------------------------------ #
 
-    base = make_team("Мидзуки C2", 2, WANDERER_SONG.at(5), 0, SILVER_LIGHT, VIRIDESCENT, MILLELITH, TTDS_HALF_CATALYSATOR)
+    base = make_team("Весна C0", 0, EMBERWELL, 0, SILVER_LIGHT, SCARLET_PROOF, MILLELITH, TTDS_HALF_CATALYSATOR,0)
     
     
-    roster = Roster(base, [Variation(slot="Мидзуки",
-                                     weapons=[WANDERER_SONG.at(5),
-                                              SUNNY_MORNING_SLEEP_IN.at(1),
-                                              RELIQUARY_OF_TRUTH,
-                                              SAC_JADE.at(1),
-                                              SAC_JADE.at(5),
-                                              STARCALLERS_WATCH,
-                                              DAWNING_FROST.at(1),
-                                              DAWNING_FROST.at(3),
-                                              DAWNING_FROST.at(5),
-                                              CEREMONIAL])])
+    roster = Roster(base, [Variation(slot="Весна",
+                                     weapons=[EMBERWELL.at(5),
+                                              FINALE.at(5),
+                                              LOW_BASE_CRIT_STATSTICK,
+                                              HIGH_BASE_CRIT_STATSTICK,
+                                              HARBINGER.at(5),
+                                              CHRYSALIS.at(1),
+                                              CHRYSALIS.at(3),
+                                              CHRYSALIS.at(5),
+                                              FROSTFEATHER.at(1),
+                                              FROSTFEATHER.at(3),
+                                              FROSTFEATHER.at(5),
+                                              BOUGH.at(1),
+                                              BOUGH.at(3),
+                                              BOUGH.at(5),
+                                              MID_BASE_CRIT_STATSTICK])])
     print("========================")
-    print("=== Ростер: оружие Мидзуки (C2) ===")
-    print(roster_report(roster.run(), title="оружие Мидзуки (C2)", ascending=True))
+    print("=== Ростер: оружие Весна (C0) ===")
+    print(roster_report(roster.run(), title="оружие Весна (C0)", ascending=True))
     print()
     
     roster6 = Roster(base, [Variation(slot="Одетта",
@@ -115,11 +109,11 @@ def main(argv: list[str]) -> int:
     # ------------------------------------------------------------------ #
 
     roster2 = Roster(base, [
-        Variation(slot="Мидзуки", constellations=[0, 1, 2, 3, 6]),
-    ], tweak=c6_mizuki_main_stats)
+        Variation(slot="Весна", constellations=[0, 1, 2, 3,4,5, 6]),
+    ],)
     print("========================")
-    print("=== Ростер: созвездия Мидзуки ===")
-    print(roster_report(roster2.run(), title="созвездия Мидзуки", ascending=True))
+    print("=== Ростер: созвездия Весна ===")
+    print(roster_report(roster2.run(), title="созвездия Весна", ascending=True))
     
     roster3 = Roster(base, [
         Variation(slot="Крио ГГ", constellations=[0, 2, 3, 5, 6]),
@@ -143,12 +137,6 @@ def main(argv: list[str]) -> int:
     print(roster_report(roster9.run(), title="созвездия Водяница", ascending=True))
 
 
-    roster5 = Roster(base, [
-        Variation(slot="Мидзуки", artifact_sets=[(VIRIDESCENT,), (EM_2_2_SET,), (SCARLET_PROOF,)]),
-    ])
-    print("========================")
-    print("=== Ростер: наборы артефактов Мидзуки ===")
-    print(roster_report(roster5.run(), title="наборы артефактов Мидзуки", ascending=True))   
     
     return 0
 

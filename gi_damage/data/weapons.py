@@ -8,7 +8,7 @@ from __future__ import annotations
 from ..core.buffs import SELF, Buff, TEAM, temp
 from ..core.entities import Weapon
 from ..core.stats import S
-from .tags import BREEZEBORNE, TTDS
+from .tags import BREEZEBORNE, TTDS_HALF, ON
 
 # --------------------------------------------------------------------------- #
 WANDERER_SONG = Weapon(
@@ -159,20 +159,53 @@ EMBERWELL = Weapon(
     note="Крафтовое оружие из снежной",
 )
 
-TTDS_BONUS = {r: 0.24 + 0.06 * (r - 1) for r in range(1, 6)}
+TTDS_BONUS_HALF = {r: 0.12 + 0.06 * (r - 1) for r in range(1, 6)}
 
-TTDS = Weapon(
+TTDS_HALF_CATALYSATOR = Weapon(
     name="Эпос",
     base_atk=401.0,
     refinement=5,
     stats={S.HP_PCT: 0.352},
     buffs_by_refinement={
-        r: (temp(S.ATK_PCT, TTDS_BONUS[r], TTDS, target=TEAM,
-                 source=f"Эпос R{r}: +{TTDS_BONUS[r]:.0%} "
+        r: (temp(S.ATK_PCT, TTDS_BONUS_HALF[r], requires=(TTDS_HALF,), target=TEAM,
+                 source=f"Эпос R{r}: +{TTDS_BONUS_HALF[r]:.0%} "
                         f"атаки персонажу"),)
-        for r in TTDS_BONUS
+        for r in TTDS_BONUS_HALF
     },
     note="",
+)
+
+MAELSTROM_BONUS = {r:((0.08+0.02*r)*3)*1.75 for r in range(1, 6)}
+
+MAELSTROM = Weapon(
+    name="Ода водоворота",
+    base_atk=542.0,
+    refinement=1,
+    stats={S.HP_PCT: 0.662},
+    buffs_by_refinement={
+        r: (temp(S.ATK_PCT, MAELSTROM_BONUS[r], requires=(ON,), target=TEAM,
+                 source=f"Ода водоворота R{r}: +{MAELSTROM_BONUS[r]:.0%} "
+                        f"атаки активному персонажу"),)
+        for r in MAELSTROM_BONUS
+    },
+    stats_by_refinement={
+        1: {
+            S.HP_PCT: (0.04*3)*1.75,
+        },
+        2: {
+            S.HP_PCT: (0.05*3)*1.75,
+        },
+        3: {
+            S.HP_PCT: (0.06*3)*1.75,
+        },
+        4: {
+            S.HP_PCT: (0.07*3)*1.75,
+        },
+        5: {
+            S.HP_PCT: (0.08*3)*1.75,
+        },
+    },
+    note="Сигна Водяницы",
 )
 
 FINALE = Weapon(

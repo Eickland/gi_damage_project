@@ -1,6 +1,5 @@
 """
-Отряд Весна/Одетта/Крио ГГ/Фарузан.
-
+Отряд Весна/Одетта/Крио ГГ/Водяница,
 """
 
 from __future__ import annotations
@@ -10,8 +9,7 @@ from ...core.buffs import OTHERS, SELF, TEAM, Buff, temp
 from ...core.entities import Character, Constellation
 from ...core.sources import Occurrence, elemental, occ, stellar_swirl
 from ...core.stats import S
-from ..tags import (DREAM, INST, OFF, ON, FROSTGLOW, BREEZEBORNE,
-                    ARMED, DA1, DA2, DA3, DA4, DA5, DA6)
+from ..tags import DREAM, INST, OFF, ON, FROSTGLOW,BREEZEBORNE, VODYA_LEAD, VODYA_CHORUS, TTDS_HALF,ARMED, DA1, DA2, DA3, DA4, DA5, DA6
 
 # =========================================================================== #
 #  Весна — анемо, main dps (меч)
@@ -40,35 +38,35 @@ VESNA = Character(
     },
     sources=(
         elemental("Использование навыка", "atk", 0.72, "anemo", "skill",
-                  [occ(1, ON)]),
+                  [occ(1, ON, TTDS_HALF)]),
 
         elemental("Windborne Sword Lv1", "atk", 0.72, "anemo", "skill",
-                  [occ(1, ON, ARMED)],
+                  [occ(1, ON, ARMED, TTDS_HALF)],
                   extra_tags=("windborne_sword",)),
 
         elemental("Windborne Sword Lv2", "atk", 1.08, "anemo", "skill",
-                  [occ(1, ON, ARMED)],
+                  [occ(1, ON, ARMED, TTDS_HALF)],
                   extra_tags=("windborne_sword",)),
 
         stellar_swirl("Windborne Sword Lv2 — Spirit Blade", "atk", 2.016,
-                  "anemo",[occ(1, ON, ARMED, DA1, BREEZEBORNE, FROSTGLOW)],"skill",
+                  "anemo",[occ(1, ON, ARMED, DA1, BREEZEBORNE, FROSTGLOW, VODYA_LEAD, TTDS_HALF)],"skill",
                   extra_tags=("spirit_blade",),
                   multipliers=("disciplinary_action",)),
 
         stellar_swirl("Windborne Sword Lv3 — Spirit Blade x4", "atk", 0.8064,
                   "anemo",
-                  [occ(4, ON, ARMED, DA2, BREEZEBORNE, FROSTGLOW), occ(4, ON, ARMED, DA4, BREEZEBORNE, FROSTGLOW), occ(4, ON, ARMED, DA5, BREEZEBORNE, FROSTGLOW)], "skill",
+                  [occ(4, ON, ARMED, DA2, BREEZEBORNE, FROSTGLOW, VODYA_LEAD, TTDS_HALF), occ(4, ON, ARMED, DA4, BREEZEBORNE, FROSTGLOW, VODYA_LEAD, TTDS_HALF), occ(4, ON, ARMED, DA5, BREEZEBORNE, FROSTGLOW, VODYA_LEAD, TTDS_HALF)], "skill",
                   extra_tags=("spirit_blade",),multipliers=("disciplinary_action",)),
         stellar_swirl("Windborne Sword Lv3 Spirit Blade Final Hit", "atk",
                   2.8224, "anemo", 
-                  [occ(1, ON, ARMED, DA2, BREEZEBORNE, FROSTGLOW), occ(1, ON, ARMED, DA4, BREEZEBORNE, FROSTGLOW), occ(1, ON, ARMED, DA5, BREEZEBORNE, FROSTGLOW)],"skill",
+                  [occ(1, ON, ARMED, DA2, BREEZEBORNE, FROSTGLOW, VODYA_LEAD, TTDS_HALF), occ(1, ON, ARMED, DA4, BREEZEBORNE, FROSTGLOW, VODYA_LEAD, TTDS_HALF), occ(1, ON, ARMED, DA5, BREEZEBORNE, FROSTGLOW, VODYA_LEAD, TTDS_HALF)],"skill",
                   extra_tags=("spirit_blade",),multipliers=("disciplinary_action",)),
 
         elemental("Перо ветра", "atk", 0.1872, "anemo", "skill",
-                  [occ(8, ON, ARMED)]),
+                  [occ(8, ON, ARMED, TTDS_HALF)]),
 
         stellar_swirl("Взрыв — Клинок Духа", "atk", 4.7376, "anemo",
-                  [occ(1, ON, ARMED, DA3, BREEZEBORNE, FROSTGLOW)], "burst",
+                  [occ(1, ON, ARMED, DA3, BREEZEBORNE, FROSTGLOW, VODYA_LEAD, TTDS_HALF)], "burst",
                   extra_tags=("spirit_blade",),multipliers=("disciplinary_action",)),
     ),
     constellations={
@@ -78,11 +76,11 @@ VESNA = Character(
             sources = (
             stellar_swirl("Windborne Sword Lv3 — Spirit Blade x4, C1", "atk", 0.8064,
                         "anemo",
-                        [occ(4, ON, ARMED, DA6, BREEZEBORNE, FROSTGLOW)], "skill",
+                        [occ(4, ON, ARMED, DA6, BREEZEBORNE, FROSTGLOW, TTDS_HALF)], "skill",
                         extra_tags=("spirit_blade",),multipliers=("disciplinary_action",)),
             stellar_swirl("Windborne Sword Lv3 Spirit Blade Final Hit, C1", "atk",
                         2.8224, "anemo", 
-                        [occ(1, ON, ARMED, DA6, BREEZEBORNE, FROSTGLOW)],"skill",
+                        [occ(1, ON, ARMED, DA6, BREEZEBORNE, FROSTGLOW, TTDS_HALF)],"skill",
                         extra_tags=("spirit_blade",),multipliers=("disciplinary_action",)),                
             ),
             buffs=(
@@ -101,10 +99,10 @@ VESNA = Character(
                      source="C2"),
             ),
             patches={
-                "Windborne Sword Lv2 — Spirit Blade": lambda s: replace(s, occurrences=[occ(1, ON, ARMED, DA6, BREEZEBORNE, FROSTGLOW)]),
-                "Windborne Sword Lv3 — Spirit Blade x4": lambda s: replace(s, occurrences=[occ(12, ON, ARMED, DA6, BREEZEBORNE, FROSTGLOW)]),
-                "Windborne Sword Lv3 Spirit Blade Final Hit": lambda s: replace(s, occurrences=[occ(3, ON, ARMED, DA6, BREEZEBORNE, FROSTGLOW)]),
-                "Взрыв — Клинок Духа": lambda s: replace(s, occurrences=[occ(1, ON, ARMED, DA6, BREEZEBORNE, FROSTGLOW)]),
+                "Windborne Sword Lv2 — Spirit Blade": lambda s: replace(s, occurrences=[occ(1, ON, ARMED, DA6, BREEZEBORNE, FROSTGLOW, TTDS_HALF, VODYA_LEAD)]),
+                "Windborne Sword Lv3 — Spirit Blade x4": lambda s: replace(s, occurrences=[occ(12, ON, ARMED, DA6, BREEZEBORNE, FROSTGLOW, TTDS_HALF, VODYA_LEAD)]),
+                "Windborne Sword Lv3 Spirit Blade Final Hit": lambda s: replace(s, occurrences=[occ(3, ON, ARMED, DA6, BREEZEBORNE, FROSTGLOW, TTDS_HALF, VODYA_LEAD)]),
+                "Взрыв — Клинок Духа": lambda s: replace(s, occurrences=[occ(1, ON, ARMED, DA6, BREEZEBORNE, FROSTGLOW, TTDS_HALF, VODYA_LEAD)]),
             },
         ),
         3: Constellation(
@@ -143,11 +141,11 @@ VESNA = Character(
             ),
             sources=(
                 elemental("C6: Windborne Sword: Transpose", "atk", 1.50,
-                          "anemo", "skill", [occ(4, ON, ARMED, BREEZEBORNE, FROSTGLOW)],
+                          "anemo", "skill", [occ(4, ON, ARMED, BREEZEBORNE, FROSTGLOW, TTDS_HALF)],
                           extra_tags=("transpose",)),
                 stellar_swirl("C6: Windborne Sword: Transpose — Клинок Духа",
                           "atk", 2.00, "anemo", 
-                          [occ(4, ON, ARMED, DA6, BREEZEBORNE, FROSTGLOW)],"skill",
+                          [occ(4, ON, ARMED, DA6, BREEZEBORNE, FROSTGLOW, TTDS_HALF)],"skill",
                           extra_tags=("spirit_blade",
                                       "transpose"),multipliers=("disciplinary_action",)),
             ),
@@ -301,11 +299,11 @@ ODETTE = Character(
         elemental("Навык (АТК), Wing Dance", "atk", 0.9264, "cryo", "skill",
                   [occ(1, OFF,),occ(3, OFF, DREAM)]),
         stellar_swirl("Навык — SSW, Plume Dance", "atk", 0.7295, "cryo",
-                      [occ(1, OFF,), occ(2, OFF, INST,DREAM,FROSTGLOW,BREEZEBORNE),occ(2, OFF,FROSTGLOW,BREEZEBORNE)], multipliers=("mp",)),
+                      [occ(1, OFF, TTDS_HALF), occ(2, OFF, INST,DREAM,FROSTGLOW,BREEZEBORNE,VODYA_CHORUS, TTDS_HALF),occ(2, OFF,FROSTGLOW,BREEZEBORNE)], multipliers=("mp",)),
         stellar_swirl("Навык — SSW, Wing Dance", "atk", 0.8724, "cryo",
-                      [occ(1, OFF,), occ(2, OFF, INST,DREAM,FROSTGLOW,BREEZEBORNE),occ(1, OFF,FROSTGLOW,BREEZEBORNE)], multipliers=("mp",)),
+                      [occ(1, OFF, TTDS_HALF), occ(2, OFF, INST,DREAM,FROSTGLOW,BREEZEBORNE,VODYA_CHORUS, TTDS_HALF),occ(1, OFF,FROSTGLOW,BREEZEBORNE)], multipliers=("mp",)),
         stellar_swirl("Особый навык — SSW", "atk", 8.2555, "cryo",
-                      [occ(1, ON, INST,FROSTGLOW)], multipliers=("mp",)),
+                      [occ(1, ON, INST,FROSTGLOW, TTDS_HALF)], multipliers=("mp",)),
     ),
     constellations={
         1: Constellation(
@@ -316,7 +314,7 @@ ODETTE = Character(
             sources=(
                 stellar_swirl("C1: доп. атака после особого навыка",
                               "atk", 4.50, "cryo",
-                              [occ(1, ON, INST,FROSTGLOW)], multipliers=("mp",)),
+                              [occ(1, ON, INST,FROSTGLOW, TTDS_HALF)], multipliers=("mp",)),
             ),
             # Усиление A4: при призыве двойника ещё 2 стака Splendor.
             buffs=(
@@ -368,7 +366,7 @@ ODETTE = Character(
             sources=(
                 stellar_swirl("C4: доп. атака",
                               "atk", 0.99, "cryo",
-                              [occ(1, OFF,), occ(2, OFF, INST,DREAM,FROSTGLOW,BREEZEBORNE),occ(1, OFF,DREAM,FROSTGLOW,BREEZEBORNE)], multipliers=("mp",)),
+                              [occ(1, OFF, TTDS_HALF), occ(2, OFF, INST,DREAM,FROSTGLOW,BREEZEBORNE, TTDS_HALF),occ(1, OFF,DREAM,FROSTGLOW,BREEZEBORNE)], multipliers=("mp",)),
             ),
         ),
         5: Constellation(
@@ -403,27 +401,104 @@ ODETTE = Character(
     },
 )
 
-# =========================================================================== #
-#  Фарузан                                                                   #
-# =========================================================================== #
-FARUZAN = Character(
-    name="Фарузан",
-    element="anemo",
-    weapon_type="bow",
+def vodyanitsa_stack_bonus(max_hp: float) -> float:
+    """+260 доп. базового урона за каждую 1000 Max HP Водяницы свыше 40000,
+    максимум 6500 (A4 «Dirge of the Fandyr»)."""
+    return min(260.0 * max(0.0, max_hp - 40000.0) / 1000.0, 6500.0)
+
+def vodyanitsa_c1_bonus(max_hp: float) -> float:
+    return 0.008*max_hp
+ 
+ 
+VODYANITSA = Character(
+    name="Водяница",
+    element="hydro",
+    weapon_type="catalyst",
     default_field=OFF,
     crit_mode="balance",
     stats={
-        S.BASE_ATK: 196.0,
+        S.BASE_HP: 14818.0,
         S.CRIT_VALUE: 0.6,
-        S.ATK_PCT: 0.24,
+        S.HP_PCT: 0.288
     },
-    buffs = (Buff("crit_value.anemo", 0.4, target=TEAM,
-                     source="С6 Фарузан, +40% анемо крит урона"),
-             Buff("res_reduction.anemo", 0.30, target=TEAM,
-                    source="Взрыв стихии: -30% анемо сопротивления")),
-    sources=(),
+    buffs=(Buff(S.FLAT_BASE_DMG, lambda ctx: vodyanitsa_stack_bonus(
+             ctx.stat("Водяница", "hp", frozenset({OFF}))),
+         target="Весна", requires=(VODYA_LEAD,),
+         source="Водяница: Lead Vocal (SSW навыка)"),
+            Buff(S.FLAT_BASE_DMG, lambda ctx: vodyanitsa_stack_bonus(
+             ctx.stat("Водяница", "hp", frozenset({OFF}))),
+         target="Крио ГГ", requires=(VODYA_CHORUS,),
+         source="Водяница: Chorus (SSW навыка)"),
+        Buff("res_reduction.anemo", 0.35, target=TEAM,
+                    source="-35% анемо сопротивления"),
+        Buff("res_reduction.cryo", 0.3, target=TEAM,
+                    source="-30% крио сопротивления"),
+        Buff("res_reduction.hydro", 0.3, target=TEAM,
+                    source="-30% гидро сопротивления"),
+        Buff("res_reduction.anemo", -1000, target=SELF,
+                    source="Нет вклада в звездные реакции"),
+        Buff("res_reduction.cryo", -1000, target=SELF,
+                    source="Нет вклада в звездные реакции")),
+    
+    sources=(elemental("Использование навыка", "hp", 0.589, "hydro", "skill",
+                  [occ(1, ON,)]),
+        elemental("Навык, Horn of Spring", "hp", 0.589, "hydro", "skill",
+                  [occ(5, OFF,),]),),
+    constellations={
+        1: Constellation(
+            number=1,
+            name="C1",
+            buffs=(
+                Buff(S.FLAT_ATK, lambda ctx: vodyanitsa_c1_bonus(
+             ctx.stat("Водяница", "hp", frozenset({OFF}))),
+                     target=OTHERS,
+                     source="C1"),
+            ),
+        ),
+        2: Constellation(
+            number=2,
+            name="C2",
+            buffs=(
+                Buff("crit_value.stellar_swirl",
+                     0.6,
+                     target=OTHERS, requires=(ON,),
+                     source="C2: +60% К криту урону звездного рассеивания"),
+            ),
+        ),
+        3: Constellation(
+            number=3,
+            name="C3",
+            buffs=(Buff("res_reduction.cryo", 0.054, target=TEAM,
+                    source="C3: Бонус к срезу крио сопротивления"),
+            Buff("res_reduction.hydro", 0.054, target=TEAM,
+                    source="C3: Бонус к срезу сопротивления")
+            ),
+        ),
+        4: Constellation(
+            number=4,
+            name="C4",
+            buffs=(Buff(S.HP_PCT, 0.6, target=SELF,
+                    source="C4: Бонус к хп"),
+            ),
+        ),
+        5: Constellation(
+            number=5,
+            name="C5",
+        ),         
+        6: Constellation(
+            number=6,
+            name="C6",
+            buffs=(
+                Buff("elevation.stellar_swirl", 0.25, target=TEAM,
+                    source="C6: +25% возвышения урона SSW всем"),
+                Buff("crit_value.stellar_swirl",0.6,
+                     target=OTHERS, requires=(OFF,),
+                     source="C6: +60% К криту урону звездного рассеивания"),
+            ),
+        ),
+    },
     note="",
 )
 
 
-ALL = {c.name: c for c in (VESNA, CRYO_MC, ODETTE, FARUZAN)}
+ALL = {c.name: c for c in (VESNA, CRYO_MC, ODETTE, VODYANITSA)}

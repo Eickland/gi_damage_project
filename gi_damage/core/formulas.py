@@ -56,12 +56,12 @@ def elemental_damage(base: float, stats: Stats, tags, def_mult: float,
                      res_mult: float, crit: float, elevation: float,
                      flat_base: float = 0.0) -> float:
     """Обычный элементальный урон."""
-    return ((base + flat_base)
-            * (1.0 + stats.dmg_bonus(*tags))
-            * def_mult
-            * res_mult
-            * crit
-            * (1.0 + elevation))
+    return max(0.0, ((base + flat_base)
+                     * (1.0 + stats.dmg_bonus(*tags))
+                     * def_mult
+                     * res_mult
+                     * crit
+                     * (1.0 + elevation)))
 
 
 def stellar_swirl_direct(stat_value: float, mv: float, stats: Stats, tags,
@@ -71,7 +71,7 @@ def stellar_swirl_direct(stat_value: float, mv: float, stats: Stats, tags,
     base = (stat_value * mv
             * base_increase(stats, *tags)
             * ssw_multiplier(stats, *tags))
-    return (base + flat_base) * res_mult * crit * (1.0 + elevation)
+    return max(0.0, (base + flat_base) * res_mult * crit * (1.0 + elevation))
 
 
 def stellar_swirl_reaction(multiplier: float, stats: Stats, tags,
@@ -80,20 +80,12 @@ def stellar_swirl_reaction(multiplier: float, stats: Stats, tags,
                            flat_base: float = 0.0,
                            excel_compat: bool = False) -> float:
     """Урон самой реакции звёздного рассеивания.
-
-    excel_compat=True воспроизводит поведение исходной таблицы, где множитель
-    (1 + Бонус базового урона) применён ДВАЖДЫ: один раз внутри строки «EMM»
-    и второй раз в строке урона реакции. По формуле он должен применяться один раз.
-
-    flat_base — плоская добавка к урону ЭТОЙ конкретной реакции (например,
-    Lead Vocal/Chorus «Водяницы»); прибавляется до сопротивления/крита/возвышения,
-    как и в остальных двух формулах.
     """
     inc = base_increase(stats, *tags)
     base = base_dmg * multiplier * inc * ssw_multiplier(stats, *tags)
     if excel_compat:
         base *= inc
-    return (base + flat_base) * res_mult * crit * (1.0 + elevation)
+    return max(0.0, (base + flat_base) * res_mult * crit * (1.0 + elevation))
 
 
 def defense_multiplier(attacker_level: int, enemy_level: int,

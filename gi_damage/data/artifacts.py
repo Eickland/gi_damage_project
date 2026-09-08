@@ -56,6 +56,7 @@ VIRIDESCENT = ArtifactSet(
 MILLELITH = ArtifactSet(
     name="Милеллит",
     pieces=4,
+    stats_by_pieces={2:{S.HP_PCT: 0.2}},
     buffs_by_pieces={
         4: (Buff(S.ATK_PCT, 0.2, target=TEAM,
                  source="Милеллит 4ч: +20% атаки всему отряду"),
