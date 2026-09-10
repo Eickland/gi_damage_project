@@ -54,10 +54,8 @@ def main(argv: list[str]) -> int:
     
     roster = Roster(base, [Variation(slot="Весна",
                                      weapons=[EMBERWELL.at(5),
-                                              FINALE.at(5),
                                               LOW_BASE_CRIT_STATSTICK,
                                               HIGH_BASE_CRIT_STATSTICK,
-                                              HARBINGER.at(5),
                                               CHRYSALIS.at(1),
                                               CHRYSALIS.at(3),
                                               CHRYSALIS.at(5),

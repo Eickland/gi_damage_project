@@ -196,7 +196,7 @@ CRYO_MC = Character(
             number=3,
             name="C3",
             patches={
-                "Взрыв — SSW": lambda s: replace(s, mv=(1.1715 + 8 * 0.0586) * 5),
+                "Взрыв — SSW": lambda s: replace(s, mv=(1.1715 + 8 * 0.0586)),
             },
         ),
         5: Constellation(

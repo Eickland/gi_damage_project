@@ -30,12 +30,12 @@ def keep_viridescent(team):
     mizuki = team.build("Мидзуки")
     if any(a.name == VIRIDESCENT.name for a in mizuki.artifacts):
         return replace(team, builds=[
-        faruzan_build(artifacts=INSTRUCTOR,weapon=FAV_BOW) if b.name == "Фарузан" else b
+        faruzan_build(artifacts=INSTRUCTOR) if b.name == "Фарузан" else b
         for b in team.builds
     ])
 
     return replace(team, builds=[
-        faruzan_build(artifacts=VIRIDESCENT,weapon=FAV_BOW) if b.name == "Фарузан" else b
+        faruzan_build(artifacts=VIRIDESCENT) if b.name == "Фарузан" else b
         for b in team.builds
     ])
 
@@ -77,7 +77,7 @@ def main(argv: list[str]) -> int:
     #  Пример 1: перебор оружия Мидзуки                                    #
     # ------------------------------------------------------------------ #
 
-    base = make_team("Мидзуки C2", 2, WANDERER_SONG.at(5), 0, SILVER_LIGHT, EM_2_2_SET, VIRIDESCENT, FAV_BOW)
+    base = make_team("Мидзуки C6", 6, SUNNY_MORNING_SLEEP_IN.at(1), 2, FROSTFEATHER, EM_2_2_SET, VIRIDESCENT, BREEZEBORNE_BOW.at(1))
     
     
     roster = Roster(base, [Variation(slot="Мидзуки",

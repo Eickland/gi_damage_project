@@ -67,15 +67,13 @@ def main(argv: list[str]) -> int:
     #  Пример 1: перебор оружия Мидзуки                                    #
     # ------------------------------------------------------------------ #
 
-    base = make_team("Весна C0", 0, EMBERWELL, 0, SILVER_LIGHT, SCARLET_PROOF, VIRIDESCENT, FAV_BOW)
+    base = make_team("Весна C0", 0, EMBERWELL, 2, FROSTFEATHER, SCARLET_PROOF, VIRIDESCENT, BREEZEBORNE_BOW.at(1))
     
     
     roster = Roster(base, [Variation(slot="Весна",
                                      weapons=[EMBERWELL.at(5),
-                                              FINALE.at(5),
                                               LOW_BASE_CRIT_STATSTICK,
                                               HIGH_BASE_CRIT_STATSTICK,
-                                              HARBINGER.at(5),
                                               CHRYSALIS.at(1),
                                               CHRYSALIS.at(3),
                                               CHRYSALIS.at(5),
