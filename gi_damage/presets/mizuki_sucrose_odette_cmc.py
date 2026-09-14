@@ -4,9 +4,6 @@
 Короткая ротация с 3 проками A4 Мидзуки, Сахароза в Инструкторе,
 Мидзуки в Изумрудной тени.
 
-Расчёт ведётся строго по формулам — режима совместимости с исходной
-таблицей Excel здесь больше нет.
-
 ОКНО «ДРЕЙФ ГРЁЗ» (тег DREAM)
 -----------------------------
 Внутри него работают эффекты C2 Мидзуки: бонус пиро/гидро/крио/электро урона
@@ -27,8 +24,8 @@ from ..core.entities import Build, Enemy, ArtifactSet
 from ..core.reactions import ssw_anemo, ssw_vortex
 from ..core.stats import S
 from ..core.utilits import merge_dicts
-from ..data.artifacts import HEART_OF_FORGE, INSTRUCTOR, MILLELITH, VIRIDESCENT
-from ..data.artifacts_presets import STANDART_SUBSTAT_PRESET
+from ..data.artifacts import *
+from ..data.artifacts_presets import *
 from ..data.tags import DREAM, INST, OFF, ON
 from ..data.teams.mizuki_sucrose_odette_cmc import CRYO_MC, MIZUKI, ODETTE, SUCROSE, ODETTE_BURST_SOURCES, odette_burst_buffs, ODETTE_BURST_TIME
 from ..data.weapons import (EXAIPHANES, CEREMONIAL, SILVER_LIGHT,
@@ -65,14 +62,10 @@ def enemy() -> Enemy:
 # =========================================================================== #
 #  Сборки                                                                     #
 # =========================================================================== #
-def mizuki_build(constellation: int, weapon, artifacts, extra_buffs: Sequence[Buff] = ()) -> Build:
+def mizuki_build(constellation: int, weapon, artifacts, extra_buffs: Sequence[Buff] = (),
+                 main_stats={S.BASE_EM: 187 * 2, S.CRIT_VALUE: 0.622}) -> Build:
 
-    
-    if constellation == 6 and weapon.name != "Сон солнечным утром":
-        main_stats = {S.BASE_EM: 187 * 3}
-    else:
-        main_stats = {S.BASE_EM: 187 * 2, S.CRIT_VALUE: 0.622}
-    
+ 
     return Build(
         character=MIZUKI,
         constellation=constellation,
@@ -80,7 +73,7 @@ def mizuki_build(constellation: int, weapon, artifacts, extra_buffs: Sequence[Bu
         artifacts=(artifacts,),
         extra_stats=merge_dicts(
             main_stats,
-            STANDART_SUBSTAT_PRESET),
+            MY_MIZUKI_VV_BUILD),
         extra_buffs=tuple(extra_buffs),
         time=TIMES["Мидзуки"],
     )
@@ -94,11 +87,10 @@ def cryo_mc_build(weapon=EXAIPHANES, extra_buffs: Sequence[Buff] = ()) -> Build:
         artifacts=(MILLELITH,),
         extra_stats=merge_dicts(
             {S.ATK_PCT: 0.466 * 2, S.CRIT_VALUE: 0.622},
-            STANDART_SUBSTAT_PRESET),
+            MY_CMC_SSW_BUILD),
         extra_buffs=tuple(extra_buffs),
         time=TIMES["Крио ГГ"],
     )
-
 
 def odette_build(constellation: int = 0, weapon=SILVER_LIGHT,
                  use_burst: bool | None = None,
@@ -114,13 +106,12 @@ def odette_build(constellation: int = 0, weapon=SILVER_LIGHT,
         artifacts=(HEART_OF_FORGE,),
         extra_stats=merge_dicts(
             {S.ATK_PCT: 0.466 * 2, S.CRIT_VALUE: 0.622},
-            STANDART_SUBSTAT_PRESET),
+            MY_ODETTE_SSW_BUILD),
         extra_sources=ODETTE_BURST_SOURCES if use_burst else (),
         extra_buffs=tuple(extra_buffs) + (odette_burst_buffs(constellation)
                                           if use_burst else ()),
         time=TIMES["Одетта"] + (ODETTE_BURST_TIME if use_burst else 0.0),
     )
-
 
 def sucrose_build(weapon=CEREMONIAL,artifacts:ArtifactSet=INSTRUCTOR, extra_buffs: Sequence[Buff] = ()) -> Build:
     
@@ -140,7 +131,6 @@ def sucrose_build(weapon=CEREMONIAL,artifacts:ArtifactSet=INSTRUCTOR, extra_buff
         extra_buffs=tuple(extra_buffs),
         time=TIMES["Сахароза"],
     )
-
 
 # =========================================================================== #
 #  Реакции                                                                    #
@@ -195,16 +185,7 @@ def make_team(name: str, mizuki_c: int, mizuki_weapon, odette_c, odette_weapon, 
 
 def all_teams() -> Dict[str, Team]:
     variants = (
-        ("Мидзуки C0 (Песнь странника R5), C0 Одетта, C2R3 Крио ГГ, Сахароза", 0, WANDERER_SONG.at(5), 0, SILVER_LIGHT,VIRIDESCENT,INSTRUCTOR),
-        ("Мидзуки C1 (Песнь странника R5), C0 Одетта, C2R3 Крио ГГ, Сахароза", 1, WANDERER_SONG.at(5), 0, SILVER_LIGHT,VIRIDESCENT,INSTRUCTOR),
-        ("Мидзуки C2 (Песнь странника R5), C0 Одетта, C2R3 Крио ГГ, Сахароза", 2, WANDERER_SONG.at(5), 0, SILVER_LIGHT,VIRIDESCENT,INSTRUCTOR),
-        ("Мидзуки C2R1 (Сон солнечным утром R1), C0 Одетта, C2R3 Крио ГГ, Сахароза", 2, SUNNY_MORNING_SLEEP_IN.at(1), 0, SILVER_LIGHT,VIRIDESCENT,INSTRUCTOR),
-        ("Мидзуки C2R1 (Сон солнечным утром R1), C1 Одетта, C2R3 Крио ГГ, Сахароза", 2, SUNNY_MORNING_SLEEP_IN.at(1), 1, SILVER_LIGHT,VIRIDESCENT,INSTRUCTOR),
-        ("Мидзуки C2R1 (Сон солнечным утром R1), C2 Одетта, C2R3 Крио ГГ, Сахароза", 2, SUNNY_MORNING_SLEEP_IN.at(1), 2, SILVER_LIGHT,VIRIDESCENT,INSTRUCTOR),
-        ("Мидзуки C2R1 (Сон солнечным утром R1), C2R1 Одетта, C2R3 Крио ГГ, Сахароза", 2, SUNNY_MORNING_SLEEP_IN.at(1), 2, FROSTFEATHER,VIRIDESCENT,INSTRUCTOR),
-        ("Мидзуки C6R1 (Сон солнечным утром R1), C2R1 Одетта, C2R3 Крио ГГ, Сахароза", 6, SUNNY_MORNING_SLEEP_IN.at(1), 2, FROSTFEATHER,VIRIDESCENT,INSTRUCTOR),
-        ("Мидзуки C6R1 (Сон солнечным утром R1), C6R1 Одетта, C2R3 Крио ГГ, Сахароза", 6, SUNNY_MORNING_SLEEP_IN.at(1), 6, FROSTFEATHER,VIRIDESCENT,INSTRUCTOR),
-        ("Мидзуки C6R5 (Сон солнечным утром R5), C6R5 Одетта, C2R3 Крио ГГ, Сахароза", 6, SUNNY_MORNING_SLEEP_IN.at(5), 6, FROSTFEATHER.at(5),VIRIDESCENT,INSTRUCTOR),
+        ("Мидзуки C6R1, C2R1 Одетта, C2R3 Крио ГГ, Сахароза", 6, SUNNY_MORNING_SLEEP_IN.at(1), 2, FROSTFEATHER.at(1),VIRIDESCENT,INSTRUCTOR),
     )
     return {name: make_team(name, c, mizuki_w, c_odette, odette_w, mizuki_art, sucrose_art) for name, c, mizuki_w, c_odette, odette_w, mizuki_art, sucrose_art in variants}
 

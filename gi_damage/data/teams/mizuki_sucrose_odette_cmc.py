@@ -73,11 +73,11 @@ MIZUKI = Character(
                   [occ(1, ON, DREAM)]),
         elemental("Взрыв (АТК)", "atk", 1.2701, "anemo", "burst",
                   [occ(8, ON, DREAM)]),
-        elemental("Перья (МС)", "em", 10.0, "anemo", "skill",
+        elemental("Перья (МС)", "em", 10.0, "anemo", "passive",
                   [occ(1, ON, DREAM), occ(2, ON, INST, DREAM)],
                   note="Строка «Quills EM MV%» = 1000%"),
         stellar_swirl("Навык — звёздное рассеивание (МС)", "em", 10.0, "anemo",
-                      [occ(1, ON, DREAM), occ(2, ON, INST, DREAM, FROSTGLOW)],
+                      [occ(1, ON, DREAM, FROSTGLOW), occ(2, ON, INST, DREAM, FROSTGLOW)],
                       note="Строка «Skill EM SSW MV%» = 1000%"),
     ),
     constellations={
@@ -86,9 +86,9 @@ MIZUKI = Character(
             name="C1",
             sources=(
                 stellar_swirl("C1: доп. звёздное рассеивание (МС)", "em", 4.0,
-                              "anemo", [occ(1, ON, DREAM), occ(2, ON, INST, DREAM)]),
+                              "anemo", [occ(1, ON, DREAM, FROSTGLOW), occ(2, ON, INST, DREAM, FROSTGLOW)]),
                 elemental("C1: доп. базовый урон", "em", 5.5, "anemo", "skill",
-                          [occ(1, ON, DREAM), occ(2, ON, INST, DREAM, FROSTGLOW)]),
+                          [occ(1, ON, DREAM), occ(2, ON, INST, DREAM)]),
             ),
         ),
         2: Constellation(
@@ -137,7 +137,6 @@ MIZUKI = Character(
             buffs=(
                 # Внутри Дрейфа грёз весь урон звёздного рассеивания отряда
                 # получает +10% крит. шанса и +20% крит. урона.
-                # В крит-вэлью это 2*0.10 + 0.20 = 0.40.
                 Buff("crit_value.stellar_swirl", 2 * 0.10 + 0.20,
                     target=TEAM, requires=(DREAM,), temporary=True,
                     source="C6: крит по урону SSW (+10% шанс, +20% урон)"),
@@ -174,7 +173,7 @@ CRYO_MC = Character(
         elemental("Использование навыка (АТК)", "atk", 1.6502, "cryo", "skill",
                   [occ(1, ON,)]),
         elemental("Навык (АТК)", "atk",0.3851, "cryo", "skill",
-                  [occ(5, OFF, DREAM),occ(3, OFF)]),
+                  [occ(5, OFF, DREAM),occ(8, OFF)],),
         stellar_swirl("Заряженная атака — SSW, 1", "atk", (1.105) + 1.40,
                       "cryo", [occ(1, ON, INST)], kind="charged"),
         stellar_swirl("Заряженная атака — SSW, 2", "atk", (1.428) + 1.40,
@@ -196,6 +195,13 @@ CRYO_MC = Character(
             name="C3",
             patches={
                 "Взрыв — SSW": lambda s: replace(s, mv=(1.1715 + 8 * 0.0586)),
+            },
+        ),
+        4: Constellation(
+            number=4,
+            name="C4",
+            patches={
+                "Навык (АТК)": lambda s: replace(s, occurrences=[occ(9, OFF, DREAM),occ(3, OFF)]),
             },
         ),
         5: Constellation(
@@ -292,7 +298,7 @@ ODETTE = Character(
     multipliers={"mp": _odette_mp},
     sources=(
         elemental("Использование навыка (АТК)", "atk", 1.9454, "cryo", "skill",
-                  [occ(1, OFF,)]),
+                  [occ(1, ON,)]),
         elemental("Навык (АТК), Plume Dance", "atk", 0.7747, "cryo", "skill",
                   [occ(1, OFF,),occ(3, OFF, DREAM)]),
         elemental("Навык (АТК), Wing Dance", "atk", 0.9264, "cryo", "skill",
@@ -311,7 +317,7 @@ ODETTE = Character(
             # Доп. инстанс в конце «дуэта» после особого навыка.
             # В режиме Radiance: Stellar Swirl — 450% от атаки Одетты.
             sources=(
-                stellar_swirl("C1: доп. рассеивание после особого навыка",
+                stellar_swirl("C1: доп. атака после особого навыка",
                               "atk", 4.50, "cryo",
                               [occ(1, ON, INST,FROSTGLOW)], multipliers=("mp",)),
             ),
@@ -330,7 +336,6 @@ ODETTE = Character(
             name="C2",
             buffs=(
                 # Каждый стак даёт ещё и +7% АТК.
-                # Количество стаков зависит от C1 — поэтому читаем созвездие.
                 Buff(S.ATK_PCT,
                      6 * SPLENDOR_C2_ATK,
                      target=SELF, requires=(ON,),
