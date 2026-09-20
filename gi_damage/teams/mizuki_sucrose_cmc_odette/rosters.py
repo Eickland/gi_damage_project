@@ -2,8 +2,8 @@
 """
 Расчёт четырёх отрядов листа «Мидзуки Сахароза» + примеры ростеров.
 
-Запуск:  python -m scripts.run_mizuki_sucrose            (режим по формуле)
-         python -m scripts.run_mizuki_sucrose --details   (разбивка по ударам)
+Запуск:  python -m gi_damage.teams.mizuki_sucrose_cmc_odette.rosters            (режим по формуле)
+         python -m gi_damage.teams.mizuki_sucrose_cmc_odette.rosters --details   (разбивка по ударам)
 """
 
 from __future__ import annotations
@@ -19,7 +19,7 @@ from gi_damage.core.roster import Roster, Variation
 from gi_damage.core.stats import S
 from gi_damage.data.weapons import *
 from gi_damage.data.artifacts import HEART_OF_FORGE, INSTRUCTOR, MILLELITH, VIRIDESCENT, EM_2_2_SET, SCARLET_PROOF
-from gi_damage.presets.mizuki_sucrose_odette_cmc import all_teams, make_team, sucrose_build, mizuki_build,odette_build
+from gi_damage.teams.mizuki_sucrose_cmc_odette.builds import all_teams, make_team, sucrose_build, mizuki_build,odette_build
 from gi_damage.core.report import roster_report
 from dataclasses import replace
 
@@ -36,8 +36,8 @@ def keep_viridescent(team):
         for b in team.builds
     ])
 
+"""
 def c6_mizuki_main_stats(team):
-    """С C6 корона на МС лучше короны на криты."""
     mizuki = team.build("Мидзуки")
     if mizuki.constellation < 6:
         return team
@@ -46,11 +46,12 @@ def c6_mizuki_main_stats(team):
     stats[S.BASE_EM] = stats.get(S.BASE_EM, 0) + 187            # надеть на МС
     return replace(team, builds=[replace(mizuki, extra_stats=stats)
                                  if b.name == "Мидзуки" else b for b in team.builds])
+"""
     
 SHOW_ALL_TEAMS = True
-SHOW_ROSTER = False
+SHOW_ROSTER = True
 
-def main(argv: list[str]) -> int:
+def main(argv: list[str]):
     details = "--details" in argv
 
     print("Стандарты")
@@ -75,7 +76,7 @@ def main(argv: list[str]) -> int:
     #  Пример 1: перебор оружия Мидзуки                                    #
     # ------------------------------------------------------------------ #
 
-    base = make_team("Мидзуки C2", 2, SUNNY_MORNING_SLEEP_IN, 0, SILVER_LIGHT)
+    base = make_team("Мидзуки C2", 2, SUNNY_MORNING_SLEEP_IN, 0, SILVER_LIGHT, VIRIDESCENT, INSTRUCTOR, MILLELITH, 2)
     
     if SHOW_ROSTER:    
         roster = Roster(base, [Variation(slot="Мидзуки",
@@ -119,7 +120,7 @@ def main(argv: list[str]) -> int:
 
         roster2 = Roster(base, [
             Variation(slot="Мидзуки", constellations=[0, 1, 2, 3, 6]),
-        ], tweak=c6_mizuki_main_stats)
+        ],)
         print("========================")
         print("=== Ростер: созвездия Мидзуки ===")
         print(roster_report(roster2.run(), title="созвездия Мидзуки", ascending=True))
@@ -132,7 +133,7 @@ def main(argv: list[str]) -> int:
         print(roster_report(roster3.run(), title="созвездия Крио ГГ", ascending=True))
         
         roster4 = Roster(base, [
-            Variation(slot="Одетта", builds=[odette_build(constellation=c) for c in (0, 1, 2, 3, 4,5, 6)]),
+            Variation(slot="Одетта", builds=[odette_build(constellation=c, weapon=SILVER_LIGHT) for c in (0, 1, 2, 3, 4,5, 6)]),
         ])
         print("========================")
         print("=== Ростер: созвездия Одетта ===")

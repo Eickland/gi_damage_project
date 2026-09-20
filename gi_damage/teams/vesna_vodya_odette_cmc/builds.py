@@ -7,17 +7,17 @@ from __future__ import annotations
 
 from typing import Dict, Sequence
 
-from ..core.buffs import OTHERS, SELF, TEAM, Buff, temp
-from ..core.engine import Config, Team
-from ..core.entities import Build, Enemy, ArtifactSet
-from ..core.reactions import ssw_anemo, ssw_vortex
-from ..core.stats import S
-from ..core.utilits import merge_dicts
-from ..data.artifacts import HEART_OF_FORGE, INSTRUCTOR, MILLELITH, VIRIDESCENT, SCARLET_PROOF,ATK_2_2_SET
-from ..data.artifacts_presets import STANDART_SUBSTAT_PRESET
-from ..data.tags import DREAM, INST, OFF, ON, VODYA_CHORUS, VODYA_LEAD
-from ..data.teams.vesna_vodya_odette_cmc import CRYO_MC, VESNA, ODETTE, VODYANITSA, ODETTE_BURST_SOURCES, odette_burst_buffs, ODETTE_BURST_TIME
-from ..data.weapons import *
+from ...core.buffs import OTHERS, SELF, TEAM, Buff, temp
+from ...core.engine import Config, Team
+from ...core.entities import Build, Enemy, ArtifactSet
+from ...core.reactions import ssw_anemo, ssw_vortex
+from ...core.stats import S
+from ...core.utilits import merge_dicts
+from ...data.artifacts import HEART_OF_FORGE, INSTRUCTOR, MILLELITH, VIRIDESCENT, SCARLET_PROOF,ATK_2_2_SET
+from ...data.artifacts_presets import STANDART_SUBSTAT_PRESET
+from ...data.tags import DREAM, INST, OFF, ON, VODYA_CHORUS, VODYA_LEAD
+from ...data.teams.vesna_vodya_odette_cmc import CRYO_MC, VESNA, ODETTE, VODYANITSA, ODETTE_BURST_SOURCES, odette_burst_buffs, ODETTE_BURST_TIME
+from ...data.weapons import *
 
 # =========================================================================== #
 #  Баффы уровня ОТРЯДА                                                        #

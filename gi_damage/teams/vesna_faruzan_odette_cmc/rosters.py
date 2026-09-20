@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
 
-Запуск:  python -m scripts.run_vesna_vodya            (режим по формуле)
-         python -m scripts.run_vesna_vodya --details   (разбивка по ударам)
+Запуск:  python -m scripts.run_vesna_faruzan            (режим по формуле)
+         python -m scripts.run_vesna_faruzan --details   (разбивка по ударам)
 """
 
 from __future__ import annotations
@@ -17,10 +17,28 @@ from gi_damage.core.report import (compare, hit_details, source_breakdown,
 from gi_damage.core.roster import Roster, Variation
 from gi_damage.data.weapons import *
 from gi_damage.data.artifacts import *
-from gi_damage.presets.vesna_vodya_odette_cmc import all_teams, make_team, vodya_build, vesna_build,odette_build
+from gi_damage.teams.vesna_faruzan_odette_cmc.builds import all_teams, make_team, faruzan_build, vesna_build,odette_build
 from gi_damage.core.report import roster_report
 
 from dataclasses import replace
+
+def keep_viridescent(team):
+    """Изумрудная тень обязана быть в отряде.
+
+    Если её не носит Весна — надеваем на Фарузан вместо Инструктора.
+    """
+    mizuki = team.build("Весна")
+    if any(a.name == VIRIDESCENT.name for a in mizuki.artifacts):
+        return replace(team, builds=[
+        faruzan_build(artifacts=INSTRUCTOR,weapon=FAV_BOW) if b.name == "Фарузан" else b
+        for b in team.builds
+    ])
+
+    return replace(team, builds=[
+        faruzan_build(artifacts=VIRIDESCENT,weapon=FAV_BOW) if b.name == "Фарузан" else b
+        for b in team.builds
+    ])
+
     
 SHOW_ALL_TEAMS = True
 
@@ -49,7 +67,7 @@ def main(argv: list[str]) -> int:
     #  Пример 1: перебор оружия Мидзуки                                    #
     # ------------------------------------------------------------------ #
 
-    base = make_team("Весна C0", 0, EMBERWELL, 0, SILVER_LIGHT, SCARLET_PROOF, MILLELITH, TTDS_HALF_CATALYSATOR,0)
+    base = make_team("Весна C0", 0, EMBERWELL, 2, FROSTFEATHER, SCARLET_PROOF, VIRIDESCENT, BREEZEBORNE_BOW.at(1))
     
     
     roster = Roster(base, [Variation(slot="Весна",
@@ -89,21 +107,21 @@ def main(argv: list[str]) -> int:
     print("=== Ростер: оружие Одетта (C0) ===")
     print(roster_report(roster6.run(), title="оружие Одетта (C0)", ascending=True))
     print()
-    
-    roster7 = Roster(base, [Variation(slot="Водяница",
-                                     weapons=[TTDS_HALF_CATALYSATOR,
-                                              MAELSTROM.at(1),
-                                              MAELSTROM.at(2),
-                                              MAELSTROM.at(3),
-                                              MAELSTROM.at(4),
-                                              MAELSTROM.at(5),])])
+
+    roster7 = Roster(base, [Variation(slot="Фарузан",
+                                     weapons=[FAV_BOW,
+                                              BREEZEBORNE_BOW.at(1),
+                                              BREEZEBORNE_BOW.at(2),
+                                              BREEZEBORNE_BOW.at(3),
+                                              BREEZEBORNE_BOW.at(4),
+                                              BREEZEBORNE_BOW.at(5),])])
     print("========================")
-    print("=== Ростер: оружие Водяница ===")
-    print(roster_report(roster7.run(), title="оружие Водяница", ascending=True))
+    print("=== Ростер: оружие Фарузан (C6) ===")
+    print(roster_report(roster7.run(), title="оружие Фарузан (C6)", ascending=True))
     print()
 
     # ------------------------------------------------------------------ #
-    #  Пример 2: созвездия Мидзуки × оружие                                #
+    #  Пример 2: созвездия Весна × оружие                                #
     # ------------------------------------------------------------------ #
 
     roster2 = Roster(base, [
@@ -115,26 +133,24 @@ def main(argv: list[str]) -> int:
     
     roster3 = Roster(base, [
         Variation(slot="Крио ГГ", constellations=[0, 2, 3, 5, 6]),
-    ])
+    ],tweak=keep_viridescent)
     print("========================")
     print("=== Ростер: созвездия Крио ГГ ===")
     print(roster_report(roster3.run(), title="созвездия Крио ГГ", ascending=True))
     
     roster4 = Roster(base, [
         Variation(slot="Одетта", builds=[odette_build(constellation=c) for c in (0, 1, 2,3, 4,5, 6)]),
-    ])
+    ],tweak=keep_viridescent)
     print("========================")
     print("=== Ростер: созвездия Одетта ===")
     print(roster_report(roster4.run(), title="созвездия Одетта", ascending=True))
-
-    roster9 = Roster(base, [
-        Variation(slot="Водяница", builds=[vodya_build(constellation=c) for c in (0, 1, 2,3, 4, 6)]),
-    ])
+    
+    roster5 = Roster(base, [
+        Variation(slot="Весна", artifact_sets=[(VIRIDESCENT,), (EM_2_2_SET,), (SCARLET_PROOF,)]),
+    ], tweak=keep_viridescent)
     print("========================")
-    print("=== Ростер: созвездия Водяница ===")
-    print(roster_report(roster9.run(), title="созвездия Водяница", ascending=True))
-
-
+    print("=== Ростер: наборы артефактов Весны ===")
+    print(roster_report(roster5.run(), title="наборы артефактов Весны", ascending=True))        
     
     return 0
 

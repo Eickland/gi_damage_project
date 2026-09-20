@@ -117,6 +117,90 @@ class Character:
     note: str = ""
 
 
+def with_rotation(
+    character: Character,
+    sources: Optional[Sequence[DamageSource]] = None,
+    constellation_sources: Optional[Mapping[int, Sequence[DamageSource]]] = None,
+    constellation_patches: Optional[Mapping[int, Mapping[str, Callable[[DamageSource], DamageSource]]]] = None,
+    extra_buffs: Optional[Sequence[Buff]] = None,
+    constellation_extra_buffs: Optional[Mapping[int, Sequence[Buff]]] = None,
+) -> Character:
+    """Клонирует персонажа с ДРУГИМ набором источников урона — своих и по
+    созвездиям, — оставляя статы/баффы/патчи/мультипликаторы (весь «кит»,
+    определяемый самой игрой) без изменений.
+
+    Нужно, когда один и тот же персонаж встречается в нескольких отрядах
+    с разной ротацией: пишете статы/баффы/патчи ОДИН раз в «ките»
+    (см. data/kits/), а под каждый отряд отдельно подставляете только
+    occurrences/mv через этот хелпер.
+
+        # data/kits/mizuki.py — один раз
+        MIZUKI_KIT = Character(name="Мидзуки", ..., sources=(),
+                                constellations={1: Constellation(1, "C1"),
+                                                ...})
+
+        # data/teams/some_team.py — под конкретную ротацию
+        MIZUKI = with_rotation(MIZUKI_KIT,
+            sources=(elemental(...), ...),
+            constellation_sources={1: (stellar_swirl(...), elemental(...))},
+        )
+
+    `Constellation.patches` в ките сопоставляются по ИМЕНИ источника
+    (см. Build.all_sources) — значит, имена в sources= у разных отрядов
+    должны совпадать с именами, которые ждут патчи в ките, иначе патч
+    молча не применится (сматчить будет не с чем).
+
+    Если для константы (номера созвездия) не передан свой список
+    источников — созвездие берётся из кита без изменений (обычно это
+    верно для тех, где sources пустые, а есть только buffs/patches).
+
+    constellation_patches — для случая, когда СОЗВЕЗДИЕ патчит occurrences/mv
+    именованного источника (а не добавляет новый), и эти occurrences/mv сами
+    зависят от ротации — то есть в разных отрядах патч должен быть разным
+    (typичный пример: C4 просто меняет количество ударов у уже существующей
+    атаки). В ките для такого созвездия patches обычно не задают вообще —
+    задают per-team здесь. Патчи из кита и отсюда объединяются (per-team
+    добавляются, не заменяют — если оба патчат одно и то же имя, кит
+    применяется первым, per-team вторым).
+
+    extra_buffs / constellation_extra_buffs — на случай, если для КОНКРЕТНОГО
+    отряда персонажу нужен разовый бафф, которого нет в общем ките (например,
+    какая-то реакция или окно есть только в этой ротации). Баффы кита при этом
+    никуда не деваются — extra_buffs ДОБАВЛЯЮТСЯ к ним, а не заменяют их.
+    Обычно это не нужно: если баффы кита правильно завязаны на теги состояния
+    (ON/OFF/INST/...), они сами включаются и выключаются под любую ротацию,
+    ничего в них менять не приходится — различаются как раз только
+    occurrences/mv, для этого и есть sources=/constellation_sources=.
+    """
+    new_character = character
+    if sources is not None:
+        new_character = replace(new_character, sources=tuple(sources))
+    if constellation_sources:
+        new_constellations = dict(new_character.constellations)
+        for number, srcs in constellation_sources.items():
+            base_c = new_constellations.get(number) or Constellation(number=number)
+            new_constellations[number] = replace(base_c, sources=tuple(srcs))
+        new_character = replace(new_character, constellations=new_constellations)
+    if constellation_patches:
+        new_constellations = dict(new_character.constellations)
+        for number, patches in constellation_patches.items():
+            base_c = new_constellations.get(number) or Constellation(number=number)
+            new_constellations[number] = replace(
+                base_c, patches={**base_c.patches, **patches})
+        new_character = replace(new_character, constellations=new_constellations)
+    if extra_buffs:
+        new_character = replace(
+            new_character, buffs=tuple(new_character.buffs) + tuple(extra_buffs))
+    if constellation_extra_buffs:
+        new_constellations = dict(new_character.constellations)
+        for number, buffs in constellation_extra_buffs.items():
+            base_c = new_constellations.get(number) or Constellation(number=number)
+            new_constellations[number] = replace(
+                base_c, buffs=tuple(base_c.buffs) + tuple(buffs))
+        new_character = replace(new_character, constellations=new_constellations)
+    return new_character
+
+
 # --------------------------------------------------------------------------- #
 @dataclass
 class Build:

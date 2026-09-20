@@ -18,17 +18,20 @@ from __future__ import annotations
 
 from typing import Dict, Sequence
 
-from ..core.buffs import OTHERS, SELF, TEAM, Buff, temp
-from ..core.engine import Config, Team
-from ..core.entities import Build, Enemy, ArtifactSet
-from ..core.reactions import ssw_anemo, ssw_vortex
-from ..core.stats import S
-from ..core.utilits import merge_dicts
-from ..data.artifacts import *
-from ..data.artifacts_presets import *
-from ..data.tags import DREAM, INST, OFF, ON
-from ..data.teams.mizuki_sucrose_odette_cmc import CRYO_MC, MIZUKI, ODETTE, SUCROSE, ODETTE_BURST_SOURCES, odette_burst_buffs, ODETTE_BURST_TIME
-from ..data.weapons import (EXAIPHANES, CEREMONIAL, SILVER_LIGHT,
+from ...core.buffs import OTHERS, SELF, TEAM, Buff, temp
+from ...core.engine import Config, Team
+from ...core.entities import Build, Enemy, ArtifactSet
+from ...core.reactions import ssw_anemo, ssw_vortex
+from ...core.stats import S
+from ...core.utilits import merge_dicts
+from ...data.artifacts import *
+from ...data.artifacts_presets import *
+from ...data.tags import DREAM, INST, OFF, ON, MIZUKI_C1
+from ...data.characters.odette import odette_burst_buffs, ODETTE_BURST_TIME, ODETTE_COMBO_DICT, ODETTE_BURST_SOURCES
+from ...data.characters.sucrose import SUCROSE_COMBO_DICT
+from ...data.characters.cryo_mc import CMC_COMBO_DICT
+from ...data.characters.mizuki import MIZUKI_COMBO_DICT
+from ...data.weapons import (EXAIPHANES, CEREMONIAL, SILVER_LIGHT,
                             SUNNY_MORNING_SLEEP_IN, WANDERER_SONG, FROSTFEATHER)
 
 # =========================================================================== #
@@ -42,8 +45,7 @@ TEAM_BUFFS = (
 #: Время каждого персонажа в ротации (секунды)
 TIMES = {"Мидзуки": 9.00, "Крио ГГ": 3.65, "Одетта": 2.4, "Сахароза": 2.95}
 
-ROTATION = "CMC E CA Q / Odette EE / Sucrose Ed\\Q / Midzuki EQ / Sucrose Ed"
-
+ROTATION = "CMC E CA Q / Odette EE / Sucrose Ed(Q) / Midzuki E(Q) / Sucrose Ed"
 
 # =========================================================================== #
 #  Цель                                                                       #
@@ -58,41 +60,38 @@ def enemy() -> Enemy:
     return Enemy(res={"anemo": 0.10, "cryo": 0.10},
                  def_mult=0.4875, elevation=0.0)
 
-
 # =========================================================================== #
 #  Сборки                                                                     #
 # =========================================================================== #
 def mizuki_build(constellation: int, weapon, artifacts, extra_buffs: Sequence[Buff] = (),
                  main_stats={S.BASE_EM: 187 * 2, S.CRIT_VALUE: 0.622}) -> Build:
 
- 
     return Build(
-        character=MIZUKI,
+        character=MIZUKI_COMBO_DICT["mizuki_short_combo"],
         constellation=constellation,
         weapon=weapon,
         artifacts=(artifacts,),
         extra_stats=merge_dicts(
             main_stats,
-            MY_MIZUKI_VV_BUILD),
+            STANDART_SUBSTAT_PRESET),
         extra_buffs=tuple(extra_buffs),
         time=TIMES["Мидзуки"],
     )
 
-
-def cryo_mc_build(weapon=EXAIPHANES, extra_buffs: Sequence[Buff] = ()) -> Build:
+def cryo_mc_build(constellation: int, artifacts, weapon=EXAIPHANES, extra_buffs: Sequence[Buff] = ()) -> Build:
     return Build(
-        character=CRYO_MC,
-        constellation=2,
+        character=CMC_COMBO_DICT["cmc_ssw_combo"],
+        constellation=constellation,
         weapon=weapon,
-        artifacts=(MILLELITH,),
+        artifacts=(artifacts,),
         extra_stats=merge_dicts(
             {S.ATK_PCT: 0.466 * 2, S.CRIT_VALUE: 0.622},
-            MY_CMC_SSW_BUILD),
+            STANDART_SUBSTAT_PRESET),
         extra_buffs=tuple(extra_buffs),
         time=TIMES["Крио ГГ"],
     )
 
-def odette_build(constellation: int = 0, weapon=SILVER_LIGHT,
+def odette_build(constellation: int, weapon,
                  use_burst: bool | None = None,
                  extra_buffs: Sequence[Buff] = ()) -> Build:
     """use_burst=None — авто: до C4 не применяем, с C4 применяем."""
@@ -100,20 +99,20 @@ def odette_build(constellation: int = 0, weapon=SILVER_LIGHT,
         use_burst = constellation >= 4
         
     return Build(
-        character=ODETTE,
+        character=ODETTE_COMBO_DICT["odette_short_mizuki_combo_no_burst"],
         constellation=constellation,
         weapon=weapon,
         artifacts=(HEART_OF_FORGE,),
         extra_stats=merge_dicts(
             {S.ATK_PCT: 0.466 * 2, S.CRIT_VALUE: 0.622},
-            MY_ODETTE_SSW_BUILD),
+            STANDART_SUBSTAT_PRESET),
         extra_sources=ODETTE_BURST_SOURCES if use_burst else (),
         extra_buffs=tuple(extra_buffs) + (odette_burst_buffs(constellation)
                                           if use_burst else ()),
         time=TIMES["Одетта"] + (ODETTE_BURST_TIME if use_burst else 0.0),
     )
 
-def sucrose_build(weapon=CEREMONIAL,artifacts:ArtifactSet=INSTRUCTOR, extra_buffs: Sequence[Buff] = ()) -> Build:
+def sucrose_build(artifacts, weapon=CEREMONIAL, extra_buffs: Sequence[Buff] = ()) -> Build:
     
     if artifacts.name == 'Инструктор':
         main_stats = {S.BASE_EM: 139 * 2 + 187}
@@ -121,7 +120,7 @@ def sucrose_build(weapon=CEREMONIAL,artifacts:ArtifactSet=INSTRUCTOR, extra_buff
         main_stats = {S.BASE_EM: 187 * 3}
     
     return Build(
-        character=SUCROSE,
+        character=SUCROSE_COMBO_DICT["no_burst_combo"],
         constellation=6,
         weapon=weapon,
         artifacts=(artifacts,),
@@ -149,11 +148,11 @@ def reactions(in_dreamdrifter: bool = True):
     return (
         # Мидзуки на поле -> её реакции всегда внутри окна
         ssw_anemo("Мидзуки", 2, *d, name="SSW анемо (Мидзуки)"),
-        ssw_anemo("Мидзуки", 8, INST, *d, name="SSW анемо (Мидзуки, Инструктор)"),
+        ssw_anemo("Мидзуки", 3, INST, *d, MIZUKI_C1, name="SSW анемо (Мидзуки, Инструктор)"),
+        ssw_anemo("Мидзуки", 5, INST, *d, name="SSW анемо (Мидзуки, Инструктор)"),
         # Сахароза триггерит со своего поля — Мидзуки в этот момент НЕ в Дрейфе.
         # Если по факту иначе, добавьте сюда *d.
-        ssw_anemo("Сахароза", 4, INST, name="SSW анемо (Сахароза, Инструктор)"),
-        # Детонации вихря: проверьте, попадают ли они в окно.
+        ssw_anemo("Сахароза", 2, INST, name="SSW анемо (Сахароза, Инструктор)"),
         ssw_vortex(3, 3, INST, *d, name="SSW вихрь ×3 стака"),
     )
 
@@ -161,7 +160,8 @@ def reactions(in_dreamdrifter: bool = True):
 # =========================================================================== #
 #  Отряды                                                                     #
 # =========================================================================== #
-def make_team(name: str, mizuki_c: int, mizuki_weapon, odette_c, odette_weapon, mizuki_artifacts = VIRIDESCENT, sucrose_artifacts = INSTRUCTOR) -> Team:
+def make_team(name: str, mizuki_c: int, mizuki_weapon, odette_c, odette_weapon,
+              mizuki_artifacts, sucrose_artifacts, cmc_artifacts, cmc_c) -> Team:
     """Собрать отряд. mizuki_c — созвездие Мидзуки (0, 1 или 2).
 
     Ничего «отрядного» по условию здесь не добавляется, поэтому перебор
@@ -171,7 +171,7 @@ def make_team(name: str, mizuki_c: int, mizuki_weapon, odette_c, odette_weapon, 
         name=name,
         builds=[
             mizuki_build(constellation=mizuki_c, weapon=mizuki_weapon, artifacts=mizuki_artifacts),
-            cryo_mc_build(),
+            cryo_mc_build(constellation=cmc_c, artifacts=cmc_artifacts),
             odette_build(constellation=odette_c, weapon=odette_weapon),
             sucrose_build(artifacts=sucrose_artifacts),
         ],
@@ -185,9 +185,12 @@ def make_team(name: str, mizuki_c: int, mizuki_weapon, odette_c, odette_weapon, 
 
 def all_teams() -> Dict[str, Team]:
     variants = (
-        ("Мидзуки C6R1, C2R1 Одетта, C2R3 Крио ГГ, Сахароза", 6, SUNNY_MORNING_SLEEP_IN.at(1), 2, FROSTFEATHER.at(1),VIRIDESCENT,INSTRUCTOR),
+        ("Мидзуки C2R0, C0R0 Одетта, C2R3 Крио ГГ, Сахароза",
+         2, WANDERER_SONG.at(5), 0, SILVER_LIGHT.at(5), VIRIDESCENT, INSTRUCTOR, MILLELITH, 2),
     )
-    return {name: make_team(name, c, mizuki_w, c_odette, odette_w, mizuki_art, sucrose_art) for name, c, mizuki_w, c_odette, odette_w, mizuki_art, sucrose_art in variants}
+    return {name: make_team(name, mizuki_c, mizuki_w, c_odette, odette_w, mizuki_art, sucrose_art, cmc_art, c_cmc) 
+            for name, mizuki_c, mizuki_w, c_odette, odette_w,
+            mizuki_art, sucrose_art, cmc_art, c_cmc in variants}
 
 
 #: Названия событий, относящихся к детонации вихря
