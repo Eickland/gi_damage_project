@@ -16,7 +16,11 @@ from ...core.utilits import merge_dicts
 from ...data.artifacts import HEART_OF_FORGE, INSTRUCTOR, MILLELITH, VIRIDESCENT, SCARLET_PROOF
 from ...data.artifacts_presets import STANDART_SUBSTAT_PRESET
 from ...data.tags import DREAM, INST, OFF, ON
-from ...data.teams.vesna_faruzan_odette_cmc import CRYO_MC, VESNA, ODETTE, FARUZAN, ODETTE_BURST_SOURCES, odette_burst_buffs, ODETTE_BURST_TIME
+from ...data.characters.odette import odette_burst_buffs, ODETTE_BURST_TIME, ODETTE_COMBO_DICT, ODETTE_BURST_SOURCES
+from ...data.characters.vodyanitsa import VODYA_COMBO_DICT
+from ...data.characters.faruzan import FARUZAN_COMBO_DICT
+from ...data.characters.cryo_mc import CMC_COMBO_DICT
+from ...data.characters.vesna import VESNA_COMBO_DICT
 from ...data.weapons import *
 
 # =========================================================================== #
@@ -50,7 +54,7 @@ def enemy() -> Enemy:
 def vesna_build(constellation: int, weapon, artifacts, extra_buffs: Sequence[Buff] = ()) -> Build:
 
     return Build(
-        character=VESNA,
+        character=VESNA_COMBO_DICT["ssw_burst_combo"],
         constellation=constellation,
         weapon=weapon,
         artifacts=(artifacts,),
@@ -62,12 +66,12 @@ def vesna_build(constellation: int, weapon, artifacts, extra_buffs: Sequence[Buf
     )
 
 
-def cryo_mc_build(weapon=EXAIPHANES, extra_buffs: Sequence[Buff] = ()) -> Build:
+def cryo_mc_build(constellation: int, artifacts, weapon=EXAIPHANES, extra_buffs: Sequence[Buff] = ()) -> Build:
     return Build(
-        character=CRYO_MC,
-        constellation=2,
+        character=CMC_COMBO_DICT["cmc_ssw_combo"],
+        constellation=constellation,
         weapon=weapon,
-        artifacts=(MILLELITH,),
+        artifacts=(artifacts,),
         extra_stats=merge_dicts(
             {S.ATK_PCT: 0.466 * 2, S.CRIT_VALUE: 0.622},
             STANDART_SUBSTAT_PRESET),
@@ -84,7 +88,7 @@ def odette_build(constellation: int = 0, weapon=SILVER_LIGHT,
         use_burst = constellation >= 4
         
     return Build(
-        character=ODETTE,
+        character=ODETTE_COMBO_DICT["odette_short_mizuki_combo_no_burst"],
         constellation=constellation,
         weapon=weapon,
         artifacts=(HEART_OF_FORGE,),
@@ -97,13 +101,13 @@ def odette_build(constellation: int = 0, weapon=SILVER_LIGHT,
         time=TIMES["Одетта"] + (ODETTE_BURST_TIME if use_burst else 0.0),
     )
 
-def faruzan_build(weapon=BREEZEBORNE_BOW,artifacts:ArtifactSet=INSTRUCTOR, extra_buffs: Sequence[Buff] = ()) -> Build:
+def faruzan_build(weapon=BREEZEBORNE_BOW,artifacts:ArtifactSet=VIRIDESCENT, extra_buffs: Sequence[Buff] = ()) -> Build:
     if artifacts.name == 'Инструктор':
         main_stats = {S.BASE_EM: 139 * 2 + 187}
     else:
         main_stats = {S.BASE_EM: 187 * 3}
     return Build(
-        character=FARUZAN,
+        character=FARUZAN_COMBO_DICT["ssw_combo"],
         constellation=6,
         weapon=weapon,
         artifacts=(artifacts,),
@@ -148,7 +152,7 @@ def make_team(name: str, vesna_c: int, vesna_weapon, odette_c, odette_weapon, ve
         name=name,
         builds=[
             vesna_build(constellation=vesna_c, weapon=vesna_weapon, artifacts=vesna_artifacts),
-            cryo_mc_build(),
+            cryo_mc_build(constellation=6,artifacts=MILLELITH),
             odette_build(constellation=odette_c, weapon=odette_weapon),
             faruzan_build(artifacts=faruzan_artifacts,weapon=faruzan_weapon),
         ],
