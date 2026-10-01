@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
 
-Запуск:  python -m gi_damage.teams.vesna_vodya_odette_cmc.rosters            (режим по формуле)
-         python -m gi_damage.teams.vesna_vodya_odette_cmc.rosters --details   (разбивка по ударам)
+Запуск:  python -m gi_damage.teams.vesna_faruzan_odette_vodya.rosters            (режим по формуле)
+         python -m gi_damage.teams.vesna_faruzan_odette_vodya.rosters   (разбивка по ударам)
 """
 
 from __future__ import annotations
@@ -17,7 +17,7 @@ from gi_damage.core.report import (compare, hit_details, source_breakdown,
 from gi_damage.core.roster import Roster, Variation
 from gi_damage.data.weapons import *
 from gi_damage.data.artifacts import *
-from gi_damage.teams.vesna_vodya_odette_cmc.builds import all_teams, make_team, vodya_build, vesna_build,odette_build
+from gi_damage.teams.vesna_faruzan_odette_vodya.builds import all_teams, make_team, vodya_build, vesna_build,odette_build
 from gi_damage.core.report import roster_report
 
 from dataclasses import replace
@@ -112,13 +112,6 @@ def main(argv: list[str]) -> int:
     print("========================")
     print("=== Ростер: созвездия Весна ===")
     print(roster_report(roster2.run(), title="созвездия Весна", ascending=True))
-    
-    roster3 = Roster(base, [
-        Variation(slot="Крио ГГ", constellations=[0, 2, 3, 5, 6]),
-    ])
-    print("========================")
-    print("=== Ростер: созвездия Крио ГГ ===")
-    print(roster_report(roster3.run(), title="созвездия Крио ГГ", ascending=True))
     
     roster4 = Roster(base, [
         Variation(slot="Одетта", builds=[odette_build(constellation=c) for c in (0, 1, 2,3, 4,5, 6)]),

@@ -84,7 +84,7 @@ def main(argv: list[str]):
                                                 SUNNY_MORNING_SLEEP_IN.at(1),
                                                 RELIQUARY_OF_TRUTH,
                                                 SAC_JADE.at(1),
-                                                SAC_JADE.at(5),
+                                                GACHA71.at(5),
                                                 STARCALLERS_WATCH,
                                                 DAWNING_FROST.at(1),
                                                 DAWNING_FROST.at(3),

@@ -26,6 +26,20 @@ WANDERER_SONG = Weapon(
     note="Усредненный бонус за 6 ротаций",
 )
 
+GACHA71 = Weapon(
+    name="Застывшее сердце зимы",
+    base_atk=510.0,
+    stats={S.CRIT_VALUE: 0.551},
+    refinement=5,
+    stats_by_refinement={
+        5: {
+            S.BASE_EM: 80.0,
+            S.SSW_BONUS: 0.24
+        },
+    },
+    note="",
+)
+
 SAC_JADE = Weapon(
     name="Sacrificial Jade",
     base_atk=454.0,

@@ -16,21 +16,21 @@ from ...core.utilits import merge_dicts
 from ...data.artifacts import HEART_OF_FORGE, INSTRUCTOR, MILLELITH, VIRIDESCENT, SCARLET_PROOF,ATK_2_2_SET
 from ...data.artifacts_presets import STANDART_SUBSTAT_PRESET
 from ...data.tags import DREAM, INST, OFF, ON, VODYA_CHORUS, VODYA_LEAD
-from ...data.teams.vesna_vodya_odette_cmc import CRYO_MC, VESNA, ODETTE, VODYANITSA, ODETTE_BURST_SOURCES, odette_burst_buffs, ODETTE_BURST_TIME
+from ...data.characters.odette import odette_burst_buffs, ODETTE_BURST_TIME, ODETTE_COMBO_DICT, ODETTE_BURST_SOURCES
+from ...data.characters.vodyanitsa import VODYA_COMBO_DICT
+from ...data.characters.faruzan import FARUZAN_COMBO_DICT
+from ...data.characters.cryo_mc import CMC_COMBO_DICT
+from ...data.characters.vesna import VESNA_COMBO_DICT
 from ...data.weapons import *
 
 # =========================================================================== #
 #  Баффы уровня ОТРЯДА                                                        #
 # =========================================================================== #
-TEAM_BUFFS = (
-    Buff(S.CRIT_VALUE, 0.30, target=TEAM,
-         source="Крио резонанс: +15% крит. шанса (0.30 крит-вэлью)"),
-)
 
 #: Время каждого персонажа в ротации (секунды)
-TIMES = {"Весна": 10.25, "Крио ГГ": 3.65, "Одетта": 2.4, "Водяница": 1.7}
+TIMES = {"Весна": 13.6, "Фарузан": 1.5, "Одетта": 2.4, "Водяница": 1.5}
 
-ROTATION = "CMC E CA Q/ Odette EE /Водяница E /Vesna E sEsE N3CsE Q sE N3CsE"
+ROTATION = "Водяница E /Фарузан E Q/ Odette EE /Vesna E sEsE N3CsE Q sE N3CsE"
 
 
 # =========================================================================== #
@@ -53,7 +53,7 @@ def enemy() -> Enemy:
 def vesna_build(constellation: int, weapon, artifacts, extra_buffs: Sequence[Buff] = ()) -> Build:
 
     return Build(
-        character=VESNA,
+        character=VESNA_COMBO_DICT["ssw_burst_combo"],
         constellation=constellation,
         weapon=weapon,
         artifacts=(artifacts,),
@@ -65,17 +65,21 @@ def vesna_build(constellation: int, weapon, artifacts, extra_buffs: Sequence[Buf
     )
 
 
-def cryo_mc_build(weapon=EXAIPHANES, extra_buffs: Sequence[Buff] = ()) -> Build:
+def faruzan_build(weapon=BREEZEBORNE_BOW,artifacts:ArtifactSet=VIRIDESCENT, extra_buffs: Sequence[Buff] = ()) -> Build:
+    if artifacts.name == 'Инструктор':
+        main_stats = {S.BASE_EM: 139 * 2 + 187}
+    else:
+        main_stats = {S.BASE_EM: 187 * 3}
     return Build(
-        character=CRYO_MC,
-        constellation=2,
+        character=FARUZAN_COMBO_DICT["ssw_combo"],
+        constellation=6,
         weapon=weapon,
-        artifacts=(ATK_2_2_SET,),
+        artifacts=(artifacts,),
         extra_stats=merge_dicts(
-            {S.ATK_PCT: 0.466 * 2, S.CRIT_VALUE: 0.622},
+            main_stats,
             STANDART_SUBSTAT_PRESET),
         extra_buffs=tuple(extra_buffs),
-        time=TIMES["Крио ГГ"],
+        time=TIMES["Фарузан"],
     )
 
 
@@ -87,7 +91,7 @@ def odette_build(constellation: int = 0, weapon=SILVER_LIGHT,
         use_burst = constellation >= 4
         
     return Build(
-        character=ODETTE,
+        character=ODETTE_COMBO_DICT["odette_short_mizuki_combo_no_burst"],
         constellation=constellation,
         weapon=weapon,
         artifacts=(HEART_OF_FORGE,),
@@ -103,7 +107,7 @@ def odette_build(constellation: int = 0, weapon=SILVER_LIGHT,
 def vodya_build(constellation: int = 0,weapon=TTDS_HALF_CATALYSATOR,artifacts:ArtifactSet=MILLELITH, extra_buffs: Sequence[Buff] = ()) -> Build:
 
     return Build(
-        character=VODYANITSA,
+        character=VODYA_COMBO_DICT["off_field"],
         constellation=constellation,
         weapon=weapon,
         artifacts=(artifacts,),
@@ -132,7 +136,8 @@ def reactions(in_dreamdrifter: bool = True):
         # Мидзуки на поле -> её реакции всегда внутри окна
         ssw_anemo("Весна", 2, INST, VODYA_LEAD, name="SSW анемо (Весна, Весна)"),
         ssw_anemo("Весна", 6, INST, VODYA_LEAD,VODYA_CHORUS, name="SSW анемо (Весна, Инструктор)"),
-        ssw_vortex(2, 3, INST, name="SSW вихрь ×3 стака"),
+        ssw_anemo("Фарузан", 6, name="SSW анемо (Фарузан)"),
+        ssw_vortex(3, 3, INST, name="SSW вихрь ×3 стака"),
     )
 
 
@@ -150,13 +155,12 @@ def make_team(name: str, vesna_c: int, vesna_weapon, odette_c, odette_weapon, ve
         name=name,
         builds=[
             vesna_build(constellation=vesna_c, weapon=vesna_weapon, artifacts=vesna_artifacts),
-            cryo_mc_build(),
+            faruzan_build(),
             odette_build(constellation=odette_c, weapon=odette_weapon),
             vodya_build(artifacts=vodya_artifacts,weapon=vodya_weapon,constellation=vodya_c),
         ],
         enemy=enemy(),
         reactions=reactions(),
-        buffs=TEAM_BUFFS,
         rotation=ROTATION,
         config=Config(),
     )
@@ -164,9 +168,7 @@ def make_team(name: str, vesna_c: int, vesna_weapon, odette_c, odette_weapon, ve
 
 def all_teams() -> Dict[str, Team]:
     variants = (
-        ("Весна C0 (Источник пламени R5), C0 Одетта, C2R3 Крио ГГ, С0 Водяница", 0, EMBERWELL.at(5), 0, SILVER_LIGHT,SCARLET_PROOF,MILLELITH,TTDS_HALF_CATALYSATOR,0),
-        ("Весна C2R1, C2R1 Одетта, C2R3 Крио ГГ, С6R1 Водяница", 2, CHRYSALIS.at(1), 2, FROSTFEATHER.at(1), SCARLET_PROOF, MILLELITH, MAELSTROM.at(1),6),
-        ("Весна C6R5 (Beyond the Chrysalis R5), C6R5 Одетта, C2R3 Крио ГГ, С6R5 Водяница", 6, CHRYSALIS.at(5), 6, FROSTFEATHER.at(5),SCARLET_PROOF,MILLELITH,MAELSTROM.at(5),6),
+        ("Весна C2R1, C2R1 Одетта, С6 Фарузан, С6R1 Водяница", 2, CHRYSALIS, 2, FROSTFEATHER, SCARLET_PROOF, MILLELITH, MAELSTROM,6),
     )
     return {name: make_team(name, c, vesna_w, c_odette, odette_w, mizuki_art, vodya_art,vodya_w,vodya_c) for name, c, vesna_w, c_odette, odette_w, mizuki_art, vodya_art, vodya_w,vodya_c in variants}
 
