@@ -27,10 +27,10 @@ from ...core.entities import Build, Enemy, ArtifactSet
 from ...core.reactions import ssw_anemo, ssw_vortex
 from ...core.stats import S
 from ...core.utilits import merge_dicts
-from ...data.artifacts import HEART_OF_FORGE, INSTRUCTOR, MILLELITH, VIRIDESCENT, SCARLET_PROOF
+from ...data.artifacts import HEART_OF_FORGE, INSTRUCTOR, MILLELITH, VIRIDESCENT, SCARLET_PROOF, EM_2_2_SET
 from ...data.artifacts_presets import STANDART_SUBSTAT_PRESET
 from ...data.tags import DREAM, INST, OFF, ON
-from ...data.weapons import (EXAIPHANES, CEREMONIAL, SILVER_LIGHT,
+from ...data.weapons import (EXAIPHANES, SACFRAG, SILVER_LIGHT,
                             SUNNY_MORNING_SLEEP_IN, WANDERER_SONG, FROSTFEATHER,FAV_BOW, BREEZEBORNE_BOW)
 from ...data.characters.odette import odette_burst_buffs, ODETTE_BURST_TIME, ODETTE_COMBO_DICT, ODETTE_BURST_SOURCES
 from ...data.characters.sucrose import SUCROSE_COMBO_DICT
@@ -119,7 +119,7 @@ def odette_build(constellation: int, weapon,
         time=TIMES["Одетта"] + (ODETTE_BURST_TIME if use_burst else 0.0),
     )
 
-def faruzan_build(weapon=BREEZEBORNE_BOW,artifacts:ArtifactSet=INSTRUCTOR, extra_buffs: Sequence[Buff] = ()) -> Build:
+def faruzan_build(weapon=FAV_BOW,artifacts:ArtifactSet=VIRIDESCENT, extra_buffs: Sequence[Buff] = ()) -> Build:
     if artifacts.name == 'Инструктор':
         main_stats = {S.BASE_EM: 139 * 2 + 187}
     else:
@@ -193,7 +193,10 @@ def make_team(name: str, mizuki_c: int, mizuki_weapon, odette_c, odette_weapon, 
 
 def all_teams() -> Dict[str, Team]:
     variants = (
-        ("Мидзуки C0 (Песнь странника R5), C0 Одетта, C2R3 Крио ГГ, С6 Фарузан", 0, WANDERER_SONG.at(5), 0, SILVER_LIGHT,VIRIDESCENT,INSTRUCTOR,FAV_BOW, MILLELITH,2),
+        ("Мидзуки C2 (Песнь R5), C0 Одетта (Серебряный свет R5), C4R3 Крио ГГ, С6R0 Фарузан", 2, WANDERER_SONG.at(5), 0, SILVER_LIGHT,EM_2_2_SET,VIRIDESCENT,FAV_BOW, MILLELITH,4),
+        ("Мидзуки C2 (Песнь R5), C2 Одетта (Серебряный свет R5), C4R3 Крио ГГ, С6R3 Фарузан", 2, WANDERER_SONG.at(5), 2, SILVER_LIGHT,EM_2_2_SET,VIRIDESCENT,BREEZEBORNE_BOW.at(3), MILLELITH,4),
+        ("Мидзуки C3R1, C2R1 Одетта, C4R3 Крио ГГ, С4R3 Фарузан", 3, SUNNY_MORNING_SLEEP_IN, 2, FROSTFEATHER,EM_2_2_SET,VIRIDESCENT,BREEZEBORNE_BOW.at(3), MILLELITH,4),
+        ("Мидзуки C3R1, C2R1 Одетта, C6R3 Крио ГГ, С4R3 Фарузан", 3, SUNNY_MORNING_SLEEP_IN, 2, FROSTFEATHER,EM_2_2_SET,VIRIDESCENT,BREEZEBORNE_BOW.at(3), MILLELITH,6),
     )
     return {name: make_team(name, c, mizuki_w, c_odette, odette_w, mizuki_art, faruzan_art,faruzan_w,
                             cmc_art, c_cmc) for name, c, mizuki_w, c_odette, odette_w, mizuki_art, faruzan_art, faruzan_w, cmc_art, c_cmc in variants}

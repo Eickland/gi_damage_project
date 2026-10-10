@@ -115,4 +115,13 @@ ATK_2_2_SET = ArtifactSet(
     },    
 )
 
+HP_2_2_SET = ArtifactSet(
+    name = "2+2 на HP",
+    pieces=4,
+    stats_by_pieces={
+        2: {S.HP_PCT: 0.2},
+        4: {S.HP_PCT: 0.2},
+    },    
+)
+
 ALL = {a.name: a for a in (INSTRUCTOR, VIRIDESCENT, MILLELITH, HEART_OF_FORGE)}

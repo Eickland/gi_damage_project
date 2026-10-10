@@ -375,7 +375,7 @@ CHRYSALIS = Weapon(
     note="Сигнатурное оружие Весны",
 )
 
-CEREMONIAL = Weapon(
+SACFRAG = Weapon(
     name="Церемон",
     base_atk=454.0,
     stats={S.BASE_EM: 221},
@@ -409,4 +409,4 @@ BREEZEBORNE_BOW = Weapon(
 )
 
 ALL = {w.name: w for w in (WANDERER_SONG, SUNNY_MORNING_SLEEP_IN, EXAIPHANES,
-                           SILVER_LIGHT, CEREMONIAL,FAV_BOW)}
+                           SILVER_LIGHT, SACFRAG,FAV_BOW)}

@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 """
-
-Запуск:  python -m scripts.run_mizuki_vodya            (режим по формуле)
-         python -m scripts.run_mizuki_vodya --details   (разбивка по ударам)
+Запуск:  python -m gi_damage.teams.mizuki_vodya_odette_cmc.rosters            (режим по формуле)
+         python -m gi_damage.teams.mizuki_vodya_odette_cmc.rosters --details   (разбивка по ударам)
 """
 
 from __future__ import annotations
@@ -60,7 +59,7 @@ def main(argv: list[str]) -> int:
     #  Пример 1: перебор оружия Мидзуки                                    #
     # ------------------------------------------------------------------ #
 
-    base = make_team("Мидзуки C2", 2, WANDERER_SONG.at(5), 0, SILVER_LIGHT, VIRIDESCENT, MILLELITH, TTDS_HALF_CATALYSATOR)
+    base = make_team("Мидзуки C2", 2, WANDERER_SONG.at(5), 0, SILVER_LIGHT, VIRIDESCENT, MILLELITH, TTDS_HALF_CATALYSATOR,0,4,ATK_2_2_SET)
     
     
     roster = Roster(base, [Variation(slot="Мидзуки",
@@ -73,7 +72,7 @@ def main(argv: list[str]) -> int:
                                               DAWNING_FROST.at(1),
                                               DAWNING_FROST.at(3),
                                               DAWNING_FROST.at(5),
-                                              CEREMONIAL])])
+                                              SACFRAG])])
     print("========================")
     print("=== Ростер: оружие Мидзуки (C2) ===")
     print(roster_report(roster.run(), title="оружие Мидзуки (C2)", ascending=True))
@@ -148,7 +147,21 @@ def main(argv: list[str]) -> int:
     ])
     print("========================")
     print("=== Ростер: наборы артефактов Мидзуки ===")
-    print(roster_report(roster5.run(), title="наборы артефактов Мидзуки", ascending=True))   
+    print(roster_report(roster5.run(), title="наборы артефактов Мидзуки", ascending=True)) 
+    
+    roster63 = Roster(base, [
+        Variation(slot="Крио ГГ", artifact_sets=[(MILLELITH,), (ATK_2_2_SET,),]),
+    ])
+    print("========================")
+    print("=== Ростер: наборы артефактов Крио ГГ ===")
+    print(roster_report(roster63.run(), title="наборы артефактов Крио ГГ", ascending=True))
+
+    roster64 = Roster(base, [
+        Variation(slot="Водяница", artifact_sets=[(MILLELITH,), (HP_2_2_SET,),]),
+    ])
+    print("========================")
+    print("=== Ростер: наборы артефактов Водяница ===")
+    print(roster_report(roster64.run(), title="наборы артефактов Водяница", ascending=True))            
     
     return 0
 

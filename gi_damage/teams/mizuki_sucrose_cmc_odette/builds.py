@@ -31,7 +31,7 @@ from ...data.characters.odette import odette_burst_buffs, ODETTE_BURST_TIME, ODE
 from ...data.characters.sucrose import SUCROSE_COMBO_DICT
 from ...data.characters.cryo_mc import CMC_COMBO_DICT
 from ...data.characters.mizuki import MIZUKI_COMBO_DICT
-from ...data.weapons import (EXAIPHANES, CEREMONIAL, SILVER_LIGHT,
+from ...data.weapons import (EXAIPHANES, SACFRAG, SILVER_LIGHT,
                             SUNNY_MORNING_SLEEP_IN, WANDERER_SONG, FROSTFEATHER)
 
 # =========================================================================== #
@@ -112,7 +112,7 @@ def odette_build(constellation: int, weapon,
         time=TIMES["Одетта"] + (ODETTE_BURST_TIME if use_burst else 0.0),
     )
 
-def sucrose_build(artifacts, weapon=CEREMONIAL, extra_buffs: Sequence[Buff] = ()) -> Build:
+def sucrose_build(artifacts, weapon=SACFRAG, extra_buffs: Sequence[Buff] = ()) -> Build:
     
     if artifacts.name == 'Инструктор':
         main_stats = {S.BASE_EM: 139 * 2 + 187}
@@ -185,8 +185,10 @@ def make_team(name: str, mizuki_c: int, mizuki_weapon, odette_c, odette_weapon,
 
 def all_teams() -> Dict[str, Team]:
     variants = (
-        ("Мидзуки C2R0, C0R0 Одетта, C2R3 Крио ГГ, Сахароза",
-         2, WANDERER_SONG.at(5), 0, SILVER_LIGHT.at(5), VIRIDESCENT, INSTRUCTOR, MILLELITH, 2),
+        ("Мидзуки C2R0 (Песнь R5), C0 Одетта (Серебряный свет R5), C4R3 Крио ГГ, Сахароза",2, WANDERER_SONG.at(5), 0, SILVER_LIGHT.at(5), VIRIDESCENT, INSTRUCTOR, MILLELITH, 4),
+        ("Мидзуки C2R0 (Песнь R5), C2 Одетта (Серебряный свет R5), C4R3 Крио ГГ, Сахароза",2, WANDERER_SONG.at(5), 2, SILVER_LIGHT.at(5), VIRIDESCENT, INSTRUCTOR, MILLELITH, 4),
+        ("Мидзуки C3R1, C2R1 Одетта, C4R3 Крио ГГ, Сахароза",3, SUNNY_MORNING_SLEEP_IN.at(1), 2, FROSTFEATHER.at(1), VIRIDESCENT, INSTRUCTOR, MILLELITH, 4),
+        ("Мидзуки C3R1, C2R1 Одетта, C6R3 Крио ГГ, Сахароза",3, SUNNY_MORNING_SLEEP_IN.at(1), 2, FROSTFEATHER.at(1), VIRIDESCENT, INSTRUCTOR, MILLELITH, 6),
     )
     return {name: make_team(name, mizuki_c, mizuki_w, c_odette, odette_w, mizuki_art, sucrose_art, cmc_art, c_cmc) 
             for name, mizuki_c, mizuki_w, c_odette, odette_w,

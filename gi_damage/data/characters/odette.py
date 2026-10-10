@@ -11,7 +11,7 @@ from dataclasses import replace  # noqa: F401 — для patches= в файла�
 from ...core.buffs import OTHERS, SELF, TEAM, Buff
 from ...core.entities import Character, Constellation, with_rotation
 from ...core.stats import S
-from ..tags import DREAM, INST, OFF, ON, MIZUKI_C1, FROSTGLOW
+from ..tags import DREAM, INST, OFF, ON, MIZUKI_C1, FROSTGLOW, BREEZEBORNE, TTDS_HALF
 from ...core.sources import elemental, occ, stellar_swirl
 
 
@@ -170,24 +170,57 @@ ODETTE_COMBO_DICT = {
                   [occ(2, OFF,), occ(2, OFF, DREAM)]),
         
         stellar_swirl("Навык — SSW, Plume Dance", "atk", 0.7295, "cryo",
-                      [occ(1, OFF, FROSTGLOW),occ(2, OFF, FROSTGLOW, INST),
-                       occ(2, OFF, INST, DREAM, FROSTGLOW)], multipliers=("mp",)),
+                      [occ(1, OFF, FROSTGLOW),occ(2, OFF, FROSTGLOW, INST, BREEZEBORNE),
+                       occ(2, OFF, INST, DREAM, FROSTGLOW, BREEZEBORNE)], multipliers=("mp",)),
         stellar_swirl("Навык — SSW, Wing Dance", "atk", 0.8724, "cryo",
-                      [occ(1, OFF, FROSTGLOW),occ(1, OFF, FROSTGLOW, INST),
-                       occ(2, OFF, INST, DREAM, FROSTGLOW)], multipliers=("mp",)),
+                      [occ(1, OFF, FROSTGLOW),occ(1, OFF, FROSTGLOW, INST, BREEZEBORNE),
+                       occ(2, OFF, INST, DREAM, FROSTGLOW, BREEZEBORNE)], multipliers=("mp",)),
         stellar_swirl("Особый навык — SSW", "atk", 8.2555, "cryo",
-                      [occ(1, ON, INST, FROSTGLOW)], multipliers=("mp",)),
+                      [occ(1, ON, INST, FROSTGLOW,BREEZEBORNE)], multipliers=("mp",)),
     ),
     constellation_sources={
         1: (
             stellar_swirl("C1: доп. атака после особого навыка",
                           "atk", 4.50, "cryo",
-                          [occ(1, ON, INST, FROSTGLOW)], multipliers=("mp",)),
+                          [occ(1, ON, INST, FROSTGLOW, BREEZEBORNE)], multipliers=("mp",)),
         ),
         4: (
             stellar_swirl("C4: доп. атака",
                           "atk", 0.99, "cryo",
-                          [occ(1, OFF,), occ(3, OFF, INST, DREAM, FROSTGLOW)], multipliers=("mp",)),
+                          [occ(1, OFF,), occ(3, OFF, INST, DREAM, FROSTGLOW, BREEZEBORNE)], multipliers=("mp",)),
+        ),
+    },
+),
+    
+    "odette_short_mizuki_combo_vodya" : with_rotation(
+    ODETTE_KIT,
+    sources=(
+        elemental("Использование навыка (АТК)", "atk", 1.9454, "cryo", "skill",
+                  [occ(1, ON,)]),
+        elemental("Навык (АТК), Plume Dance", "atk", 0.7747, "cryo", "skill",
+                  [occ(3, OFF,), occ(2, OFF, DREAM)]),
+        elemental("Навык (АТК), Wing Dance", "atk", 0.9264, "cryo", "skill",
+                  [occ(2, OFF,), occ(2, OFF, DREAM)]),
+        
+        stellar_swirl("Навык — SSW, Plume Dance", "atk", 0.7295, "cryo",
+                      [occ(1, OFF, FROSTGLOW),occ(2, OFF, FROSTGLOW, INST, BREEZEBORNE,TTDS_HALF),
+                       occ(2, OFF, INST, DREAM, FROSTGLOW, BREEZEBORNE,TTDS_HALF)], multipliers=("mp",)),
+        stellar_swirl("Навык — SSW, Wing Dance", "atk", 0.8724, "cryo",
+                      [occ(1, OFF, FROSTGLOW),occ(1, OFF, FROSTGLOW, INST, BREEZEBORNE),
+                       occ(2, OFF, INST, DREAM, FROSTGLOW, BREEZEBORNE,TTDS_HALF)], multipliers=("mp",)),
+        stellar_swirl("Особый навык — SSW", "atk", 8.2555, "cryo",
+                      [occ(1, ON, INST, FROSTGLOW,BREEZEBORNE,TTDS_HALF)], multipliers=("mp",)),
+    ),
+    constellation_sources={
+        1: (
+            stellar_swirl("C1: доп. атака после особого навыка",
+                          "atk", 4.50, "cryo",
+                          [occ(1, ON, INST, FROSTGLOW, BREEZEBORNE,TTDS_HALF)], multipliers=("mp",)),
+        ),
+        4: (
+            stellar_swirl("C4: доп. атака",
+                          "atk", 0.99, "cryo",
+                          [occ(1, OFF,), occ(3, OFF, INST, DREAM, FROSTGLOW, BREEZEBORNE,TTDS_HALF)], multipliers=("mp",)),
         ),
     },
 ),

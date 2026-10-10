@@ -268,7 +268,12 @@ class Team:
         for event in self.reactions:
             per_char: Dict[str, float] = {}
             for b in self.builds:
-                st = frozenset({b.effective_field()} | set(event.tags))
+                st = frozenset(
+                    {b.effective_field()}
+                    | set(event.tags)
+                    | (set(event.trigger_tags) if b.name == event.trigger else set())
+                    | set(event.char_tags.get(b.name, ()))
+                )
                 stats = resolver.stats(b.name, st)
                 per_char[b.name] = self._reaction_damage(event, stats, b)
             primary = pick_primary(per_char, event, elements)

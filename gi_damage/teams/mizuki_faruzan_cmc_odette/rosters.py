@@ -77,7 +77,7 @@ def main(argv: list[str]) -> int:
     #  Пример 1: перебор оружия Мидзуки                                    #
     # ------------------------------------------------------------------ #
 
-    base = make_team("Мидзуки C6", 6, SUNNY_MORNING_SLEEP_IN.at(1), 2, FROSTFEATHER, EM_2_2_SET, VIRIDESCENT, BREEZEBORNE_BOW.at(1), MILLELITH,2)
+    base = make_team("Мидзуки C2", 2, WANDERER_SONG.at(5), 0, SILVER_LIGHT, EM_2_2_SET, VIRIDESCENT, FAV_BOW.at(5), MILLELITH,4)
     
     
     roster = Roster(base, [Variation(slot="Мидзуки",
@@ -90,7 +90,7 @@ def main(argv: list[str]) -> int:
                                               DAWNING_FROST.at(1),
                                               DAWNING_FROST.at(3),
                                               DAWNING_FROST.at(5),
-                                              CEREMONIAL])])
+                                              SACFRAG])])
     print("========================")
     print("=== Ростер: оружие Мидзуки (C2) ===")
     print(roster_report(roster.run(), title="оружие Мидзуки (C2)", ascending=True))
@@ -158,6 +158,15 @@ def main(argv: list[str]) -> int:
     print("========================")
     print("=== Ростер: наборы артефактов Мидзуки ===")
     print(roster_report(roster5.run(), title="наборы артефактов Мидзуки", ascending=True))        
+
+    roster63 = Roster(base, [
+        Variation(slot="Крио ГГ", artifact_sets=[(MILLELITH,), (ATK_2_2_SET,),]),
+    ], tweak=keep_viridescent)
+    print("========================")
+    print("=== Ростер: наборы артефактов Крио ГГ ===")
+    print(roster_report(roster63.run(), title="наборы артефактов Крио ГГ", ascending=True))              
+    
+    return 0
     
     return 0
 

@@ -27,12 +27,16 @@ from ...core.entities import Build, Enemy, ArtifactSet
 from ...core.reactions import ssw_anemo, ssw_vortex
 from ...core.stats import S
 from ...core.utilits import merge_dicts
-from ...data.artifacts import HEART_OF_FORGE, INSTRUCTOR, MILLELITH, VIRIDESCENT, SCARLET_PROOF,ATK_2_2_SET
+from ...data.artifacts import *
 from ...data.artifacts_presets import STANDART_SUBSTAT_PRESET
 from ...data.tags import DREAM, INST, OFF, ON, VODYA_CHORUS, VODYA_LEAD
-from ...data.teams.mizuki_vodya_odette_cmc import CRYO_MC, MIZUKI, ODETTE, VODYANITSA, ODETTE_BURST_SOURCES, odette_burst_buffs, ODETTE_BURST_TIME
-from ...data.weapons import (EXAIPHANES, CEREMONIAL, SILVER_LIGHT,
+from ...data.weapons import (EXAIPHANES, SACFRAG, SILVER_LIGHT,
                             SUNNY_MORNING_SLEEP_IN, WANDERER_SONG, FROSTFEATHER,FAV_BOW, BREEZEBORNE_BOW, TTDS_HALF_CATALYSATOR, MAELSTROM)
+from ...data.characters.odette import odette_burst_buffs, ODETTE_BURST_TIME, ODETTE_COMBO_DICT, ODETTE_BURST_SOURCES
+from ...data.characters.sucrose import SUCROSE_COMBO_DICT
+from ...data.characters.cryo_mc import CMC_COMBO_DICT
+from ...data.characters.mizuki import MIZUKI_COMBO_DICT
+from ...data.characters.vodyanitsa import VODYA_COMBO_DICT
 
 # =========================================================================== #
 #  Баффы уровня ОТРЯДА                                                        #
@@ -43,7 +47,7 @@ TEAM_BUFFS = (
 )
 
 #: Время каждого персонажа в ротации (секунды)
-TIMES = {"Мидзуки": 10.25, "Крио ГГ": 3.65, "Одетта": 2.4, "Водяница": 1.7}
+TIMES = {"Мидзуки": 10.5, "Крио ГГ": 3.65, "Одетта": 2.4, "Водяница": 1.35}
 
 ROTATION = "CMC E CA Q /Водяница E / Odette EE /Midzuki EQ"
 
@@ -74,7 +78,7 @@ def mizuki_build(constellation: int, weapon, artifacts, extra_buffs: Sequence[Bu
         main_stats = {S.BASE_EM: 187 * 2, S.CRIT_VALUE: 0.622}
     
     return Build(
-        character=MIZUKI,
+        character=MIZUKI_COMBO_DICT['mizuki_vodya_combo'],
         constellation=constellation,
         weapon=weapon,
         artifacts=(artifacts,),
@@ -86,12 +90,12 @@ def mizuki_build(constellation: int, weapon, artifacts, extra_buffs: Sequence[Bu
     )
 
 
-def cryo_mc_build(weapon=EXAIPHANES, extra_buffs: Sequence[Buff] = ()) -> Build:
+def cryo_mc_build(constellation: int, artifacts, weapon=EXAIPHANES, extra_buffs: Sequence[Buff] = ()) -> Build:
     return Build(
-        character=CRYO_MC,
-        constellation=2,
+        character=CMC_COMBO_DICT["cmc_ssw_vodya_combo"],
+        constellation=constellation,
         weapon=weapon,
-        artifacts=(ATK_2_2_SET,),
+        artifacts=(artifacts,),
         extra_stats=merge_dicts(
             {S.ATK_PCT: 0.466 * 2, S.CRIT_VALUE: 0.622},
             STANDART_SUBSTAT_PRESET),
@@ -108,7 +112,7 @@ def odette_build(constellation: int = 0, weapon=SILVER_LIGHT,
         use_burst = constellation >= 4
         
     return Build(
-        character=ODETTE,
+        character=ODETTE_COMBO_DICT['odette_short_mizuki_combo_vodya'],
         constellation=constellation,
         weapon=weapon,
         artifacts=(HEART_OF_FORGE,),
@@ -124,7 +128,7 @@ def odette_build(constellation: int = 0, weapon=SILVER_LIGHT,
 def vodya_build(constellation: int = 0,weapon=TTDS_HALF_CATALYSATOR,artifacts:ArtifactSet=MILLELITH, extra_buffs: Sequence[Buff] = ()) -> Build:
 
     return Build(
-        character=VODYANITSA,
+        character=VODYA_COMBO_DICT['off_field'],
         constellation=constellation,
         weapon=weapon,
         artifacts=(artifacts,),
@@ -152,10 +156,9 @@ def reactions(in_dreamdrifter: bool = True):
     d = (DREAM,) if in_dreamdrifter else ()
     return (
         # Мидзуки на поле -> её реакции всегда внутри окна
-        ssw_anemo("Мидзуки", 2, *d, VODYA_LEAD, name="SSW анемо (Мидзуки)"),
-        ssw_anemo("Мидзуки", 2, INST, *d, VODYA_LEAD, name="SSW анемо (Мидзуки, Инструктор)"),
-        ssw_anemo("Мидзуки", 6, INST, *d, VODYA_LEAD,VODYA_CHORUS, name="SSW анемо (Мидзуки, Инструктор)"),
-        ssw_vortex(2, 3, INST, *d, name="SSW вихрь ×3 стака"),
+        ssw_anemo("Мидзуки", 1, *d,trigger_tags=(VODYA_LEAD,), name="SSW анемо (Мидзуки)"),
+        ssw_anemo("Мидзуки", 10, *d, trigger_tags=(VODYA_LEAD,),char_tags={"Крио ГГ": (VODYA_CHORUS,)}, name="SSW анемо (Мидзуки)"),
+        ssw_vortex(3, 3, *d, name="SSW вихрь ×3 стака"),
     )
 
 
@@ -163,7 +166,7 @@ def reactions(in_dreamdrifter: bool = True):
 #  Отряды                                                                     #
 # =========================================================================== #
 def make_team(name: str, mizuki_c: int, mizuki_weapon, odette_c, odette_weapon, mizuki_artifacts = VIRIDESCENT, vodya_artifacts = MILLELITH,
-              vodya_weapon = TTDS_HALF_CATALYSATOR, vodya_c = 0) -> Team:
+              vodya_weapon = TTDS_HALF_CATALYSATOR, vodya_c = 0, cmc_c=4, cmc_art=ATK_2_2_SET) -> Team:
     """Собрать отряд. mizuki_c — созвездие Мидзуки (0, 1 или 2).
 
     Ничего «отрядного» по условию здесь не добавляется, поэтому перебор
@@ -173,7 +176,7 @@ def make_team(name: str, mizuki_c: int, mizuki_weapon, odette_c, odette_weapon, 
         name=name,
         builds=[
             mizuki_build(constellation=mizuki_c, weapon=mizuki_weapon, artifacts=mizuki_artifacts),
-            cryo_mc_build(),
+            cryo_mc_build(constellation=cmc_c,artifacts=cmc_art),
             odette_build(constellation=odette_c, weapon=odette_weapon),
             vodya_build(artifacts=vodya_artifacts,weapon=vodya_weapon,constellation=vodya_c),
         ],
@@ -187,20 +190,15 @@ def make_team(name: str, mizuki_c: int, mizuki_weapon, odette_c, odette_weapon, 
 
 def all_teams() -> Dict[str, Team]:
     variants = (
-        ("Мидзуки C0 (Песнь странника R5), C0 Одетта, C2R3 Крио ГГ, С0 Водяница", 0, WANDERER_SONG.at(5), 0, SILVER_LIGHT,VIRIDESCENT,MILLELITH,TTDS_HALF_CATALYSATOR,0),
-        ("Мидзуки C1 (Песнь странника R5), C0 Одетта, C2R3 Крио ГГ, С0 Водяница", 1, WANDERER_SONG.at(5), 0, SILVER_LIGHT,VIRIDESCENT,MILLELITH,TTDS_HALF_CATALYSATOR,0),
-        ("Мидзуки C2 (Песнь странника R5), C0 Одетта, C2R3 Крио ГГ, С0 Водяница", 2, WANDERER_SONG.at(5), 0, SILVER_LIGHT,VIRIDESCENT,MILLELITH,TTDS_HALF_CATALYSATOR,0),
-        ("Мидзуки C2R1 (Сон солнечным утром R1), C0 Одетта, C2R3 Крио ГГ, С0 Водяница", 2, SUNNY_MORNING_SLEEP_IN.at(1), 0, SILVER_LIGHT,VIRIDESCENT,MILLELITH,TTDS_HALF_CATALYSATOR,0),
-        ("Мидзуки C2R1 (Сон солнечным утром R1), C1 Одетта, C2R3 Крио ГГ, С0 Водяница", 2, SUNNY_MORNING_SLEEP_IN.at(1), 1, SILVER_LIGHT,VIRIDESCENT,MILLELITH,TTDS_HALF_CATALYSATOR,0),
-        ("Мидзуки C2R1 (Сон солнечным утром R1), C2 Одетта, C2R3 Крио ГГ, С0 Водяница", 2, SUNNY_MORNING_SLEEP_IN.at(1), 2, SILVER_LIGHT,VIRIDESCENT,MILLELITH,TTDS_HALF_CATALYSATOR,0),
-        ("Мидзуки C2R1 (Сон солнечным утром R1), C2R1 Одетта, C2R3 Крио ГГ, С0 Водяница", 2, SUNNY_MORNING_SLEEP_IN.at(1), 2, FROSTFEATHER,VIRIDESCENT,MILLELITH,TTDS_HALF_CATALYSATOR,0),
-        ("Мидзуки C6R1 (Сон солнечным утром R1), C2R1 Одетта, C2R3 Крио ГГ, С0 Водяница", 6, SUNNY_MORNING_SLEEP_IN.at(1), 2, FROSTFEATHER,VIRIDESCENT,MILLELITH,TTDS_HALF_CATALYSATOR,0),
-        ("Мидзуки C6R1 (Сон солнечным утром R1), C6R1 Одетта, C2R3 Крио ГГ, С0 Водяница", 6, SUNNY_MORNING_SLEEP_IN.at(1), 6, FROSTFEATHER,VIRIDESCENT,MILLELITH,TTDS_HALF_CATALYSATOR,0),
-        ("Мидзуки C6R5 (Сон солнечным утром R5), C6R5 Одетта, C2R3 Крио ГГ, С0 Водяница", 6, SUNNY_MORNING_SLEEP_IN.at(5), 6, FROSTFEATHER.at(5),VIRIDESCENT,MILLELITH,TTDS_HALF_CATALYSATOR,1),
-        ("Мидзуки C6R5 (Сон солнечным утром R5), C6R5 Одетта, C2R3 Крио ГГ, С6R5 Водяница", 6, SUNNY_MORNING_SLEEP_IN.at(5), 6, FROSTFEATHER.at(5),VIRIDESCENT,MILLELITH,MAELSTROM.at(5),6),
+        ("Мидзуки C2 (Песнь R5), C0 Одетта, C4R3 Крио ГГ, С0R0 Водяница (Мил)", 2, WANDERER_SONG.at(5), 0, SILVER_LIGHT,VIRIDESCENT,MILLELITH,TTDS_HALF_CATALYSATOR,0,4,ATK_2_2_SET),
+        ("Мидзуки C2 (Песнь R5), C0 Одетта, C4R3 Крио ГГ, С0R0 Водяница (2+2)", 2, WANDERER_SONG.at(5), 0, SILVER_LIGHT,VIRIDESCENT,HP_2_2_SET,TTDS_HALF_CATALYSATOR,0,4,MILLELITH),
+        ("Мидзуки C2 (Песнь R5), C2 Одетта, C2R3 Крио ГГ, С0 Водяница", 2, WANDERER_SONG.at(5), 2, SILVER_LIGHT,VIRIDESCENT,MILLELITH,TTDS_HALF_CATALYSATOR,0,4,ATK_2_2_SET),
+        ("Мидзуки C3R1 (Сон солнечным утром R1), C2R1 Одетта, C4R3 Крио ГГ, С0 Водяница", 3, SUNNY_MORNING_SLEEP_IN.at(1), 2, FROSTFEATHER,VIRIDESCENT,MILLELITH,TTDS_HALF_CATALYSATOR,0,4,ATK_2_2_SET),
+        ("Мидзуки C3R1 (Сон солнечным утром R1), C2R1 Одетта, C6R3 Крио ГГ, С0 Водяница", 3, SUNNY_MORNING_SLEEP_IN.at(1), 2, FROSTFEATHER,VIRIDESCENT,MILLELITH,TTDS_HALF_CATALYSATOR,0,6,ATK_2_2_SET),
+
 
     )
-    return {name: make_team(name, c, mizuki_w, c_odette, odette_w, mizuki_art, vodya_art,vodya_w,vodya_c) for name, c, mizuki_w, c_odette, odette_w, mizuki_art, vodya_art, vodya_w,vodya_c in variants}
+    return {name: make_team(name, c, mizuki_w, c_odette, odette_w, mizuki_art, vodya_art,vodya_w,vodya_c, cmc_c,cmc_art) for name, c, mizuki_w, c_odette, odette_w, mizuki_art, vodya_art, vodya_w,vodya_c, cmc_c,cmc_art in variants}
 
 
 #: Названия событий, относящихся к детонации вихря

@@ -76,7 +76,7 @@ def main(argv: list[str]):
     #  Пример 1: перебор оружия Мидзуки                                    #
     # ------------------------------------------------------------------ #
 
-    base = make_team("Мидзуки C2", 2, SUNNY_MORNING_SLEEP_IN, 0, SILVER_LIGHT, VIRIDESCENT, INSTRUCTOR, MILLELITH, 2)
+    base = make_team("Мидзуки C2", 2, WANDERER_SONG, 0, SILVER_LIGHT, VIRIDESCENT, INSTRUCTOR, MILLELITH, 4)
     
     if SHOW_ROSTER:    
         roster = Roster(base, [Variation(slot="Мидзуки",
@@ -89,7 +89,7 @@ def main(argv: list[str]):
                                                 DAWNING_FROST.at(1),
                                                 DAWNING_FROST.at(3),
                                                 DAWNING_FROST.at(5),
-                                                CEREMONIAL])])
+                                                SACFRAG])])
         print("========================")
         print("=== Ростер: оружие Мидзуки (C2) ===")
         print(roster_report(roster.run(), title="оружие Мидзуки (C2)", ascending=True))

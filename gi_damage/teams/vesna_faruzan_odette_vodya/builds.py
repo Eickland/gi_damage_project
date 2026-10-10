@@ -30,7 +30,7 @@ from ...data.weapons import *
 #: Время каждого персонажа в ротации (секунды)
 TIMES = {"Весна": 13.6, "Фарузан": 1.5, "Одетта": 2.4, "Водяница": 1.5}
 
-ROTATION = "Водяница E /Фарузан E Q/ Odette EE /Vesna E sEsE N3CsE Q sE N3CsE"
+ROTATION = "Фарузан E Q/ Odette EE /Водяница E /Vesna E sEsE N3CsE Q sE N3CsE"
 
 
 # =========================================================================== #

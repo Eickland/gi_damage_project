@@ -32,9 +32,9 @@ TEAM_BUFFS = (
 )
 
 #: Время каждого персонажа в ротации (секунды)
-TIMES = {"Весна": 10.25, "Крио ГГ": 3.65, "Одетта": 2.4, "Фарузан": 2.7}
+TIMES = {"Весна": 11.25, "Крио ГГ": 3.65, "Одетта": 2.4, "Фарузан": 2.7}
 
-ROTATION = "CMC E CA Q/ Odette EE /Faruzan EQ /Vesna E sEsE N3CsE Q sE N3CsE /Faruzan E"
+ROTATION = "Faruzan EQ /CMC E CA Q/ Odette EE / /Vesna E sEsE N3CsE Q sE N3CsE"
 
 
 # =========================================================================== #

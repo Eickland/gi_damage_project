@@ -11,7 +11,7 @@ from dataclasses import replace  # noqa: F401 — для patches= в файла�
 from ...core.buffs import OTHERS, SELF, TEAM, Buff, temp
 from ...core.entities import Character, Constellation, with_rotation
 from ...core.stats import S
-from ..tags import DREAM, INST, OFF, ON, MIZUKI_C1, FROSTGLOW
+from ..tags import DREAM, INST, OFF, ON, MIZUKI_C1, FROSTGLOW,BREEZEBORNE, VODYA_LEAD
 from ...core.sources import elemental, occ, stellar_swirl
 
 CRYO_MC_KIT = Character(
@@ -78,11 +78,31 @@ CMC_COMBO_DICT = {
         elemental("Навык (АТК)", "atk", 0.3851, "cryo", "skill",
                   [occ(5, OFF, DREAM), occ(8, OFF)]),
         stellar_swirl("Заряженная атака — SSW, 1", "atk", (1.105) + 1.40,
-                      "cryo", [occ(1, ON, INST)], kind="charged"),
+                      "cryo", [occ(1, ON, INST,BREEZEBORNE,FROSTGLOW)], kind="charged"),
         stellar_swirl("Заряженная атака — SSW, 2", "atk", (1.428) + 1.40,
-                      "cryo", [occ(1, ON, INST)], kind="charged"),
+                      "cryo", [occ(1, ON, INST,BREEZEBORNE,FROSTGLOW)], kind="charged"),
         stellar_swirl("Взрыв — SSW", "atk", (0.9924 + 8 * 0.0496), "cryo",
-                      [occ(5, ON, INST)], kind="burst"),
+                      [occ(5, ON, INST,BREEZEBORNE,FROSTGLOW)], kind="burst"),
+    ),
+    constellation_patches={
+        4: {
+            "Навык (АТК)": lambda s: replace(s, occurrences=[occ(9, OFF, DREAM), occ(3, OFF)]),
+        },
+    },
+),
+    "cmc_ssw_vodya_combo" : with_rotation(
+    CRYO_MC_KIT,
+    sources=(
+        elemental("Использование навыка (АТК)", "atk", 1.6502, "cryo", "skill",
+                  [occ(1, ON,)]),
+        elemental("Навык (АТК)", "atk", 0.3851, "cryo", "skill",
+                  [occ(5, OFF, DREAM), occ(8, OFF)]),
+        stellar_swirl("Заряженная атака — SSW, 1", "atk", (1.105) + 1.40,
+                      "cryo", [occ(1, ON, INST,BREEZEBORNE,FROSTGLOW,VODYA_LEAD)], kind="charged"),
+        stellar_swirl("Заряженная атака — SSW, 2", "atk", (1.428) + 1.40,
+                      "cryo", [occ(1, ON, INST,BREEZEBORNE,FROSTGLOW,VODYA_LEAD)], kind="charged"),
+        stellar_swirl("Взрыв — SSW", "atk", (0.9924 + 8 * 0.0496), "cryo",
+                      [occ(5, ON, INST,BREEZEBORNE,FROSTGLOW,VODYA_LEAD)], kind="burst"),
     ),
     constellation_patches={
         4: {

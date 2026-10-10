@@ -28,11 +28,11 @@ VODYANITSA_KIT = Character(
     },
     buffs=(Buff(S.FLAT_BASE_DMG, lambda ctx: vodyanitsa_stack_bonus(
              ctx.stat("Водяница", "hp", frozenset({OFF}))),
-         target="Весна", requires=(VODYA_LEAD,),
+         target=TEAM, requires=(VODYA_LEAD,),
          source="Водяница: Lead Vocal (SSW навыка)"),
             Buff(S.FLAT_BASE_DMG, lambda ctx: vodyanitsa_stack_bonus(
              ctx.stat("Водяница", "hp", frozenset({OFF}))),
-         target="Крио ГГ", requires=(VODYA_CHORUS,),
+         target=TEAM, requires=(VODYA_CHORUS,),
          source="Водяница: Chorus (SSW навыка)"),
         Buff("res_reduction.anemo", 0.35, target=TEAM,
                     source="-35% анемо сопротивления"),

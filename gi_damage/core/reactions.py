@@ -16,7 +16,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Sequence, Tuple
+from typing import Dict, List, Optional, Sequence, Tuple, Mapping
 
 from .buffs import State, state
 from .formulas import (SSW_ANEMO_MULTIPLIER, SSW_VORTEX_MULTIPLIER,
@@ -51,6 +51,8 @@ class ReactionEvent:
     trigger: Optional[str] = None
     primary_from: Optional[object] = None       # Sequence[str] | str (стихия)
     tags: Tuple[str, ...] = ()
+    trigger_tags: Tuple[str, ...] = ()
+    char_tags: Mapping[str, Tuple[str, ...]] = field(default_factory=dict)
     count: float = 1.0
     base_dmg: float = STELLAR_SWIRL_BASE_DMG
     res_override: Optional[float] = None
@@ -119,5 +121,5 @@ def pick_primary(per_character: Dict[str, float], event: ReactionEvent,
     elif isinstance(pf, str):
         candidates = [n for n, el in elements.items() if el == pf] or list(per_character)
     else:
-        candidates = [n for n in pf if n in per_character] or list(per_character)
+        candidates = [n for n in pf if n in per_character] or list(per_character) # type: ignore
     return max(candidates, key=lambda n: (per_character.get(n, 0.0), n))
