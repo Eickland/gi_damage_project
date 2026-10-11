@@ -32,7 +32,7 @@ TEAM_BUFFS = (
 )
 
 #: Время каждого персонажа в ротации (секунды)
-TIMES = {"Весна": 11.25, "Крио ГГ": 3.65, "Одетта": 2.4, "Фарузан": 2.7}
+TIMES = {"Весна": 11.5, "Крио ГГ": 3.65, "Одетта": 2.4, "Фарузан": 1.7}
 
 ROTATION = "Faruzan EQ /CMC E CA Q/ Odette EE / /Vesna E sEsE N3CsE Q sE N3CsE"
 
@@ -127,11 +127,9 @@ def reactions(in_dreamdrifter: bool = True):
     """
     d = (DREAM,) if in_dreamdrifter else ()
     return (
-        ssw_anemo("Весна", 2, name="SSW анемо (Весна)"),
-        ssw_anemo("Весна", 8, INST, name="SSW анемо (Весна, Инструктор)"),
+        ssw_anemo("Весна", 7, name="SSW анемо (Весна)"),
         
-        ssw_anemo("Фарузан", 4, INST, name="SSW анемо (Фарузан, Инструктор)"),
-        ssw_anemo("Фарузан", 3, INST, name="SSW анемо (Фарузан, Инструктор)"),
+        ssw_anemo("Фарузан", 7, name="SSW анемо (Фарузан, Инструктор)"),
         
         # Детонации вихря
         ssw_vortex(2, 4, INST, name="SSW вихрь ×3 стака"),
@@ -152,7 +150,7 @@ def make_team(name: str, vesna_c: int, vesna_weapon, odette_c, odette_weapon, ve
         name=name,
         builds=[
             vesna_build(constellation=vesna_c, weapon=vesna_weapon, artifacts=vesna_artifacts),
-            cryo_mc_build(constellation=6,artifacts=MILLELITH),
+            cryo_mc_build(constellation=4,artifacts=MILLELITH),
             odette_build(constellation=odette_c, weapon=odette_weapon),
             faruzan_build(artifacts=faruzan_artifacts,weapon=faruzan_weapon),
         ],
@@ -166,20 +164,10 @@ def make_team(name: str, vesna_c: int, vesna_weapon, odette_c, odette_weapon, ve
 
 def all_teams() -> Dict[str, Team]:
     variants = (
-        ("Весна C0 (Источник пламени R5), C0 Одетта, C2R3 Крио ГГ, С6R1 Фарузан", 0, EMBERWELL.at(5), 0, SILVER_LIGHT,SCARLET_PROOF,VIRIDESCENT,BREEZEBORNE_BOW),
-        ("Весна C0 (Источник пламени R5), C2R1 Одетта, C2R3 Крио ГГ, С6R1 Фарузан", 0, EMBERWELL.at(5), 2, FROSTFEATHER.at(1),SCARLET_PROOF,VIRIDESCENT,BREEZEBORNE_BOW),
-        ("Весна C0 (Frostfeather R1), C2R0 Одетта, C2R3 Крио ГГ, С6R1 Фарузан", 0, FROSTFEATHER.at(1), 2, SILVER_LIGHT,SCARLET_PROOF,VIRIDESCENT,BREEZEBORNE_BOW),
-        ("Весна C1 (Источник пламени R5), C0 Одетта, C2R3 Крио ГГ, С6R1 Фарузан", 1, EMBERWELL.at(5), 0, SILVER_LIGHT,SCARLET_PROOF,VIRIDESCENT,BREEZEBORNE_BOW),
-        ("Весна C2 (Источник пламени R5), C0 Одетта, C2R3 Крио ГГ, С6R1 Фарузан", 2, EMBERWELL.at(5), 0, SILVER_LIGHT,SCARLET_PROOF,VIRIDESCENT,BREEZEBORNE_BOW),
-        ("Весна C0 (Beyond the Chrysalis R1), C0 Одетта, C2R3 Крио ГГ, С6R1 Фарузан", 0, CHRYSALIS.at(1), 0, SILVER_LIGHT,SCARLET_PROOF,VIRIDESCENT,BREEZEBORNE_BOW),
-        ("Весна C1 (Beyond the Chrysalis R1), C0 Одетта, C2R3 Крио ГГ, С6R1 Фарузан", 1, CHRYSALIS.at(1), 0, SILVER_LIGHT,SCARLET_PROOF,VIRIDESCENT,BREEZEBORNE_BOW),
-        ("Весна C2R1 (Beyond the Chrysalis R1), C0 Одетта, C2R3 Крио ГГ, С6R1 Фарузан", 2, CHRYSALIS.at(1), 0, SILVER_LIGHT,SCARLET_PROOF,VIRIDESCENT,BREEZEBORNE_BOW),
-        ("Весна C2R1 (Beyond the Chrysalis R1), C1 Одетта, C2R3 Крио ГГ, С6R1 Фарузан", 2, CHRYSALIS.at(1), 1, SILVER_LIGHT,SCARLET_PROOF,VIRIDESCENT,BREEZEBORNE_BOW),
-        ("Весна C2R1 (Beyond the Chrysalis R1), C2 Одетта, C2R3 Крио ГГ, С6R1 Фарузан", 2, CHRYSALIS.at(1), 2, SILVER_LIGHT,SCARLET_PROOF,VIRIDESCENT,BREEZEBORNE_BOW),
-        ("Весна C2R1 (Beyond the Chrysalis R1), C2R1 Одетта, C2R3 Крио ГГ, С6R1 Фарузан", 2, CHRYSALIS.at(1), 2, FROSTFEATHER,SCARLET_PROOF,VIRIDESCENT,BREEZEBORNE_BOW),
-        ("Весна C6R1 (Beyond the Chrysalis R1), C2R1 Одетта, C2R3 Крио ГГ, С6R1 Фарузан", 6, CHRYSALIS.at(1), 2, FROSTFEATHER,SCARLET_PROOF,VIRIDESCENT,BREEZEBORNE_BOW),
-        ("Весна C6R1 (Beyond the Chrysalis R1), C6R1 Одетта, C2R3 Крио ГГ, С6R1 Фарузан", 6, CHRYSALIS.at(1), 6, FROSTFEATHER,SCARLET_PROOF,VIRIDESCENT,BREEZEBORNE_BOW),
-        ("Весна C6R5 (Beyond the Chrysalis R5), C6R5 Одетта, C2R3 Крио ГГ, С6R5 Фарузан", 6, CHRYSALIS.at(5), 6, FROSTFEATHER.at(5),SCARLET_PROOF,VIRIDESCENT,BREEZEBORNE_BOW.at(5)),
+        ("Весна C0 (Источник пламени R5), C0 Одетта, C4R3 Крио ГГ, С6R0 Фарузан", 0, EMBERWELL.at(5), 0, SILVER_LIGHT,SCARLET_PROOF,VIRIDESCENT,FAV_BOW),
+        ("Весна C0R1, C2R1 Одетта, C4R3 Крио ГГ, С6R3 Фарузан", 0,  CHRYSALIS.at(1), 2, FROSTFEATHER.at(1),SCARLET_PROOF,VIRIDESCENT,BREEZEBORNE_BOW.at(3)),
+        ("Весна C2R1, C2R0 Одетта, C4R3 Крио ГГ, С6R3 Фарузан", 2,  CHRYSALIS.at(1), 2, SILVER_LIGHT,SCARLET_PROOF,VIRIDESCENT,BREEZEBORNE_BOW.at(3)),
+
     )
     return {name: make_team(name, c, vesna_w, c_odette, odette_w, vesna_art, faruzan_art,faruzan_w) for name, c, vesna_w, c_odette, odette_w, vesna_art, faruzan_art, faruzan_w in variants}
 

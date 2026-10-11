@@ -69,9 +69,9 @@ def main(argv: list[str]) -> int:
                                               SAC_JADE.at(1),
                                               SAC_JADE.at(5),
                                               STARCALLERS_WATCH,
-                                              DAWNING_FROST.at(1),
-                                              DAWNING_FROST.at(3),
-                                              DAWNING_FROST.at(5),
+                                              GACHA71.at(1),
+                                              GACHA71.at(3),
+                                              GACHA71.at(5),
                                               SACFRAG])])
     print("========================")
     print("=== Ростер: оружие Мидзуки (C2) ===")

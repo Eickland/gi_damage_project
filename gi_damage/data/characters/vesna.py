@@ -123,11 +123,11 @@ VESNA_COMBO_DICT = {
 
         stellar_swirl("Windborne Sword Lv3 — Spirit Blade x4", "atk", 0.8064,
                   "anemo",
-                  [occ(4, ON, ARMED, DA3, BREEZEBORNE, FROSTGLOW), occ(4, ON, ARMED, DA4, BREEZEBORNE, FROSTGLOW), occ(4, ON, ARMED, DA5, BREEZEBORNE, FROSTGLOW)], "skill",
+                  [occ(4, ON, ARMED, DA3, BREEZEBORNE, FROSTGLOW), occ(4, ON, ARMED, DA4, FROSTGLOW), occ(4, ON, ARMED, DA5, FROSTGLOW)], "skill",
                   extra_tags=("spirit_blade",),multipliers=("disciplinary_action",)),
         stellar_swirl("Windborne Sword Lv3 Spirit Blade Final Hit", "atk",
                   2.8224, "anemo", 
-                  [occ(1, ON, ARMED, DA3, BREEZEBORNE, FROSTGLOW), occ(1, ON, ARMED, DA4, BREEZEBORNE, FROSTGLOW), occ(1, ON, ARMED, DA5, BREEZEBORNE, FROSTGLOW)],"skill",
+                  [occ(1, ON, ARMED, DA3, BREEZEBORNE, FROSTGLOW), occ(1, ON, ARMED, DA4, FROSTGLOW), occ(1, ON, ARMED, DA5, FROSTGLOW)],"skill",
                   extra_tags=("spirit_blade",),multipliers=("disciplinary_action",)),
 
         elemental("Перо ветра", "atk", 0.1872, "anemo", "skill",

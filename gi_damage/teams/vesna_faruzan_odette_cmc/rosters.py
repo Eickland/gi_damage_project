@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
 
-Запуск:  python -m scripts.run_vesna_faruzan            (режим по формуле)
-         python -m scripts.run_vesna_faruzan --details   (разбивка по ударам)
+Запуск:  python -m gi_damage.teams.vesna_faruzan_odette_cmc.rosters            (режим по формуле)
+         python -m gi_damage.teams.vesna_faruzan_odette_cmc.rosters --details   (разбивка по ударам)
 """
 
 from __future__ import annotations
