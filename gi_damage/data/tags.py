@@ -47,8 +47,17 @@ MIZUKI_C1 = "mizuki_c1" # увеличение урона звездного р�
 TTDS_HALF = "ttds_half"
 
 #Анемо сет
-VV = "vv"
+VV_CRYO = "vv_cryo"
+VV_PYRO = "vv_pyro"
+VV_HYDRO = "vv_hydro"
+VV_ELECTRO = "vv_electro"
 
+#С6 диона
+CATS_TAIL = "cats_tail"
+
+#Ци ци
+SEVEN_SACRED = "seven_sacred"
 
 __all__ = ["ON", "OFF", "INST", "DREAM", "FROSTGLOW", "BREEZEBORNE",
-           "ARMED", "DA1", "DA2", "DA3", "DA4", "DA5", "DA6","VODYA_LEAD","VODYA_CHORUS","TTDS_HALF","VV"]
+           "ARMED", "DA1", "DA2", "DA3", "DA4", "DA5", "DA6","VODYA_LEAD","VODYA_CHORUS","TTDS_HALF","VV_CRYO","VV_PYRO"
+           ,"VV_HYDRO","VV_ELECTRO","CATS_TAIL","SEVEN_SACRED","MIZUKI_C1"]

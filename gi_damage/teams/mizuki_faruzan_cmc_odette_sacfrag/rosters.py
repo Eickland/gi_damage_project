@@ -77,7 +77,7 @@ def main(argv: list[str]) -> int:
     #  Пример 1: перебор оружия Мидзуки                                    #
     # ------------------------------------------------------------------ #
 
-    base = make_team("Мидзуки C2", 2, SACFRAG.at(5), 0, SILVER_LIGHT, (NIGHT_SKY,AUBADE), VIRIDESCENT, FAV_BOW.at(5), MILLELITH,4)
+    base = make_team("Мидзуки C2", 2, SACFRAG.at(5), 0, SILVER_LIGHT, (NIGHT_SKY.at(2),AUBADE.at(2)), VIRIDESCENT, FAV_BOW.at(5), MILLELITH,4)
     
     
     roster6 = Roster(base, [Variation(slot="Одетта",
@@ -137,14 +137,14 @@ def main(argv: list[str]) -> int:
     print(roster_report(roster4.run(), title="созвездия Одетта", ascending=True))
     
     roster5 = Roster(base, [
-        Variation(slot="Мидзуки", artifact_sets=[(VIRIDESCENT,), ((NIGHT_SKY,AUBADE),), (SCARLET_PROOF,)]),
+        Variation(slot="Мидзуки", artifact_sets=[(VIRIDESCENT,), (NIGHT_SKY,AUBADE,), (SCARLET_PROOF,)]),
     ], tweak=keep_viridescent)
     print("========================")
     print("=== Ростер: наборы артефактов Мидзуки ===")
     print(roster_report(roster5.run(), title="наборы артефактов Мидзуки", ascending=True))
     
     roster63 = Roster(base, [
-        Variation(slot="Крио ГГ", artifact_sets=[(MILLELITH,), (ATK_2_2_SET,),]),
+        Variation(slot="Крио ГГ", artifact_sets=[(MILLELITH,), (HEART_OF_FORGE,SCARLET_PROOF,),]),
     ], tweak=keep_viridescent)
     print("========================")
     print("=== Ростер: наборы артефактов Крио ГГ ===")

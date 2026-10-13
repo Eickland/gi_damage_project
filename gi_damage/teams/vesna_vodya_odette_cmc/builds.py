@@ -13,9 +13,9 @@ from ...core.entities import Build, Enemy, ArtifactSet
 from ...core.reactions import ssw_anemo, ssw_vortex
 from ...core.stats import S
 from ...core.utilits import merge_dicts
-from ...data.artifacts import HEART_OF_FORGE, INSTRUCTOR, MILLELITH, VIRIDESCENT, SCARLET_PROOF,ATK_2_2_SET
+from ...data.artifacts import *
 from ...data.artifacts_presets import STANDART_SUBSTAT_PRESET
-from ...data.tags import DREAM, INST, OFF, ON, VODYA_CHORUS, VODYA_LEAD
+from ...data.tags import *
 from ...data.characters.odette import odette_burst_buffs, ODETTE_BURST_TIME, ODETTE_COMBO_DICT, ODETTE_BURST_SOURCES
 from ...data.characters.vodyanitsa import VODYA_COMBO_DICT
 from ...data.characters.faruzan import FARUZAN_COMBO_DICT
@@ -75,7 +75,7 @@ def cryo_mc_build(constellation: int, artifacts, weapon=EXAIPHANES, extra_buffs:
         character=CMC_COMBO_DICT["cmc_ssw_combo"],
         constellation=constellation,
         weapon=weapon,
-        artifacts=(artifacts,),
+        artifacts=artifacts,
         extra_stats=merge_dicts(
             {S.ATK_PCT: 0.466 * 2, S.CRIT_VALUE: 0.622},
             STANDART_SUBSTAT_PRESET),
@@ -92,7 +92,7 @@ def odette_build(constellation: int = 0, weapon=SILVER_LIGHT,
         use_burst = constellation >= 4
         
     return Build(
-        character=ODETTE_COMBO_DICT["odette_short_mizuki_combo_no_burst"],
+        character=ODETTE_COMBO_DICT["odette_ssw_combo_vv_full_uptime_mizuki"],
         constellation=constellation,
         weapon=weapon,
         artifacts=(HEART_OF_FORGE,),
@@ -123,21 +123,14 @@ def vodya_build(constellation: int = 0,weapon=TTDS_HALF_CATALYSATOR,artifacts:Ar
 # =========================================================================== #
 #  Реакции                                                                    #
 # =========================================================================== #
-def reactions(in_dreamdrifter: bool = True):
+def reactions():
     """События звёздного рассеивания за одну ротацию.
-
-    Теги события добавляются к «полевому» состоянию КАЖДОГО персонажа, то есть
-    описывают момент времени, а не конкретного бойца. Поэтому DREAM здесь —
-    это «реакция произошла, пока Мидзуки была в Дрейфе грёз», и он влияет на
-    сопротивление цели для всех участников распределения.
-
-    in_dreamdrifter=False — если реакции происходят вне окна.
     """
     return (
         # Мидзуки на поле -> её реакции всегда внутри окна
-        ssw_anemo("Весна", 2, INST, VODYA_LEAD, name="SSW анемо (Весна, Весна)"),
-        ssw_anemo("Весна", 6, INST, VODYA_LEAD,VODYA_CHORUS, name="SSW анемо (Весна, Инструктор)"),
-        ssw_vortex(2, 3, INST, name="SSW вихрь ×3 стака"),
+        ssw_anemo("Весна", 2, INST, VODYA_LEAD,BREEZEBORNE,FROSTGLOW, name="SSW анемо (Весна, Весна)"),
+        ssw_anemo("Весна", 6, INST, VODYA_LEAD,VODYA_CHORUS,BREEZEBORNE,FROSTGLOW, name="SSW анемо (Весна, Инструктор)"),
+        ssw_vortex(2, 3, INST,BREEZEBORNE,FROSTGLOW,VV_CRYO, name="SSW вихрь ×3 стака"),
     )
 
 
@@ -145,7 +138,7 @@ def reactions(in_dreamdrifter: bool = True):
 #  Отряды                                                                     #
 # =========================================================================== #
 def make_team(name: str, vesna_c: int, vesna_weapon, odette_c, odette_weapon, vesna_artifacts = SCARLET_PROOF, vodya_artifacts = MILLELITH,
-              vodya_weapon = TTDS_HALF_CATALYSATOR, vodya_c = 0) -> Team:
+              vodya_weapon = TTDS_HALF_CATALYSATOR, vodya_c = 0, cmc_c=4,cmc_arts=(HEART_OF_FORGE.at(2),SCARLET_PROOF.at(2))) -> Team:
     """Собрать отряд. mizuki_c — созвездие Мидзуки (0, 1 или 2).
 
     Ничего «отрядного» по условию здесь не добавляется, поэтому перебор
@@ -155,7 +148,7 @@ def make_team(name: str, vesna_c: int, vesna_weapon, odette_c, odette_weapon, ve
         name=name,
         builds=[
             vesna_build(constellation=vesna_c, weapon=vesna_weapon, artifacts=vesna_artifacts),
-            cryo_mc_build(constellation=6,artifacts=MILLELITH),
+            cryo_mc_build(constellation=cmc_c,artifacts=cmc_arts),
             odette_build(constellation=odette_c, weapon=odette_weapon),
             vodya_build(artifacts=vodya_artifacts,weapon=vodya_weapon,constellation=vodya_c),
         ],
@@ -169,11 +162,15 @@ def make_team(name: str, vesna_c: int, vesna_weapon, odette_c, odette_weapon, ve
 
 def all_teams() -> Dict[str, Team]:
     variants = (
-        ("Весна C0 (Источник пламени R5), C0 Одетта, C2R3 Крио ГГ, С0 Водяница", 0, EMBERWELL.at(5), 0, SILVER_LIGHT,SCARLET_PROOF,MILLELITH,TTDS_HALF_CATALYSATOR,0),
-        ("Весна C2R1, C2R1 Одетта, C2R3 Крио ГГ, С6R1 Водяница", 2, CHRYSALIS.at(1), 2, FROSTFEATHER.at(1), SCARLET_PROOF, MILLELITH, MAELSTROM.at(1),6),
-        ("Весна C6R5 (Beyond the Chrysalis R5), C6R5 Одетта, C2R3 Крио ГГ, С6R5 Водяница", 6, CHRYSALIS.at(5), 6, FROSTFEATHER.at(5),SCARLET_PROOF,MILLELITH,MAELSTROM.at(5),6),
+        ("Весна C0R0, C0R0 Одетта, C4R3 Крио ГГ, С0R0 Водяница", 0, EMBERWELL.at(5), 0, SILVER_LIGHT,SCARLET_PROOF,MILLELITH,TTDS_HALF_CATALYSATOR,0,4,(HEART_OF_FORGE.at(2),SCARLET_PROOF.at(2))),
+        ("Весна C0R1, C0R0 Одетта, C4R3 Крио ГГ, С0R0 Водяница", 0, CHRYSALIS.at(1), 0, SILVER_LIGHT, SCARLET_PROOF, MILLELITH, TTDS_HALF_CATALYSATOR,0,4,(HEART_OF_FORGE.at(2),SCARLET_PROOF.at(2))),
+        ("Весна C0R1, C0R0 Одетта, C4R3 Крио ГГ, С0R1 Водяница", 0, CHRYSALIS.at(1), 0, SILVER_LIGHT, SCARLET_PROOF, MILLELITH, MAELSTROM,0,4,(HEART_OF_FORGE.at(2),SCARLET_PROOF.at(2))),
+        ("Весна C0R0, C2R0 Одетта, C4R3 Крио ГГ, С0R0 Водяница", 0, EMBERWELL.at(5), 2, SILVER_LIGHT,SCARLET_PROOF,MILLELITH,TTDS_HALF_CATALYSATOR,0,4,(HEART_OF_FORGE.at(2),SCARLET_PROOF.at(2))),
+
+
     )
-    return {name: make_team(name, c, vesna_w, c_odette, odette_w, mizuki_art, vodya_art,vodya_w,vodya_c) for name, c, vesna_w, c_odette, odette_w, mizuki_art, vodya_art, vodya_w,vodya_c in variants}
+    return {name: make_team(name, c, vesna_w, c_odette, odette_w, mizuki_art, vodya_art,vodya_w,vodya_c,cmc_c,cmc_arts) for name, 
+            c, vesna_w, c_odette, odette_w, mizuki_art, vodya_art, vodya_w,vodya_c,cmc_c,cmc_arts in variants}
 
 
 #: Названия событий, относящихся к детонации вихря

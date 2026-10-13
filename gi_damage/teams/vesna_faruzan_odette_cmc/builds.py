@@ -13,9 +13,9 @@ from ...core.entities import Build, Enemy, ArtifactSet
 from ...core.reactions import ssw_anemo, ssw_vortex
 from ...core.stats import S
 from ...core.utilits import merge_dicts
-from ...data.artifacts import HEART_OF_FORGE, INSTRUCTOR, MILLELITH, VIRIDESCENT, SCARLET_PROOF
+from ...data.artifacts import *
 from ...data.artifacts_presets import STANDART_SUBSTAT_PRESET
-from ...data.tags import DREAM, INST, OFF, ON
+from ...data.tags import *
 from ...data.characters.odette import odette_burst_buffs, ODETTE_BURST_TIME, ODETTE_COMBO_DICT, ODETTE_BURST_SOURCES
 from ...data.characters.vodyanitsa import VODYA_COMBO_DICT
 from ...data.characters.faruzan import FARUZAN_COMBO_DICT
@@ -88,7 +88,7 @@ def odette_build(constellation: int = 0, weapon=SILVER_LIGHT,
         use_burst = constellation >= 4
         
     return Build(
-        character=ODETTE_COMBO_DICT["odette_short_mizuki_combo_no_burst"],
+        character=ODETTE_COMBO_DICT["odette_ssw_combo_vv_full_uptime_mizuki"],
         constellation=constellation,
         weapon=weapon,
         artifacts=(HEART_OF_FORGE,),
@@ -102,10 +102,7 @@ def odette_build(constellation: int = 0, weapon=SILVER_LIGHT,
     )
 
 def faruzan_build(weapon=BREEZEBORNE_BOW,artifacts:ArtifactSet=VIRIDESCENT, extra_buffs: Sequence[Buff] = ()) -> Build:
-    if artifacts.name == 'Инструктор':
-        main_stats = {S.BASE_EM: 139 * 2 + 187}
-    else:
-        main_stats = {S.BASE_EM: 187 * 3}
+    main_stats = {S.ATK_PCT: 0.446,S.CRIT_VALUE: 0.311,"dmg_bonus.anemo":0.466}
     return Build(
         character=FARUZAN_COMBO_DICT["ssw_combo"],
         constellation=6,
@@ -122,17 +119,16 @@ def faruzan_build(weapon=BREEZEBORNE_BOW,artifacts:ArtifactSet=VIRIDESCENT, extr
 # =========================================================================== #
 #  Реакции                                                                    #
 # =========================================================================== #
-def reactions(in_dreamdrifter: bool = True):
+def reactions():
     """События звёздного рассеивания за одну ротацию.
     """
-    d = (DREAM,) if in_dreamdrifter else ()
     return (
-        ssw_anemo("Весна", 7, name="SSW анемо (Весна)"),
+        ssw_anemo("Весна", 7,BREEZEBORNE,FROSTGLOW, name="SSW анемо (Весна)"),
         
-        ssw_anemo("Фарузан", 7, name="SSW анемо (Фарузан, Инструктор)"),
+        ssw_anemo("Фарузан", 7,BREEZEBORNE,FROSTGLOW, name="SSW анемо (Фарузан, Инструктор)"),
         
         # Детонации вихря
-        ssw_vortex(2, 4, INST, name="SSW вихрь ×3 стака"),
+        ssw_vortex(2, 4, INST,BREEZEBORNE,FROSTGLOW,VV_CRYO, name="SSW вихрь ×3 стака"),
     )
 
 
@@ -140,7 +136,7 @@ def reactions(in_dreamdrifter: bool = True):
 #  Отряды                                                                     #
 # =========================================================================== #
 def make_team(name: str, vesna_c: int, vesna_weapon, odette_c, odette_weapon, vesna_artifacts = SCARLET_PROOF, faruzan_artifacts = VIRIDESCENT,
-              faruzan_weapon = FAV_BOW) -> Team:
+              faruzan_weapon = FAV_BOW, cmc_c=4) -> Team:
     """Собрать отряд. vesna_c — созвездие Мидзуки (0, 1 или 2).
 
     Ничего «отрядного» по условию здесь не добавляется, поэтому перебор
@@ -150,7 +146,7 @@ def make_team(name: str, vesna_c: int, vesna_weapon, odette_c, odette_weapon, ve
         name=name,
         builds=[
             vesna_build(constellation=vesna_c, weapon=vesna_weapon, artifacts=vesna_artifacts),
-            cryo_mc_build(constellation=4,artifacts=MILLELITH),
+            cryo_mc_build(constellation=cmc_c,artifacts=MILLELITH),
             odette_build(constellation=odette_c, weapon=odette_weapon),
             faruzan_build(artifacts=faruzan_artifacts,weapon=faruzan_weapon),
         ],
@@ -164,12 +160,14 @@ def make_team(name: str, vesna_c: int, vesna_weapon, odette_c, odette_weapon, ve
 
 def all_teams() -> Dict[str, Team]:
     variants = (
-        ("Весна C0 (Источник пламени R5), C0 Одетта, C4R3 Крио ГГ, С6R0 Фарузан", 0, EMBERWELL.at(5), 0, SILVER_LIGHT,SCARLET_PROOF,VIRIDESCENT,FAV_BOW),
-        ("Весна C0R1, C2R1 Одетта, C4R3 Крио ГГ, С6R3 Фарузан", 0,  CHRYSALIS.at(1), 2, FROSTFEATHER.at(1),SCARLET_PROOF,VIRIDESCENT,BREEZEBORNE_BOW.at(3)),
-        ("Весна C2R1, C2R0 Одетта, C4R3 Крио ГГ, С6R3 Фарузан", 2,  CHRYSALIS.at(1), 2, SILVER_LIGHT,SCARLET_PROOF,VIRIDESCENT,BREEZEBORNE_BOW.at(3)),
+        ("Весна C0R0, C0R0 Одетта, C4R3 Крио ГГ, С6R0 Фарузан", 0, EMBERWELL.at(5), 0, SILVER_LIGHT,SCARLET_PROOF,VIRIDESCENT,FAV_BOW,4),
+        ("Весна C0R1, C0R0 Одетта, C4R3 Крио ГГ, С6R1 Фарузан", 0,  CHRYSALIS.at(1), 0, SILVER_LIGHT,SCARLET_PROOF,VIRIDESCENT,BREEZEBORNE_BOW.at(1),4),
+        ("Весна C1R1, C0R0 Одетта, C4R3 Крио ГГ, С6R1 Фарузан", 1,  CHRYSALIS.at(1), 0, SILVER_LIGHT,SCARLET_PROOF,VIRIDESCENT,BREEZEBORNE_BOW.at(1),4),
+        ("Весна C2R1, C0R0 Одетта, C4R3 Крио ГГ, С6R1 Фарузан", 2,  CHRYSALIS.at(1), 0, SILVER_LIGHT,SCARLET_PROOF,VIRIDESCENT,BREEZEBORNE_BOW.at(1),4),
+
 
     )
-    return {name: make_team(name, c, vesna_w, c_odette, odette_w, vesna_art, faruzan_art,faruzan_w) for name, c, vesna_w, c_odette, odette_w, vesna_art, faruzan_art, faruzan_w in variants}
+    return {name: make_team(name, c, vesna_w, c_odette, odette_w, vesna_art, faruzan_art,faruzan_w,cmc_c) for name, c, vesna_w, c_odette, odette_w, vesna_art, faruzan_art, faruzan_w,cmc_c in variants}
 
 
 #: Названия событий, относящихся к детонации вихря

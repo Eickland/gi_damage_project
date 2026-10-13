@@ -18,7 +18,7 @@ from gi_damage.core.report import (compare, hit_details, source_breakdown,
 from gi_damage.core.roster import Roster, Variation
 from gi_damage.core.stats import S
 from gi_damage.data.weapons import *
-from gi_damage.data.artifacts import HEART_OF_FORGE, INSTRUCTOR, MILLELITH, VIRIDESCENT, (NIGHT_SKY,AUBADE), SCARLET_PROOF
+from gi_damage.data.artifacts import *
 from gi_damage.teams.mizuki_sucrose_cmc_odette.builds import all_teams, make_team, sucrose_build, mizuki_build,odette_build
 from gi_damage.core.report import roster_report
 from dataclasses import replace
@@ -76,7 +76,7 @@ def main(argv: list[str]):
     #  Пример 1: перебор оружия Мидзуки                                    #
     # ------------------------------------------------------------------ #
 
-    base = make_team("Мидзуки C2", 2, WANDERER_SONG, 0, SILVER_LIGHT, VIRIDESCENT, INSTRUCTOR, MILLELITH, 4)
+    base = make_team("Мидзуки C2", 2, WANDERER_SONG, 0, SILVER_LIGHT, (VIRIDESCENT,), INSTRUCTOR, MILLELITH, 4)
     
     if SHOW_ROSTER:    
         roster = Roster(base, [Variation(slot="Мидзуки",
@@ -140,7 +140,7 @@ def main(argv: list[str]):
         print(roster_report(roster4.run(), title="созвездия Одетта", ascending=True))
         
         roster5 = Roster(base, [
-            Variation(slot="Мидзуки", artifact_sets=[(VIRIDESCENT,), ((NIGHT_SKY,AUBADE),), (SCARLET_PROOF,)]),
+            Variation(slot="Мидзуки", artifact_sets=[(VIRIDESCENT,), (NIGHT_SKY,AUBADE,), (SCARLET_PROOF,)]),
         ], tweak=keep_viridescent)
         print("========================")
         print("=== Ростер: наборы артефактов Мидзуки ===")

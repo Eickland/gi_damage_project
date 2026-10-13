@@ -35,6 +35,8 @@ ALIASES: Dict[str, Dict[str, str]] = {
         "Фарузан": "faruzan",
         "Весна": "vesna",
         "Водяница": "vodyanitsa",
+        "Диона":"diona",
+        "Ци Ци" : "qiqi",
     },
     "weapons": {
         "Песнь странника": "wanderers_song",
@@ -54,6 +56,7 @@ ALIASES: Dict[str, Dict[str, str]] = {
         "Предвестник": "harbinger",
         "Новая ветвь": "new_bough",
         "Лазурное сияние": "azurelight",
+        "Меч фавония":"fav_sword",
     },
     "artifacts": {
         "Инструктор": "instructor",
@@ -61,9 +64,7 @@ ALIASES: Dict[str, Dict[str, str]] = {
         "Милеллит": "millelith",
         "Сердце горна": "heart_of_forge",
         "Багряное доказательство": "scarlet_proof",
-        "2+2 на МС": "em_2_2",
-        "2+2 на атк": "atk_2_2",
-        "2+2 на HP": "hp_2_2",
+        "Сияние Вурукаши": "vourukasha",
         "Рассветная песнь": "aubade",
         "Ночь неба": "night_sky",
     },

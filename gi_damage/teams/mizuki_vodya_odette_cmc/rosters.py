@@ -59,7 +59,7 @@ def main(argv: list[str]) -> int:
     #  Пример 1: перебор оружия Мидзуки                                    #
     # ------------------------------------------------------------------ #
 
-    base = make_team("Мидзуки C2", 2, WANDERER_SONG.at(5), 0, SILVER_LIGHT, VIRIDESCENT, MILLELITH, TTDS_HALF_CATALYSATOR,0,4,ATK_2_2_SET)
+    base = make_team("Мидзуки C2", 2, WANDERER_SONG.at(5), 0, SILVER_LIGHT, (VIRIDESCENT,), MILLELITH, TTDS_HALF_CATALYSATOR,0,4,(HEART_OF_FORGE.at(2),SCARLET_PROOF.at(2)))
     
     
     roster = Roster(base, [Variation(slot="Мидзуки",
@@ -143,21 +143,21 @@ def main(argv: list[str]) -> int:
 
 
     roster5 = Roster(base, [
-        Variation(slot="Мидзуки", artifact_sets=[(VIRIDESCENT,), ((NIGHT_SKY,AUBADE),), (SCARLET_PROOF,)]),
+        Variation(slot="Мидзуки", artifact_sets=[(VIRIDESCENT,), (NIGHT_SKY.at(2),AUBADE.at(2)), (SCARLET_PROOF,)]),
     ])
     print("========================")
     print("=== Ростер: наборы артефактов Мидзуки ===")
     print(roster_report(roster5.run(), title="наборы артефактов Мидзуки", ascending=True)) 
     
     roster63 = Roster(base, [
-        Variation(slot="Крио ГГ", artifact_sets=[(MILLELITH,), (ATK_2_2_SET,),]),
+        Variation(slot="Крио ГГ", artifact_sets=[(MILLELITH,), (HEART_OF_FORGE,SCARLET_PROOF,),]),
     ])
     print("========================")
     print("=== Ростер: наборы артефактов Крио ГГ ===")
     print(roster_report(roster63.run(), title="наборы артефактов Крио ГГ", ascending=True))
 
     roster64 = Roster(base, [
-        Variation(slot="Водяница", artifact_sets=[(MILLELITH,), (HP_2_2_SET,),]),
+        Variation(slot="Водяница", artifact_sets=[(MILLELITH,), (MILLELITH,VOURUKASHA,),]),
     ])
     print("========================")
     print("=== Ростер: наборы артефактов Водяница ===")

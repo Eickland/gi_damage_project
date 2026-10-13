@@ -11,7 +11,7 @@ from dataclasses import replace  # noqa: F401 — для patches= в файла�
 from ...core.buffs import OTHERS, SELF, TEAM, Buff
 from ...core.entities import Character, Constellation, with_rotation
 from ...core.stats import S
-from ..tags import DREAM, INST, OFF, ON, MIZUKI_C1, FROSTGLOW, BREEZEBORNE, VODYA_LEAD
+from ..tags import *
 from ...core.sources import elemental, occ, stellar_swirl
 
 SSW_EM_RATE = 0.045          # прирост урона SSW за 100 МС (базовый уровень)
@@ -183,7 +183,7 @@ MIZUKI_COMBO_DICT = {
         ),
     },
 ),
-    
+
     "mizuki_long_combo" : with_rotation(
     MIZUKI_KIT,
     sources=(
@@ -196,45 +196,19 @@ MIZUKI_COMBO_DICT = {
         elemental("Взрыв (АТК)", "atk", 1.2701, "anemo", "burst",
                   [occ(8, ON, DREAM)]),
         elemental("Перья (МС)", "em", 10.0, "anemo", "passive",
-                  [occ(2, ON, DREAM), occ(2, ON, INST, DREAM)],
+                  [occ(2, ON, DREAM,CATS_TAIL), occ(2, ON, INST, DREAM,CATS_TAIL)],
                   note="Дополнительный базовый урон для инстанции навыка"),
         stellar_swirl("Навык — звёздное рассеивание (МС)", "em", 10.0, "anemo",
-                      [occ(1, ON, DREAM, FROSTGLOW, BREEZEBORNE), occ(2, ON, INST, DREAM, FROSTGLOW, BREEZEBORNE),
-                       occ(1, ON, FROSTGLOW),],
+                      [occ(1, ON, DREAM, FROSTGLOW, BREEZEBORNE, VODYA_LEAD,CATS_TAIL,SEVEN_SACRED),
+                       occ(2, ON, INST, DREAM, FROSTGLOW, BREEZEBORNE, VODYA_LEAD,CATS_TAIL,SEVEN_SACRED),
+                       occ(1, ON, FROSTGLOW, VODYA_LEAD,CATS_TAIL,SEVEN_SACRED),],
                       note="Строка «Skill EM SSW MV%» = 1000%"),
     ),
     constellation_sources={
         1: (
             stellar_swirl("C1: доп. звёздное рассеивание (МС)", "em", 4.0,
-                          "anemo", [occ(1, ON, DREAM, FROSTGLOW, BREEZEBORNE),
-                                    occ(2, ON, INST, DREAM, FROSTGLOW, BREEZEBORNE)]),
-        ),
-    },
-),
-    "mizuki_vodya_combo" : with_rotation(
-    MIZUKI_KIT,
-    sources=(
-        elemental("Использование навыка (АТК)", "atk", 1.0394, "anemo", "skill",
-                  [occ(1, ON, DREAM)]),
-        elemental("Навык (АТК)", "atk", 0.8084, "anemo", "skill",
-                  [occ(13, ON, DREAM)]),
-        elemental("Использование взрыва (АТК)", "atk", 1.6934, "anemo", "burst",
-                  [occ(1, ON, DREAM)]),
-        elemental("Взрыв (АТК)", "atk", 1.2701, "anemo", "burst",
-                  [occ(8, ON, DREAM)]),
-        elemental("Перья (МС)", "em", 10.0, "anemo", "passive",
-                  [occ(2, ON, DREAM), occ(2, ON, INST, DREAM)],
-                  note="Дополнительный базовый урон для инстанции навыка"),
-        stellar_swirl("Навык — звёздное рассеивание (МС)", "em", 10.0, "anemo",
-                      [occ(1, ON, DREAM, FROSTGLOW, BREEZEBORNE, VODYA_LEAD,), occ(2, ON, INST, DREAM, FROSTGLOW, BREEZEBORNE, VODYA_LEAD,),
-                       occ(1, ON, FROSTGLOW, VODYA_LEAD,),],
-                      note="Строка «Skill EM SSW MV%» = 1000%"),
-    ),
-    constellation_sources={
-        1: (
-            stellar_swirl("C1: доп. звёздное рассеивание (МС)", "em", 4.0,
-                          "anemo", [occ(1, ON, DREAM, FROSTGLOW, BREEZEBORNE, VODYA_LEAD,),
-                                    occ(2, ON, INST, DREAM, FROSTGLOW, BREEZEBORNE, VODYA_LEAD,)]),
+                          "anemo", [occ(1, ON, DREAM, FROSTGLOW, BREEZEBORNE, VODYA_LEAD,CATS_TAIL,SEVEN_SACRED),
+                                    occ(2, ON, INST, DREAM, FROSTGLOW, BREEZEBORNE, VODYA_LEAD,CATS_TAIL,SEVEN_SACRED)]),
         ),
     },
 )

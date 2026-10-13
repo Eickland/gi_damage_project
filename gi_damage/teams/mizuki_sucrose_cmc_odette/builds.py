@@ -99,7 +99,7 @@ def odette_build(constellation: int, weapon,
         use_burst = constellation >= 4
         
     return Build(
-        character=ODETTE_COMBO_DICT["odette_short_mizuki_combo_no_burst"],
+        character=ODETTE_COMBO_DICT["odette_ssw_combo_vv_full_uptime_mizuki"],
         constellation=constellation,
         weapon=weapon,
         artifacts=(HEART_OF_FORGE,),
@@ -147,13 +147,13 @@ def reactions(in_dreamdrifter: bool = True):
     d = (DREAM,) if in_dreamdrifter else ()
     return (
         # Мидзуки на поле -> её реакции всегда внутри окна
-        ssw_anemo("Мидзуки", 2, *d, name="SSW анемо (Мидзуки)"),
-        ssw_anemo("Мидзуки", 3, INST, *d, MIZUKI_C1, name="SSW анемо (Мидзуки, Инструктор)"),
-        ssw_anemo("Мидзуки", 5, INST, *d, name="SSW анемо (Мидзуки, Инструктор)"),
+        ssw_anemo("Мидзуки", 2, *d,BREEZEBORNE,FROSTGLOW, name="SSW анемо (Мидзуки)"),
+        ssw_anemo("Мидзуки", 3, INST, *d,BREEZEBORNE,FROSTGLOW, MIZUKI_C1, name="SSW анемо (Мидзуки, Инструктор)"),
+        ssw_anemo("Мидзуки", 5, INST, *d,BREEZEBORNE,FROSTGLOW, name="SSW анемо (Мидзуки, Инструктор)"),
         # Сахароза триггерит со своего поля — Мидзуки в этот момент НЕ в Дрейфе.
         # Если по факту иначе, добавьте сюда *d.
-        ssw_anemo("Сахароза", 2, INST, name="SSW анемо (Сахароза, Инструктор)"),
-        ssw_vortex(3, 3, INST, *d, name="SSW вихрь ×3 стака"),
+        ssw_anemo("Сахароза", 2, INST,BREEZEBORNE,FROSTGLOW,VV_CRYO, name="SSW анемо (Сахароза, Инструктор)"),
+        ssw_vortex(3, 3, INST, *d,BREEZEBORNE,FROSTGLOW,VV_CRYO, name="SSW вихрь ×3 стака"),
     )
 
 
@@ -185,10 +185,10 @@ def make_team(name: str, mizuki_c: int, mizuki_weapon, odette_c, odette_weapon,
 
 def all_teams() -> Dict[str, Team]:
     variants = (
-        ("Мидзуки C2R0 (Песнь R5), C0 Одетта (Серебряный свет R5), C4R3 Крио ГГ, Сахароза",2, WANDERER_SONG.at(5), 0, SILVER_LIGHT.at(5), VIRIDESCENT, INSTRUCTOR, MILLELITH, 4),
-        ("Мидзуки C2R0 (Песнь R5), C2 Одетта (Серебряный свет R5), C4R3 Крио ГГ, Сахароза",2, WANDERER_SONG.at(5), 2, SILVER_LIGHT.at(5), VIRIDESCENT, INSTRUCTOR, MILLELITH, 4),
-        ("Мидзуки C3R1, C2R1 Одетта, C4R3 Крио ГГ, Сахароза",3, SUNNY_MORNING_SLEEP_IN.at(1), 2, FROSTFEATHER.at(1), VIRIDESCENT, INSTRUCTOR, MILLELITH, 4),
-        ("Мидзуки C3R1, C2R1 Одетта, C6R3 Крио ГГ, Сахароза",3, SUNNY_MORNING_SLEEP_IN.at(1), 2, FROSTFEATHER.at(1), VIRIDESCENT, INSTRUCTOR, MILLELITH, 6),
+        ("Мидзуки C2R0 (Песнь R5), C0 Одетта (Серебряный свет R5), C4R3 Крио ГГ, Сахароза",2, WANDERER_SONG.at(5), 0, SILVER_LIGHT.at(5), (VIRIDESCENT,), INSTRUCTOR, MILLELITH, 4),
+        ("Мидзуки C2R0 (Песнь R5), C2 Одетта (Серебряный свет R5), C4R3 Крио ГГ, Сахароза",2, WANDERER_SONG.at(5), 2, SILVER_LIGHT.at(5), (VIRIDESCENT,), INSTRUCTOR, MILLELITH, 4),
+        ("Мидзуки C3R1, C2R1 Одетта, C4R3 Крио ГГ, Сахароза",3, SUNNY_MORNING_SLEEP_IN.at(1), 2, FROSTFEATHER.at(1), (VIRIDESCENT,), INSTRUCTOR, MILLELITH, 4),
+        ("Мидзуки C3R1, C2R1 Одетта, C6R3 Крио ГГ, Сахароза",3, SUNNY_MORNING_SLEEP_IN.at(1), 2, FROSTFEATHER.at(1), (VIRIDESCENT,), INSTRUCTOR, MILLELITH, 6),
     )
     return {name: make_team(name, mizuki_c, mizuki_w, c_odette, odette_w, mizuki_art, sucrose_art, cmc_art, c_cmc) 
             for name, mizuki_c, mizuki_w, c_odette, odette_w,

@@ -82,6 +82,10 @@ class ArtifactSet:
     buffs_by_pieces: Mapping[int, Sequence[Buff]] = field(default_factory=dict)
     note: str = ""
 
+    def at(self, pieces: int) -> "ArtifactSet":
+        """Копия набора с другим числом надетых предметов (2 для схемы 2+2)."""
+        return replace(self, pieces=pieces)
+
     def resolved_stats(self) -> Dict[str, float]:
         out = dict(self.stats)
         for n, extra in self.stats_by_pieces.items():

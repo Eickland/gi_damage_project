@@ -390,6 +390,13 @@ FAV_BOW = Weapon(
     note="",
 )
 
+FAV_SWORD = Weapon(
+    name="Меч фавония",
+    base_atk=454.0,
+    refinement=5,
+    note="",
+)
+
 #: Бонус урона звёздных реакций по рангу пробуждения (24% на R1, +6% за ранг).
 BREEZEBORNE_BONUS = {r: 0.24 + 0.06 * (r - 1) for r in range(1, 6)}
 

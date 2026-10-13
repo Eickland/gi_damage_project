@@ -37,20 +37,20 @@ VIRIDESCENT = ArtifactSet(
     pieces=4,
     buffs_by_pieces={
         4: (
-            # 4ч: -40% сопротивления цели к стихии, которую рассеяли.
-            # В этом отряде рассеивается крио.
-            # Работает, только если цель задана через Enemy.res (базовое
-            # сопротивление); при Enemy.res_mult (готовые множители таблицы)
-            # снижение уже учтено в самих множителях и повторно не применяется.
-            Buff("res_reduction.cryo", 0.40, target=TEAM, requires=(VV,), temporary=True,
+            Buff("res_reduction.cryo", 0.40, target=TEAM, requires=(VV_CRYO,), temporary=True,
+                 source="Изумрудная тень 4ч: -40% сопр. к стихии рассеивания"),
+            Buff("res_reduction.pyro", 0.40, target=TEAM, requires=(VV_PYRO,), temporary=True,
+                 source="Изумрудная тень 4ч: -40% сопр. к стихии рассеивания"),
+            Buff("res_reduction.hydro", 0.40, target=TEAM, requires=(VV_HYDRO,), temporary=True,
+                 source="Изумрудная тень 4ч: -40% сопр. к стихии рассеивания"),
+            Buff("res_reduction.electro", 0.40, target=TEAM, requires=(VV_ELECTRO,), temporary=True,
                  source="Изумрудная тень 4ч: -40% сопр. к стихии рассеивания"),
             Buff(S.SSW_BONUS, 0.20, target=SELF, requires=(ON,),
              source="+20% урона звёздного рассеивания"),
         ),
     },
     note=("2ч: +15% анемо урона; 4ч: +60% урона рассеивания, +20% к урону звездного рассеивания и -40% сопр. цели "
-          "к стихии рассеивания. Бонус урона рассеивания в таблице «зашит» "
-          "в постоянные слагаемые скобки EMM."),
+          "к стихии рассеивания."),
 )
 
 MILLELITH = ArtifactSet(
@@ -97,21 +97,11 @@ SCARLET_PROOF = ArtifactSet(
     note="",
 )
 
-ATK_2_2_SET = ArtifactSet(
-    name = "2+2 на атк",
-    pieces=4,
-    stats_by_pieces={
-        2: {S.ATK_PCT: 0.18},
-        4: {S.ATK_PCT: 0.18},
-    },    
-)
-
-HP_2_2_SET = ArtifactSet(
-    name = "2+2 на HP",
-    pieces=4,
+VOURUKASHA = ArtifactSet(
+    name = "Сияние Вурукаши",
+    pieces=2,
     stats_by_pieces={
         2: {S.HP_PCT: 0.2},
-        4: {S.HP_PCT: 0.2},
     },    
 )
 

@@ -13,9 +13,9 @@ from ...core.entities import Build, Enemy, ArtifactSet
 from ...core.reactions import ssw_anemo, ssw_vortex
 from ...core.stats import S
 from ...core.utilits import merge_dicts
-from ...data.artifacts import HEART_OF_FORGE, INSTRUCTOR, MILLELITH, VIRIDESCENT, SCARLET_PROOF,ATK_2_2_SET
+from ...data.artifacts import *
 from ...data.artifacts_presets import STANDART_SUBSTAT_PRESET
-from ...data.tags import DREAM, INST, OFF, ON, VODYA_CHORUS, VODYA_LEAD
+from ...data.tags import *
 from ...data.characters.odette import odette_burst_buffs, ODETTE_BURST_TIME, ODETTE_COMBO_DICT, ODETTE_BURST_SOURCES
 from ...data.characters.vodyanitsa import VODYA_COMBO_DICT
 from ...data.characters.faruzan import FARUZAN_COMBO_DICT
@@ -30,7 +30,7 @@ from ...data.weapons import *
 #: Время каждого персонажа в ротации (секунды)
 TIMES = {"Весна": 13.6, "Фарузан": 1.5, "Одетта": 2.4, "Водяница": 1.5}
 
-ROTATION = "Odette EE/Фарузан E Q/  /Водяница E /Vesna E sEsE N3CsE Q sE N3CsE"
+ROTATION = "Фарузан E Q/Odette EE/  /Водяница E /Vesna E sEsE N3CsE Q sE N3CsE"
 
 
 # =========================================================================== #
@@ -66,10 +66,7 @@ def vesna_build(constellation: int, weapon, artifacts, extra_buffs: Sequence[Buf
 
 
 def faruzan_build(weapon=FAV_BOW,artifacts:ArtifactSet=VIRIDESCENT, extra_buffs: Sequence[Buff] = ()) -> Build:
-    if artifacts.name == 'Инструктор':
-        main_stats = {S.BASE_EM: 139 * 2 + 187}
-    else:
-        main_stats = {S.BASE_EM: 187 * 3}
+    main_stats = {S.ATK_PCT: 0.446,S.CRIT_VALUE: 0.311,"dmg_bonus.anemo":0.466}
     return Build(
         character=FARUZAN_COMBO_DICT["ssw_combo"],
         constellation=6,
@@ -91,7 +88,7 @@ def odette_build(constellation: int = 0, weapon=SILVER_LIGHT,
         use_burst = constellation >= 4
         
     return Build(
-        character=ODETTE_COMBO_DICT["odette_ssw_combo_no_burst_no_breezbow"],
+        character=ODETTE_COMBO_DICT["ssw_combo_vv_full_uptime_no_bow"],
         constellation=constellation,
         weapon=weapon,
         artifacts=(HEART_OF_FORGE,),
@@ -133,10 +130,10 @@ def reactions():
     in_dreamdrifter=False — если реакции происходят вне окна.
     """
     return (
-        ssw_anemo("Весна", 8, trigger_tags=(VODYA_LEAD,),char_tags={"Одетта": (VODYA_CHORUS,)}, name="SSW анемо (Весна)"),
-        ssw_anemo("Фарузан", 2,char_tags={"Одетта": (VODYA_CHORUS,)}, name="SSW анемо (Фарузан)"),
-        ssw_anemo("Фарузан", 4, name="SSW анемо (Фарузан)"),
-        ssw_vortex(2, 4, name="SSW вихрь ×3 стака"),
+        ssw_anemo("Весна", 8,BREEZEBORNE,FROSTGLOW, trigger_tags=(VODYA_LEAD,),char_tags={"Одетта": (VODYA_CHORUS,)}, name="SSW анемо (Весна)"),
+        ssw_anemo("Фарузан", 2,BREEZEBORNE,FROSTGLOW,char_tags={"Одетта": (VODYA_CHORUS,)}, name="SSW анемо (Фарузан)"),
+        ssw_anemo("Фарузан", 4,BREEZEBORNE,FROSTGLOW, name="SSW анемо (Фарузан)"),
+        ssw_vortex(2, 4,BREEZEBORNE,FROSTGLOW,VV_CRYO, name="SSW вихрь ×3 стака"),
     )
 
 
@@ -144,7 +141,7 @@ def reactions():
 #  Отряды                                                                     #
 # =========================================================================== #
 def make_team(name: str, vesna_c: int, vesna_weapon, odette_c, odette_weapon, vesna_artifacts = SCARLET_PROOF, vodya_artifacts = MILLELITH,
-              vodya_weapon = TTDS_HALF_CATALYSATOR, vodya_c = 0) -> Team:
+              vodya_weapon = TTDS_HALF_CATALYSATOR, vodya_c = 0, faruzan_artifacts = VIRIDESCENT, faruzan_weapon=FAV_BOW) -> Team:
     """Собрать отряд.
 
     Ничего «отрядного» по условию здесь не добавляется, поэтому перебор
@@ -154,7 +151,7 @@ def make_team(name: str, vesna_c: int, vesna_weapon, odette_c, odette_weapon, ve
         name=name,
         builds=[
             vesna_build(constellation=vesna_c, weapon=vesna_weapon, artifacts=vesna_artifacts),
-            faruzan_build(),
+            faruzan_build(artifacts=faruzan_artifacts,weapon=faruzan_weapon),
             odette_build(constellation=odette_c, weapon=odette_weapon),
             vodya_build(artifacts=vodya_artifacts,weapon=vodya_weapon,constellation=vodya_c),
         ],
@@ -167,9 +164,13 @@ def make_team(name: str, vesna_c: int, vesna_weapon, odette_c, odette_weapon, ve
 
 def all_teams() -> Dict[str, Team]:
     variants = (
-        ("Весна C2R1, C2R1 Одетта, С6 Фарузан, С6R1 Водяница", 2, CHRYSALIS, 2, FROSTFEATHER, SCARLET_PROOF, MILLELITH, MAELSTROM,6),
+        ("Весна C0R0, Одетта C0R0, Фарузан C6R0, Водяница C0R0", 0, EMBERWELL, 0, SILVER_LIGHT, SCARLET_PROOF, MILLELITH, TTDS_HALF_CATALYSATOR,0,VIRIDESCENT,FAV_BOW),
+        ("Весна C0R1, Одетта C0R0, Фарузан C6R0, Водяница C0R0", 0, CHRYSALIS.at(1), 0, SILVER_LIGHT, SCARLET_PROOF, MILLELITH, TTDS_HALF_CATALYSATOR,0,VIRIDESCENT,FAV_BOW),
+        ("Весна C0R1, Одетта C0R0, Фарузан C6R1, Водяница C0R0", 0, CHRYSALIS.at(1), 0, SILVER_LIGHT, SCARLET_PROOF, MILLELITH, TTDS_HALF_CATALYSATOR,0,VIRIDESCENT,BREEZEBORNE_BOW),
+        ("Весна C0R1, Одетта C0R0, Фарузан C6R3, Водяница C0R1", 0, CHRYSALIS.at(1), 0, SILVER_LIGHT, SCARLET_PROOF, MILLELITH, MAELSTROM,0,VIRIDESCENT,BREEZEBORNE_BOW.at(3)),
     )
-    return {name: make_team(name, c, vesna_w, c_odette, odette_w, mizuki_art, vodya_art,vodya_w,vodya_c) for name, c, vesna_w, c_odette, odette_w, mizuki_art, vodya_art, vodya_w,vodya_c in variants}
+    return {name: make_team(name, c, vesna_w, c_odette, odette_w, mizuki_art, vodya_art,vodya_w,vodya_c, fara_art,fara_w) for name, 
+            c, vesna_w, c_odette, odette_w, mizuki_art, vodya_art, vodya_w,vodya_c, fara_art, fara_w in variants}
 
 
 #: Названия событий, относящихся к детонации вихря
