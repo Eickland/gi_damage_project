@@ -81,7 +81,7 @@ def mizuki_build(constellation: int, weapon, artifacts, extra_buffs: Sequence[Bu
         character=MIZUKI_COMBO_DICT['mizuki_vodya_combo'],
         constellation=constellation,
         weapon=weapon,
-        artifacts=(artifacts,),
+        artifacts=artifacts,
         extra_stats=merge_dicts(
             main_stats,
             STANDART_SUBSTAT_PRESET),

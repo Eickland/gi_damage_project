@@ -10,7 +10,7 @@ from __future__ import annotations
 from ..core.buffs import OTHERS, SELF, TEAM, Buff, temp
 from ..core.entities import ArtifactSet
 from ..core.stats import S
-from .tags import INST, OFF, ON
+from .tags import *
 
 # --------------------------------------------------------------------------- #
 INSTRUCTOR = ArtifactSet(
@@ -29,7 +29,7 @@ INSTRUCTOR = ArtifactSet(
                  source="Инструктор 4ч: +120 МС всему отряду"),
         ),
     },
-    note="Носитель в пресете — Сахароза.",
+    note="",
 )
 
 VIRIDESCENT = ArtifactSet(
@@ -42,7 +42,7 @@ VIRIDESCENT = ArtifactSet(
             # Работает, только если цель задана через Enemy.res (базовое
             # сопротивление); при Enemy.res_mult (готовые множители таблицы)
             # снижение уже учтено в самих множителях и повторно не применяется.
-            Buff("res_reduction.cryo", 0.40, target=TEAM,
+            Buff("res_reduction.cryo", 0.40, target=TEAM, requires=(VV,), temporary=True,
                  source="Изумрудная тень 4ч: -40% сопр. к стихии рассеивания"),
             Buff(S.SSW_BONUS, 0.20, target=SELF, requires=(ON,),
              source="+20% урона звёздного рассеивания"),
@@ -97,15 +97,6 @@ SCARLET_PROOF = ArtifactSet(
     note="",
 )
 
-EM_2_2_SET = ArtifactSet(
-    name = "2+2 на МС",
-    pieces=4,
-    stats_by_pieces={
-        2: {S.BASE_EM: 80},
-        4: {S.BASE_EM: 80},
-    },    
-)
-
 ATK_2_2_SET = ArtifactSet(
     name = "2+2 на атк",
     pieces=4,
@@ -121,6 +112,24 @@ HP_2_2_SET = ArtifactSet(
     stats_by_pieces={
         2: {S.HP_PCT: 0.2},
         4: {S.HP_PCT: 0.2},
+    },    
+)
+
+AUBADE = ArtifactSet(
+    name = "Рассветная песнь",
+    pieces=4,
+    stats_by_pieces={
+        2: {S.BASE_EM: 80},
+        4: {},
+    },    
+)
+
+NIGHT_SKY = ArtifactSet(
+    name = "Ночь неба",
+    pieces=4,
+    stats_by_pieces={
+        2: {S.BASE_EM: 80},
+        4: {},
     },    
 )
 

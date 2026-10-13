@@ -11,7 +11,7 @@ from dataclasses import replace  # noqa: F401 — для patches= в файла�
 from ...core.buffs import OTHERS, SELF, TEAM, Buff, temp
 from ...core.entities import Character, Constellation, with_rotation
 from ...core.stats import S
-from ..tags import DREAM, INST, OFF, ON, MIZUKI_C1, FROSTGLOW,BREEZEBORNE, VODYA_LEAD
+from ..tags import *
 from ...core.sources import elemental, occ, stellar_swirl
 
 CRYO_MC_KIT = Character(

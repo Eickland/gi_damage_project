@@ -143,7 +143,7 @@ def main(argv: list[str]) -> int:
 
 
     roster5 = Roster(base, [
-        Variation(slot="Мидзуки", artifact_sets=[(VIRIDESCENT,), (EM_2_2_SET,), (SCARLET_PROOF,)]),
+        Variation(slot="Мидзуки", artifact_sets=[(VIRIDESCENT,), ((NIGHT_SKY,AUBADE),), (SCARLET_PROOF,)]),
     ])
     print("========================")
     print("=== Ростер: наборы артефактов Мидзуки ===")

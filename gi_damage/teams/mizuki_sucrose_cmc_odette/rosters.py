@@ -18,7 +18,7 @@ from gi_damage.core.report import (compare, hit_details, source_breakdown,
 from gi_damage.core.roster import Roster, Variation
 from gi_damage.core.stats import S
 from gi_damage.data.weapons import *
-from gi_damage.data.artifacts import HEART_OF_FORGE, INSTRUCTOR, MILLELITH, VIRIDESCENT, EM_2_2_SET, SCARLET_PROOF
+from gi_damage.data.artifacts import HEART_OF_FORGE, INSTRUCTOR, MILLELITH, VIRIDESCENT, (NIGHT_SKY,AUBADE), SCARLET_PROOF
 from gi_damage.teams.mizuki_sucrose_cmc_odette.builds import all_teams, make_team, sucrose_build, mizuki_build,odette_build
 from gi_damage.core.report import roster_report
 from dataclasses import replace
@@ -140,7 +140,7 @@ def main(argv: list[str]):
         print(roster_report(roster4.run(), title="созвездия Одетта", ascending=True))
         
         roster5 = Roster(base, [
-            Variation(slot="Мидзуки", artifact_sets=[(VIRIDESCENT,), (EM_2_2_SET,), (SCARLET_PROOF,)]),
+            Variation(slot="Мидзуки", artifact_sets=[(VIRIDESCENT,), ((NIGHT_SKY,AUBADE),), (SCARLET_PROOF,)]),
         ], tweak=keep_viridescent)
         print("========================")
         print("=== Ростер: наборы артефактов Мидзуки ===")

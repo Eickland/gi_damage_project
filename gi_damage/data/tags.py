@@ -46,6 +46,9 @@ MIZUKI_C1 = "mizuki_c1" # увеличение урона звездного р�
 #Эпос, 10с увеличение атаки
 TTDS_HALF = "ttds_half"
 
+#Анемо сет
+VV = "vv"
+
 
 __all__ = ["ON", "OFF", "INST", "DREAM", "FROSTGLOW", "BREEZEBORNE",
-           "ARMED", "DA1", "DA2", "DA3", "DA4", "DA5", "DA6","VODYA_LEAD","VODYA_CHORUS","TTDS_HALF"]
+           "ARMED", "DA1", "DA2", "DA3", "DA4", "DA5", "DA6","VODYA_LEAD","VODYA_CHORUS","TTDS_HALF","VV"]

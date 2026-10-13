@@ -77,7 +77,7 @@ def main(argv: list[str]) -> int:
     #  Пример 1: перебор оружия Мидзуки                                    #
     # ------------------------------------------------------------------ #
 
-    base = make_team("Мидзуки C2", 2, WANDERER_SONG.at(5), 0, SILVER_LIGHT, EM_2_2_SET, VIRIDESCENT, FAV_BOW.at(5), MILLELITH,4)
+    base = make_team("Мидзуки C2", 2, WANDERER_SONG.at(5), 0, SILVER_LIGHT, (NIGHT_SKY,AUBADE), VIRIDESCENT, FAV_BOW.at(5), MILLELITH,4)
     
     
     roster = Roster(base, [Variation(slot="Мидзуки",
@@ -150,7 +150,7 @@ def main(argv: list[str]) -> int:
     print(roster_report(roster4.run(), title="созвездия Одетта", ascending=True))
     
     roster5 = Roster(base, [
-        Variation(slot="Мидзуки", artifact_sets=[(VIRIDESCENT,), (EM_2_2_SET,), (SCARLET_PROOF,)]),
+        Variation(slot="Мидзуки", artifact_sets=[(VIRIDESCENT,), (AUBADE,NIGHT_SKY), (SCARLET_PROOF,)]),
     ], tweak=keep_viridescent)
     print("========================")
     print("=== Ростер: наборы артефактов Мидзуки ===")
@@ -165,7 +165,6 @@ def main(argv: list[str]) -> int:
     
     return 0
     
-    return 0
 
 if __name__ == "__main__":
     raise SystemExit(main(sys.argv[1:]))

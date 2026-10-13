@@ -135,7 +135,7 @@ def main(argv: list[str]) -> int:
     print(roster_report(roster9.run(), title="созвездия Водяница", ascending=True))
 
     roster50 = Roster(base, [
-        Variation(slot="Весна", artifact_sets=[(VIRIDESCENT,), (ATK_2_2_SET,), (SCARLET_PROOF,),(EM_2_2_SET,),]),
+        Variation(slot="Весна", artifact_sets=[(VIRIDESCENT,), (ATK_2_2_SET,), (SCARLET_PROOF,),((NIGHT_SKY,AUBADE),),]),
     ])
     print("========================")
     print("=== Ростер: наборы артефактов Весны ===")
