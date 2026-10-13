@@ -30,7 +30,7 @@ from ...data.weapons import *
 #: Время каждого персонажа в ротации (секунды)
 TIMES = {"Весна": 13.6, "Фарузан": 1.5, "Одетта": 2.4, "Водяница": 1.5}
 
-ROTATION = "Фарузан E Q/ Odette EE /Водяница E /Vesna E sEsE N3CsE Q sE N3CsE"
+ROTATION = "Odette EE/Фарузан E Q/  /Водяница E /Vesna E sEsE N3CsE Q sE N3CsE"
 
 
 # =========================================================================== #
@@ -65,7 +65,7 @@ def vesna_build(constellation: int, weapon, artifacts, extra_buffs: Sequence[Buf
     )
 
 
-def faruzan_build(weapon=BREEZEBORNE_BOW,artifacts:ArtifactSet=VIRIDESCENT, extra_buffs: Sequence[Buff] = ()) -> Build:
+def faruzan_build(weapon=FAV_BOW,artifacts:ArtifactSet=VIRIDESCENT, extra_buffs: Sequence[Buff] = ()) -> Build:
     if artifacts.name == 'Инструктор':
         main_stats = {S.BASE_EM: 139 * 2 + 187}
     else:
@@ -91,7 +91,7 @@ def odette_build(constellation: int = 0, weapon=SILVER_LIGHT,
         use_burst = constellation >= 4
         
     return Build(
-        character=ODETTE_COMBO_DICT["odette_short_mizuki_combo_no_burst"],
+        character=ODETTE_COMBO_DICT["odette_ssw_combo_no_burst_no_breezbow"],
         constellation=constellation,
         weapon=weapon,
         artifacts=(HEART_OF_FORGE,),
@@ -122,7 +122,7 @@ def vodya_build(constellation: int = 0,weapon=TTDS_HALF_CATALYSATOR,artifacts:Ar
 # =========================================================================== #
 #  Реакции                                                                    #
 # =========================================================================== #
-def reactions(in_dreamdrifter: bool = True):
+def reactions():
     """События звёздного рассеивания за одну ротацию.
 
     Теги события добавляются к «полевому» состоянию КАЖДОГО персонажа, то есть
@@ -133,11 +133,10 @@ def reactions(in_dreamdrifter: bool = True):
     in_dreamdrifter=False — если реакции происходят вне окна.
     """
     return (
-        # Мидзуки на поле -> её реакции всегда внутри окна
-        ssw_anemo("Весна", 2, INST, VODYA_LEAD, name="SSW анемо (Весна, Весна)"),
-        ssw_anemo("Весна", 6, INST, VODYA_LEAD,VODYA_CHORUS, name="SSW анемо (Весна, Инструктор)"),
-        ssw_anemo("Фарузан", 6, name="SSW анемо (Фарузан)"),
-        ssw_vortex(3, 3, INST, name="SSW вихрь ×3 стака"),
+        ssw_anemo("Весна", 8, trigger_tags=(VODYA_LEAD,),char_tags={"Одетта": (VODYA_CHORUS,)}, name="SSW анемо (Весна)"),
+        ssw_anemo("Фарузан", 2,char_tags={"Одетта": (VODYA_CHORUS,)}, name="SSW анемо (Фарузан)"),
+        ssw_anemo("Фарузан", 4, name="SSW анемо (Фарузан)"),
+        ssw_vortex(2, 4, name="SSW вихрь ×3 стака"),
     )
 
 
@@ -146,7 +145,7 @@ def reactions(in_dreamdrifter: bool = True):
 # =========================================================================== #
 def make_team(name: str, vesna_c: int, vesna_weapon, odette_c, odette_weapon, vesna_artifacts = SCARLET_PROOF, vodya_artifacts = MILLELITH,
               vodya_weapon = TTDS_HALF_CATALYSATOR, vodya_c = 0) -> Team:
-    """Собрать отряд. mizuki_c — созвездие Мидзуки (0, 1 или 2).
+    """Собрать отряд.
 
     Ничего «отрядного» по условию здесь не добавляется, поэтому перебор
     созвездий через Roster/Variation даёт те же числа, что и этот пресет.
