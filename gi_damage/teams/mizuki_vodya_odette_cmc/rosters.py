@@ -21,6 +21,8 @@ from gi_damage.core.report import roster_report
 
 from dataclasses import replace
 
+from gi_damage.visual.rosters import RosterBook
+
 def c6_mizuki_main_stats(team):
     """С C6 корона на МС лучше короны на криты."""
     mizuki = team.build("Мидзуки")
@@ -32,11 +34,25 @@ def c6_mizuki_main_stats(team):
     return replace(team, builds=[replace(mizuki, extra_stats=stats)
                                  if b.name == "Мидзуки" else b for b in team.builds])
     
+def keep_millelit(team):
+    """Миллелит обязан быть в отряде.
+    """
+    cryo_mc = team.build("Крио ГГ")
+    if any(a.name == MILLELITH.name for a in cryo_mc.artifacts):
+        return replace(team, builds=[
+        vodya_build(artifacts=(MILLELITH.at(2),VOURUKASHA.at(2))) if b.name == "Водяница" else b
+        for b in team.builds
+    ])
+    return replace(team, builds=[
+        vodya_build(artifacts=(MILLELITH,)) if b.name == "Водяница" else b
+        for b in team.builds
+    ])
+    
 SHOW_ALL_TEAMS = True
 
 def main(argv: list[str]) -> int:
     details = "--details" in argv
-
+    book = RosterBook() 
     print("Стандарты")
 
     teams = all_teams()
@@ -59,7 +75,7 @@ def main(argv: list[str]) -> int:
     #  Пример 1: перебор оружия Мидзуки                                    #
     # ------------------------------------------------------------------ #
 
-    base = make_team("Мидзуки C2", 2, WANDERER_SONG.at(5), 0, SILVER_LIGHT, (VIRIDESCENT,), MILLELITH, TTDS_HALF_CATALYSATOR,0,4,(HEART_OF_FORGE.at(2),SCARLET_PROOF.at(2)))
+    base = make_team("Мидзуки C2", 2, SUNNY_MORNING_SLEEP_IN, 2, FROSTFEATHER, (GILDED,), (MILLELITH,), TTDS_HALF_CATALYSATOR,0,4,(HEART_OF_FORGE.at(2),SCARLET_PROOF.at(2)))
     
     
     roster = Roster(base, [Variation(slot="Мидзуки",
@@ -69,14 +85,12 @@ def main(argv: list[str]) -> int:
                                               SAC_JADE.at(1),
                                               SAC_JADE.at(5),
                                               STARCALLERS_WATCH,
-                                              GACHA71.at(1),
-                                              GACHA71.at(3),
-                                              GACHA71.at(5),
-                                              SACFRAG])])
-    print("========================")
-    print("=== Ростер: оружие Мидзуки (C2) ===")
-    print(roster_report(roster.run(), title="оружие Мидзуки (C2)", ascending=True))
-    print()
+                                              WINTER.at(1),
+                                              WINTER.at(3),
+                                              WINTER.at(5),
+                                              SACFRAG,
+                                              STARSEALED])])
+    book.add(roster, "Оружие Мидзуки С6", ascending=True)
     
     roster6 = Roster(base, [Variation(slot="Одетта",
                                      weapons=[SILVER_LIGHT.at(5),
@@ -85,17 +99,12 @@ def main(argv: list[str]) -> int:
                                               FROSTFEATHER.at(3),
                                               FROSTFEATHER.at(5),
                                               FINALE.at(5),
-                                              LOW_BASE_CRIT_STATSTICK,
-                                              MID_BASE_CRIT_STATSTICK,
-                                              HIGH_BASE_CRIT_STATSTICK,
                                               HARBINGER.at(5),
                                               BOUGH.at(1),
                                               BOUGH.at(3),
                                               BOUGH.at(5)])])
-    print("========================")
-    print("=== Ростер: оружие Одетта (C0) ===")
-    print(roster_report(roster6.run(), title="оружие Одетта (C0)", ascending=True))
-    print()
+
+    book.add(roster6, "оружие Одетта (C2)", ascending=True)
     
     roster7 = Roster(base, [Variation(slot="Водяница",
                                      weapons=[TTDS_HALF_CATALYSATOR,
@@ -104,65 +113,46 @@ def main(argv: list[str]) -> int:
                                               MAELSTROM.at(3),
                                               MAELSTROM.at(4),
                                               MAELSTROM.at(5),])])
-    print("========================")
-    print("=== Ростер: оружие Водяница ===")
-    print(roster_report(roster7.run(), title="оружие Водяница", ascending=True))
-    print()
+    book.add(roster7, "Оружие Водяница", ascending=True)
 
     # ------------------------------------------------------------------ #
     #  Пример 2: созвездия Мидзуки × оружие                                #
     # ------------------------------------------------------------------ #
 
-    roster2 = Roster(base, [
+    roster7 = Roster(base, [
         Variation(slot="Мидзуки", constellations=[0, 1, 2, 3, 6]),
     ], tweak=c6_mizuki_main_stats)
-    print("========================")
-    print("=== Ростер: созвездия Мидзуки ===")
-    print(roster_report(roster2.run(), title="созвездия Мидзуки", ascending=True))
+    book.add(roster7, "Созвездия Мидзуки", ascending=True)
     
     roster3 = Roster(base, [
         Variation(slot="Крио ГГ", constellations=[0, 2, 3, 5, 6]),
     ])
-    print("========================")
-    print("=== Ростер: созвездия Крио ГГ ===")
-    print(roster_report(roster3.run(), title="созвездия Крио ГГ", ascending=True))
+    book.add(roster3, "Созвездия Крио ГГ", ascending=True)
     
     roster4 = Roster(base, [
         Variation(slot="Одетта", builds=[odette_build(constellation=c) for c in (0, 1, 2,3, 4,5, 6)]),
     ])
-    print("========================")
-    print("=== Ростер: созвездия Одетта ===")
-    print(roster_report(roster4.run(), title="созвездия Одетта", ascending=True))
+    book.add(roster4, "Созвездия Одетта", ascending=True)
 
     roster9 = Roster(base, [
         Variation(slot="Водяница", builds=[vodya_build(constellation=c) for c in (0, 1, 2,3, 4, 6)]),
     ])
-    print("========================")
-    print("=== Ростер: созвездия Водяница ===")
-    print(roster_report(roster9.run(), title="созвездия Водяница", ascending=True))
+    book.add(roster9, "Созвездия Водяница", ascending=True)
 
 
     roster5 = Roster(base, [
-        Variation(slot="Мидзуки", artifact_sets=[(VIRIDESCENT,), (NIGHT_SKY.at(2),AUBADE.at(2)), (SCARLET_PROOF,)]),
+        Variation(slot="Мидзуки", artifact_sets=[(VIRIDESCENT,), (NIGHT_SKY.at(2),AUBADE.at(2)), (SCARLET_PROOF,),(GILDED,)]),
     ])
-    print("========================")
-    print("=== Ростер: наборы артефактов Мидзуки ===")
-    print(roster_report(roster5.run(), title="наборы артефактов Мидзуки", ascending=True)) 
+    book.add(roster5, "Наборы артефактов Мидзуки", ascending=True)
+ 
     
     roster63 = Roster(base, [
-        Variation(slot="Крио ГГ", artifact_sets=[(MILLELITH,), (HEART_OF_FORGE,SCARLET_PROOF,),]),
-    ])
-    print("========================")
-    print("=== Ростер: наборы артефактов Крио ГГ ===")
-    print(roster_report(roster63.run(), title="наборы артефактов Крио ГГ", ascending=True))
+        Variation(slot="Крио ГГ", artifact_sets=[(MILLELITH,), (HEART_OF_FORGE.at(2),SCARLET_PROOF.at(2),),]),
+    ],tweak=keep_millelit)
+    book.add(roster63, "Наборы артефактов Крио ГГ и Водяницы", ascending=True)
 
-    roster64 = Roster(base, [
-        Variation(slot="Водяница", artifact_sets=[(MILLELITH,), (MILLELITH,VOURUKASHA,),]),
-    ])
-    print("========================")
-    print("=== Ростер: наборы артефактов Водяница ===")
-    print(roster_report(roster64.run(), title="наборы артефактов Водяница", ascending=True))            
-    
+            
+    book.save("rosters.html")
     return 0
 
 if __name__ == "__main__":

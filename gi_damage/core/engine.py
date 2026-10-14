@@ -22,9 +22,9 @@ from typing import Dict, Iterable, List, Optional, Sequence, Tuple
 from .buffs import Buff, BuffContext, State, state
 from .entities import Build, Enemy
 from .formulas import (elemental_damage, stellar_swirl_direct,
-                       stellar_swirl_reaction)
+                       stellar_swirl_reaction,stellar_conduct_direct)
 from .reactions import ReactionEvent, distribute, pick_primary
-from .sources import ELEMENTAL, STELLAR_SWIRL, DamageSource
+from .sources import ELEMENTAL, STELLAR_SWIRL,STELLAR_CONDUCT, DamageSource
 from .stats import S, Stats, crit_multiplier
 
 
@@ -312,6 +312,11 @@ class Team:
             value = stellar_swirl_direct(
                 stat_value, mv, stats, tags, res, crit, elevation,
                 flat_base=src.flat_base + stats.flat_base_dmg(*tags))
+        elif src.model == STELLAR_CONDUCT:
+            value = stellar_conduct_direct(
+                stat_value, mv, stats, tags, res, crit, elevation,
+                flat_base=src.flat_base + stats.flat_base_dmg(*tags),
+                polar_stacks=src.polar_stacks)
         else:
             def_mult = self.enemy.def_mult if src.applies_def else 1.0
             value = elemental_damage(

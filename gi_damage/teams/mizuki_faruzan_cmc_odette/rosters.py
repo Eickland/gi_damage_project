@@ -157,7 +157,7 @@ def main(argv: list[str]) -> int:
     print(roster_report(roster5.run(), title="наборы артефактов Мидзуки", ascending=True))        
 
     roster63 = Roster(base, [
-        Variation(slot="Крио ГГ", artifact_sets=[(MILLELITH,), (HEART_OF_FORGE,SCARLET_PROOF,),]),
+        Variation(slot="Крио ГГ", artifact_sets=[(MILLELITH,), (HEART_OF_FORGE.at(2),SCARLET_PROOF.at(2),),]),
     ], tweak=keep_viridescent)
     print("========================")
     print("=== Ростер: наборы артефактов Крио ГГ ===")

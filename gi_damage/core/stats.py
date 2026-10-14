@@ -60,6 +60,10 @@ class S:
     # Звёздное рассеивание (Stellar Swirl)
     SSW_BONUS = "ssw_bonus"        # «Stellar Swirl DMG Bonus%» — внутрь скобки с МС
     SSW_BASE_INC = "ssw_base_inc"  # «Base DMG Increase%» — множитель (1 + x)
+    
+    # Звёздный проводник (Stellar Conduct)
+    SC_BONUS = "sc_bonus"
+    SC_BASE_INC = "sc_base_inc"
 
     # Прочее
     ELEVATION = "elevation"    # «Возвышение», итоговый множитель = 1 + elevation
@@ -160,9 +164,15 @@ class Stats:
 
     def ssw_bonus(self, *tags: str) -> float:
         return self._tagged_sum(S.SSW_BONUS, tags)
+    
+    def sc_bonus(self, *tags: str) -> float:
+        return self._tagged_sum(S.SC_BONUS, tags)
 
     def ssw_base_inc(self, *tags: str) -> float:
         return self._tagged_sum(S.SSW_BASE_INC, tags)
+    
+    def sc_base_inc(self, *tags: str) -> float:
+        return self._tagged_sum(S.SC_BASE_INC, tags)
 
     def flat_base_dmg(self, *tags: str) -> float:
         """«Дополнительный базовый урон» с учётом точечных ключей вида

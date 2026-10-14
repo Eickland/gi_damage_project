@@ -84,7 +84,7 @@ def main(argv: list[str]):
                                                 SUNNY_MORNING_SLEEP_IN.at(1),
                                                 RELIQUARY_OF_TRUTH,
                                                 SAC_JADE.at(1),
-                                                GACHA71.at(5),
+                                                WINTER.at(5),
                                                 STARCALLERS_WATCH,
                                                 DAWNING_FROST.at(1),
                                                 DAWNING_FROST.at(3),
@@ -140,7 +140,7 @@ def main(argv: list[str]):
         print(roster_report(roster4.run(), title="созвездия Одетта", ascending=True))
         
         roster5 = Roster(base, [
-            Variation(slot="Мидзуки", artifact_sets=[(VIRIDESCENT,), (NIGHT_SKY,AUBADE,), (SCARLET_PROOF,)]),
+            Variation(slot="Мидзуки", artifact_sets=[(VIRIDESCENT,), (NIGHT_SKY.at(2),AUBADE.at(2),), (SCARLET_PROOF,)]),
         ], tweak=keep_viridescent)
         print("========================")
         print("=== Ростер: наборы артефактов Мидзуки ===")

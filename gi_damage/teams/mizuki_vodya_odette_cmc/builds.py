@@ -30,8 +30,7 @@ from ...core.utilits import merge_dicts
 from ...data.artifacts import *
 from ...data.artifacts_presets import STANDART_SUBSTAT_PRESET
 from ...data.tags import DREAM, INST, OFF, ON, VODYA_CHORUS, VODYA_LEAD
-from ...data.weapons import (EXAIPHANES, SACFRAG, SILVER_LIGHT,
-                            SUNNY_MORNING_SLEEP_IN, WANDERER_SONG, FROSTFEATHER,FAV_BOW, BREEZEBORNE_BOW, TTDS_HALF_CATALYSATOR, MAELSTROM)
+from ...data.weapons import *
 from ...data.characters.odette import odette_burst_buffs, ODETTE_BURST_TIME, ODETTE_COMBO_DICT, ODETTE_BURST_SOURCES
 from ...data.characters.sucrose import SUCROSE_COMBO_DICT
 from ...data.characters.cryo_mc import CMC_COMBO_DICT
@@ -190,11 +189,12 @@ def make_team(name: str, mizuki_c: int, mizuki_weapon, odette_c, odette_weapon, 
 
 def all_teams() -> Dict[str, Team]:
     variants = (
-        ("Мидзуки C2 (Песнь R5), C0 Одетта, C4R3 Крио ГГ, С0R0 Водяница (Мил)", 2, WANDERER_SONG.at(5), 0, SILVER_LIGHT,(VIRIDESCENT,),(MILLELITH,),TTDS_HALF_CATALYSATOR,0,4,(HEART_OF_FORGE.at(2),SCARLET_PROOF.at(2))),
-        ("Мидзуки C2 (Песнь R5), C0 Одетта, C4R3 Крио ГГ, С0R0 Водяница (2+2)", 2, WANDERER_SONG.at(5), 0, SILVER_LIGHT,(VIRIDESCENT,),(MILLELITH.at(2),VOURUKASHA.at(2)),TTDS_HALF_CATALYSATOR,0,4,(MILLELITH,)),
-        ("Мидзуки C2 (Песнь R5), C2 Одетта, C2R3 Крио ГГ, С0 Водяница", 2, WANDERER_SONG.at(5), 2, SILVER_LIGHT,(VIRIDESCENT,),(MILLELITH,),TTDS_HALF_CATALYSATOR,0,4,(HEART_OF_FORGE.at(2),SCARLET_PROOF.at(2))),
-        ("Мидзуки C3R1 (Сон солнечным утром R1), C2R1 Одетта, C4R3 Крио ГГ, С0 Водяница", 3, SUNNY_MORNING_SLEEP_IN.at(1), 2, FROSTFEATHER,(VIRIDESCENT,),(MILLELITH,),TTDS_HALF_CATALYSATOR,0,4,(HEART_OF_FORGE.at(2),SCARLET_PROOF.at(2))),
-        ("Мидзуки C3R1 (Сон солнечным утром R1), C2R1 Одетта, C6R3 Крио ГГ, С0 Водяница", 3, SUNNY_MORNING_SLEEP_IN.at(1), 2, FROSTFEATHER,(VIRIDESCENT,),(MILLELITH,),TTDS_HALF_CATALYSATOR,0,6,(HEART_OF_FORGE.at(2),SCARLET_PROOF.at(2))),
+        ("Мидзуки C2, C0 Одетта, C4R3 Крио ГГ, С0R0 Водяница (Мил)", 2, WANDERER_SONG.at(5), 0, SILVER_LIGHT,(VIRIDESCENT,),(MILLELITH,),TTDS_HALF_CATALYSATOR,0,4,(HEART_OF_FORGE.at(2),SCARLET_PROOF.at(2))),
+        ("Мидзуки C2, C0 Одетта, C4R3 Крио ГГ, С0R0 Водяница (2+2)", 2, WANDERER_SONG.at(5), 0, SILVER_LIGHT,(VIRIDESCENT,),(MILLELITH.at(2),VOURUKASHA.at(2)),TTDS_HALF_CATALYSATOR,0,4,(MILLELITH,)),
+        ("Мидзуки C2, C2 Одетта, C2R3 Крио ГГ, С0 Водяница", 2, WANDERER_SONG.at(5), 2, SILVER_LIGHT,(VIRIDESCENT,),(MILLELITH,),TTDS_HALF_CATALYSATOR,0,4,(HEART_OF_FORGE.at(2),SCARLET_PROOF.at(2))),
+        ("Мидзуки C3R1, C2R1 Одетта, C4R3 Крио ГГ, С0 Водяница", 3, SUNNY_MORNING_SLEEP_IN.at(1), 2, FROSTFEATHER,(VIRIDESCENT,),(MILLELITH,),TTDS_HALF_CATALYSATOR,0,4,(HEART_OF_FORGE.at(2),SCARLET_PROOF.at(2))),
+        ("Мидзуки C3R1, C2R1 Одетта, C6R3 Крио ГГ, С0 Водяница", 3, SUNNY_MORNING_SLEEP_IN.at(1), 2, FROSTFEATHER,(VIRIDESCENT,),(MILLELITH,),TTDS_HALF_CATALYSATOR,0,6,(HEART_OF_FORGE.at(2),SCARLET_PROOF.at(2))),
+        ("Мидзуки C2R0, C2R1 Одетта, C4R3 Крио ГГ, С6R1 Водяница", 2, STARCALLERS_WATCH.at(1), 2, FROSTFEATHER,(VIRIDESCENT,),(MILLELITH,),MAELSTROM,6,4,(HEART_OF_FORGE.at(2),SCARLET_PROOF.at(2))),
 
 
     )

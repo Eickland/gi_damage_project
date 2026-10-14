@@ -16,9 +16,7 @@ OFF = "off_field"    # персонаж вне поля
 #: окно «Инструктор + A4 Сахарозы» (в таблице — «instructor + Sucrose»)
 INST = "instructor"
 
-#: окно состояния «Дрейф грёз» (Dreamdrifter) Мидзуки — пока она на поле.
-#: В нём работают эффекты её C2: бонус урона отряду и снижение сопротивлений цели.
-DREAM = "dreamdrifter"
+
 
 #: 15с усиление звзедного урона от Крио ГГ
 FROSTGLOW = "frostglow"
@@ -43,8 +41,19 @@ VODYA_CHORUS = "vodya_chorus"  # 1-й потраченный стак Chorus
 # --- Мидзуки ------------------------------------ #
 MIZUKI_C1 = "mizuki_c1" # увеличение урона звездного рассеивания от с1
 
+#: окно состояния «Дрейф грёз» (Dreamdrifter) Мидзуки — пока она на поле.
+#: В нём работают эффекты её C2: бонус урона отряду и снижение сопротивлений цели.
+DREAM = "dreamdrifter"
+
+# --- Сандроне ------------------------------------ #
+DECODING = "decoding"
+SANDRONE_CA_STACKS_1 = "sandrone_ca_1"
+SANDRONE_CA_STACKS_2 = "sandrone_ca_2"
+SANDRONE_CA_STACKS_3 = "sandrone_ca_3"
+
 #Эпос, 10с увеличение атаки
 TTDS_HALF = "ttds_half"
+TTDS_FULL = "ttds_full"
 
 #Анемо сет
 VV_CRYO = "vv_cryo"
@@ -60,4 +69,5 @@ SEVEN_SACRED = "seven_sacred"
 
 __all__ = ["ON", "OFF", "INST", "DREAM", "FROSTGLOW", "BREEZEBORNE",
            "ARMED", "DA1", "DA2", "DA3", "DA4", "DA5", "DA6","VODYA_LEAD","VODYA_CHORUS","TTDS_HALF","VV_CRYO","VV_PYRO"
-           ,"VV_HYDRO","VV_ELECTRO","CATS_TAIL","SEVEN_SACRED","MIZUKI_C1"]
+           ,"VV_HYDRO","VV_ELECTRO","CATS_TAIL","SEVEN_SACRED","MIZUKI_C1","DECODING","TTDS_FULL","SANDRONE_CA_STACKS_1","SANDRONE_CA_STACKS_2","SANDRONE_CA_STACKS_3",
+           ]

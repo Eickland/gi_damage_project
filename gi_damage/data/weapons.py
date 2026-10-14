@@ -8,7 +8,7 @@ from __future__ import annotations
 from ..core.buffs import SELF, Buff, TEAM, temp
 from ..core.entities import Weapon
 from ..core.stats import S
-from .tags import BREEZEBORNE, TTDS_HALF, ON
+from .tags import BREEZEBORNE, TTDS_HALF, ON,TTDS_FULL
 
 # --------------------------------------------------------------------------- #
 WANDERER_SONG = Weapon(
@@ -26,12 +26,28 @@ WANDERER_SONG = Weapon(
     note="Усредненный бонус за 6 ротаций",
 )
 
-GACHA71 = Weapon(
+WINTER = Weapon(
     name="Застывшее сердце зимы",
     base_atk=510.0,
     stats={S.CRIT_VALUE: 0.551},
-    refinement=5,
+    refinement=1,
     stats_by_refinement={
+        1: {
+            S.BASE_EM: 40.0,
+            S.SSW_BONUS: 0.12
+        },
+        2: {
+            S.BASE_EM: 50.0,
+            S.SSW_BONUS: 0.15
+        },
+        3: {
+            S.BASE_EM: 60.0,
+            S.SSW_BONUS: 0.18
+        },
+        4: {
+            S.BASE_EM: 70.0,
+            S.SSW_BONUS: 0.21
+        },
         5: {
             S.BASE_EM: 80.0,
             S.SSW_BONUS: 0.24
@@ -108,6 +124,20 @@ RELIQUARY_OF_TRUTH = Weapon(
     note="",
 )
 
+STARSEALED = Weapon(
+    name="Starsealed Edict",
+    base_atk=542.0,
+    stats={S.CRIT_VALUE: 0.882},
+    refinement=1,
+    stats_by_refinement={
+        1: {
+            S.BASE_EM: 48+72,
+            S.CRIT_VALUE: 0.24
+        },
+    },
+    note="",
+)
+
 DAWNING_FROST = Weapon(
     name="Dawning Frost",
     base_atk=510.0,
@@ -174,6 +204,7 @@ EMBERWELL = Weapon(
 )
 
 TTDS_BONUS_HALF = {r: 0.12 + 0.06 * (r - 1) for r in range(1, 6)}
+TTDS_BONUS_FULL = {r: 0.24 + 0.12 * (r - 1) for r in range(1, 6)}
 
 TTDS_HALF_CATALYSATOR = Weapon(
     name="Эпос",
@@ -185,6 +216,53 @@ TTDS_HALF_CATALYSATOR = Weapon(
                  source=f"Эпос R{r}: +{TTDS_BONUS_HALF[r]:.0%} "
                         f"атаки персонажу"),)
         for r in TTDS_BONUS_HALF
+    },
+    note="",
+)
+
+TTDS_FULL_CATALYSATOR = Weapon(
+    name="Эпос",
+    base_atk=401.0,
+    refinement=5,
+    stats={S.HP_PCT: 0.352},
+    buffs_by_refinement={
+        r: (temp(S.ATK_PCT, TTDS_BONUS_FULL[r], requires=(TTDS_FULL,), target=TEAM,
+                 source=f"Эпос R{r}: +{TTDS_BONUS_FULL[r]:.0%} "
+                        f"атаки персонажу"),)
+        for r in TTDS_BONUS_FULL
+    },
+    note="",
+)
+
+SYMPHONIST_BONUS = {r: 0.32 + 0.08* (r-1) for r in range(1,6)}
+
+SYMPHONIST = Weapon(
+    name="Симфонист ароматов",
+    base_atk=608.0,
+    refinement=1,
+    stats={S.CRIT_VALUE: 0.662},
+    buffs_by_refinement={
+        r: (temp(S.ATK_PCT, SYMPHONIST_BONUS[r], requires=(ON,), target=TEAM,
+                 source=f"Симфонист R{r}: +{SYMPHONIST_BONUS[r]:.0%} "
+                        f"атаки персонажу"),)
+        for r in SYMPHONIST_BONUS
+    },
+    stats_by_refinement={
+        1: {
+            S.ATK_PCT: 0.24+0.32,
+        },
+        2: {
+            S.ATK_PCT: 0.3+0.4,
+        },
+        3: {
+            S.ATK_PCT: 0.36+0.48,
+        },
+        4: {
+            S.ATK_PCT: 0.42+0.56,
+        },
+        5: {
+            S.ATK_PCT: 0.48+0.64,
+        },
     },
     note="",
 )
@@ -276,30 +354,6 @@ BOUGH = Weapon(
         },
     },
     note="Оружие из баннера",
-)
-
-LOW_BASE_CRIT_STATSTICK = Weapon(
-    name="Крит затычка с низкой базой",
-    base_atk=542.0,
-    refinement=1,
-    stats={S.CRIT_VALUE: 0.882},
-    note="",
-)
-
-MID_BASE_CRIT_STATSTICK = Weapon(
-    name="Крит затычка с средней базой",
-    base_atk=608.0,
-    refinement=1,
-    stats={S.CRIT_VALUE: 0.662},
-    note="",
-)
-
-HIGH_BASE_CRIT_STATSTICK = Weapon(
-    name="Крит затычка с высокой базой",
-    base_atk=674.0,
-    refinement=1,
-    stats={S.CRIT_VALUE: 0.441},
-    note="",
 )
 
 AZURELIGHT = Weapon(
@@ -394,6 +448,97 @@ FAV_SWORD = Weapon(
     name="Меч фавония",
     base_atk=454.0,
     refinement=5,
+    note="",
+)
+
+FAV_LANCE = Weapon(
+    name="Копье фавония",
+    base_atk=454.0,
+    refinement=5,
+    note="",
+)
+
+TIDAL_SHADOW = Weapon(
+    name="Тень волны",
+    base_atk=510.0,
+    refinement=5,
+    stats={S.ATK_PCT: 0.413},
+    stats_by_refinement={
+        5: {
+            S.ATK_PCT: 0.48,
+        },
+    },
+    note="",
+)
+
+SERPENT_SPINE = Weapon(
+    name="Меч драконьей кости",
+    base_atk=510.0,
+    refinement=1,
+    stats={S.CRIT_VALUE: 0.276*2},
+    stats_by_refinement={
+        1: {
+            "dmg_bonus.cryo": 0.3,
+        },
+    },
+    note="",
+)
+
+FLOWER = Weapon(
+    name="Цветок в латах",
+    base_atk=565.0,
+    refinement=5,
+    stats={S.BASE_EM: 0.110},
+    stats_by_refinement={
+        5: {
+            S.ATK_PCT: 0.24,
+            S.BASE_EM: 96
+        },
+    },
+    note="",
+)
+
+TEASPOON = Weapon(
+    name="Чайная ложка",
+    base_atk=674.0,
+    refinement=1,
+    stats={S.CRIT_VALUE: 0.44},
+    stats_by_refinement={
+        1: {
+            S.ATK_PCT: 0.28,
+            S.SC_BONUS: 0.16*3
+        },
+        2: {
+            S.ATK_PCT: 0.35,
+            S.SC_BONUS: 0.2*3
+        },
+        3: {
+            S.ATK_PCT: 0.42,
+            S.SC_BONUS: 0.24*3
+        },
+        4: {
+            S.ATK_PCT: 0.49,
+            S.SC_BONUS: 0.28*3
+        },
+        5: {
+            S.ATK_PCT: 0.56,
+            S.SC_BONUS: 0.32*3
+        },
+    },
+    note="",
+)
+
+THOUSAND_SUNS = Weapon(
+    name="Тысяча солнц",
+    base_atk=741.0,
+    refinement=1,
+    stats={S.CRIT_VALUE: 0.11*2},
+    stats_by_refinement={
+        1: {
+            S.CRIT_VALUE: 0.2,
+            S.ATK_PCT: 0.28
+        },
+    },
     note="",
 )
 

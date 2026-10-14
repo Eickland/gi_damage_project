@@ -75,6 +75,8 @@ HEART_OF_FORGE = ArtifactSet(
     buffs_by_pieces={
         4: (Buff(S.SSW_BONUS, 0.50, target=TEAM,
          source="Сердце горна 4ч:+50% урона звёздного команде"),
+            Buff(S.SC_BONUS, 0.50, target=TEAM,
+         source="Сердце горна 4ч:+50% урона звёздного команде"),
             Buff(S.ATK_PCT, 0.12, target=SELF,
          source="Сердце горна 4ч:+12% атаки носителю"))
         },
@@ -93,6 +95,22 @@ SCARLET_PROOF = ArtifactSet(
          source="Багряное доказательство 4ч:+40% урона звёздного рассеивания"),
             Buff(S.CRIT_VALUE, 0.32, target=SELF,
          source="Багряное доказательство 4ч:+16% крит шанса носителю"))
+        },
+    note="",
+)
+
+DISENCHANTMENT = ArtifactSet(
+    name="Разочарование",
+    pieces=4,
+    stats_by_pieces={
+        # 2 предмета: +18% атаки носителю
+        2: {S.ATK_PCT: 0.18},
+    },
+    buffs_by_pieces={
+        4: (Buff(S.SC_BONUS, 0.40, target=SELF,
+         source="Разочарование 4ч:+40% урона звёздного проводника"),
+            Buff(S.CRIT_VALUE, 0.32, target=SELF,
+         source="Разочарование 4ч:+16% крит шанса носителю"))
         },
     note="",
 )
@@ -120,6 +138,15 @@ NIGHT_SKY = ArtifactSet(
     stats_by_pieces={
         2: {S.BASE_EM: 80},
         4: {},
+    },    
+)
+
+GILDED = ArtifactSet(
+    name = "Позолоченные сны",
+    pieces=4,
+    stats_by_pieces={
+        2: {S.BASE_EM: 80},
+        4: {S.BASE_EM: 150},
     },    
 )
 

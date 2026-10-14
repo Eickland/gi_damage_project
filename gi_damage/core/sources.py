@@ -34,6 +34,7 @@ from .buffs import State, state
 #                     зато применяется множитель МС/бонуса SSW)
 ELEMENTAL = "elemental"
 STELLAR_SWIRL = "stellar_swirl"
+STELLAR_CONDUCT = "stellar_conduct"
 
 MotionValue = Union[float, Callable[["object"], float]]
 
@@ -67,6 +68,7 @@ class DamageSource:
     multipliers: Tuple[str, ...] = ()  # имена доп. множителей персонажа (см. Character.multipliers)
     res_override: Optional[float] = None   # заменить множитель сопротивления цели
     crit_mode: Optional[str] = None    # переопределить режим крита для этого источника
+    polar_stacks: int = 1 
     note: str = ""
 
     # Дополнительные теги для поиска бонусов урона: element + kind + пользовательские
@@ -101,4 +103,14 @@ def stellar_swirl(name: str, scaling: str, mv: MotionValue, element: str,
     kwargs.setdefault("applies_def", False)
     return DamageSource(name=name, scaling=scaling, mv=mv, element=element,
                         kind=kind, model=STELLAR_SWIRL,
+                        occurrences=list(occurrences), **kwargs)
+    
+def stellar_conduct(name: str, scaling: str, mv: MotionValue, element: str,
+                  occurrences: Sequence[Occurrence], kind: str = "skill",
+                  **kwargs) -> DamageSource:
+    """Прямой урон звёздного проводника (из талантов персонажей).
+    """
+    kwargs.setdefault("applies_def", False)
+    return DamageSource(name=name, scaling=scaling, mv=mv, element=element,
+                        kind=kind, model=STELLAR_CONDUCT,
                         occurrences=list(occurrences), **kwargs)

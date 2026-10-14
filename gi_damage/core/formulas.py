@@ -46,11 +46,24 @@ def ssw_multiplier(stats: Stats, *tags: str) -> float:
     """(1 + 6·МС/(МС+2000) + Бонус урона звёздной реакции)."""
     return 1.0 + em_swirl_term(stats.em) + stats.ssw_bonus(*tags)
 
+def sc_multiplier(stats: Stats, *tags: str) -> float:
+    """(1 + 6·МС/(МС+2000) + Бонус урона звёздной реакции)."""
+    return 1.0 + em_swirl_term(stats.em) + stats.sc_bonus(*tags)
 
 def base_increase(stats: Stats, *tags: str) -> float:
     """(1 + Бонус базового урона) — «Base DMG Increase%»."""
     return 1.0 + stats.ssw_base_inc(*tags)
 
+def base_increase_sc(stats: Stats, *tags: str) -> float:
+    """(1 + Бонус базового урона) — «Base DMG Increase%»."""
+    return 1.0 + stats.sc_base_inc(*tags)
+
+def stellar_conduct_multiplier(polar_stacks:int = 1):
+    
+    if polar_stacks == 1:
+        return 1
+    else:
+        return 1.5 + (polar_stacks-2)*0.05
 
 def elemental_damage(base: float, stats: Stats, tags, def_mult: float,
                      res_mult: float, crit: float, elevation: float,
@@ -71,6 +84,15 @@ def stellar_swirl_direct(stat_value: float, mv: float, stats: Stats, tags,
     base = (stat_value * mv
             * base_increase(stats, *tags)
             * ssw_multiplier(stats, *tags))
+    return max(0.0, (base + flat_base) * res_mult * crit * (1.0 + elevation))
+
+def stellar_conduct_direct(stat_value: float, mv: float, stats: Stats, tags,
+                         res_mult: float, crit: float, elevation: float,
+                         flat_base: float = 0.0, polar_stacks:int = 1) -> float:
+    """Прямой урон звёздного проводника (из талантов)."""
+    base = (stellar_conduct_multiplier(polar_stacks)*stat_value * mv
+            * base_increase_sc(stats, *tags)
+            * sc_multiplier(stats, *tags))
     return max(0.0, (base + flat_base) * res_mult * crit * (1.0 + elevation))
 
 

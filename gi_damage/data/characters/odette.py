@@ -12,7 +12,7 @@ from ...core.buffs import OTHERS, SELF, TEAM, Buff
 from ...core.entities import Character, Constellation, with_rotation
 from ...core.stats import S
 from ..tags import *
-from ...core.sources import elemental, occ, stellar_swirl
+from ...core.sources import elemental, occ, stellar_swirl,stellar_conduct
 
 
 def _odette_mp(stats) -> float:
@@ -42,16 +42,24 @@ SNOW_SWAN_C4_SHARE = 0.50    # C4: половина эффекта достаё�
 def odette_burst_buffs(constellation: int):
     """Баффы «Сна снежного лебедя» — только если взрыв применён."""
     out = [Buff(S.SSW_BONUS, SNOW_SWAN_BONUS, target=SELF,
-                source="Сон снежного лебедя: +50% урона звёздных реакций")]
+                source="Сон снежного лебедя: +50% урона звёздных реакций"),
+            Buff(S.SC_BONUS, SNOW_SWAN_BONUS, target=SELF,
+                            source="Сон снежного лебедя: +50% урона звёздных реакций")]
     if constellation >= 5:
         out = [Buff(S.SSW_BONUS, SNOW_SWAN_BONUS + 0.12, target=SELF,
+                    source="Сон снежного лебедя: +62% урона звёздных реакций (C5)"),
+                Buff(S.SC_BONUS, SNOW_SWAN_BONUS + 0.12, target=SELF,
                     source="Сон снежного лебедя: +62% урона звёздных реакций (C5)")]
         out.append(Buff(S.SSW_BONUS, (SNOW_SWAN_BONUS + 0.12) * SNOW_SWAN_C4_SHARE,
+                        target=OTHERS, source="C5: половина «Сна снежного лебедя» отряду"))
+        out.append(Buff(S.SC_BONUS, (SNOW_SWAN_BONUS + 0.12) * SNOW_SWAN_C4_SHARE,
                         target=OTHERS, source="C5: половина «Сна снежного лебедя» отряду"))
         return tuple(out)
 
     if constellation == 4:
         out.append(Buff(S.SSW_BONUS, SNOW_SWAN_BONUS * SNOW_SWAN_C4_SHARE,
+                        target=OTHERS, source="C4: половина «Сна снежного лебедя» отряду"))
+        out.append(Buff(S.SC_BONUS, SNOW_SWAN_BONUS * SNOW_SWAN_C4_SHARE,
                         target=OTHERS, source="C4: половина «Сна снежного лебедя» отряду"))
     return tuple(out)
 
@@ -69,12 +77,20 @@ ODETTE_KIT = Character(
     buffs=(
         Buff(S.SSW_BASE_INC, 0.14, target=TEAM,
              source="Одетта: +14% базового урона звёздного рассеивания"),
+        Buff(S.SC_BASE_INC, 0.14, target=TEAM,
+             source="Одетта: +14% базового урона звёздного проводника"),
         # Пока Одетта на поле — стаки ещё у неё
         Buff(S.SSW_BONUS, SPLENDOR_STACKS * SPLENDOR_PER_STACK,
              target=SELF, requires=(ON,),
              source="Marvelous Splendor: 4 стака себе (на поле)"),
+        Buff(S.SC_BONUS, SPLENDOR_STACKS * SPLENDOR_PER_STACK,
+             target=SELF, requires=(ON,),
+             source="Marvelous Splendor: 4 стака себе (на поле)"),
         # Ушла с поля — стаки перешли отряду
         Buff(S.SSW_BONUS, SPLENDOR_STACKS * SPLENDOR_PER_STACK,
+             target=OTHERS,
+             source="Marvelous Splendor: 4 стака отряду"),
+        Buff(S.SC_BONUS, SPLENDOR_STACKS * SPLENDOR_PER_STACK,
              target=OTHERS,
              source="Marvelous Splendor: 4 стака отряду"),
     ),
@@ -91,6 +107,12 @@ ODETTE_KIT = Character(
                      target=SELF, requires=(ON,),
                      source="C1: +2 стака Splendor себе"),
                 Buff(S.SSW_BONUS, SPLENDOR_C1_EXTRA * SPLENDOR_PER_STACK,
+                     target=OTHERS,
+                     source="C1: +2 стака Splendor отряду"),
+                Buff(S.SC_BONUS, SPLENDOR_C1_EXTRA * SPLENDOR_PER_STACK,
+                     target=SELF, requires=(ON,),
+                     source="C1: +2 стака Splendor себе"),
+                Buff(S.SC_BONUS, SPLENDOR_C1_EXTRA * SPLENDOR_PER_STACK,
                      target=OTHERS,
                      source="C1: +2 стака Splendor отряду"),
             ),
@@ -111,6 +133,8 @@ ODETTE_KIT = Character(
                 # Пока на поле двойник — цель теряет 20% крио и анемо сопр.
                 Buff("res_reduction.cryo", 0.20, target=TEAM,
                      source="C2: -20% крио сопротивления"),
+                Buff("res_reduction.electro", 0.20, target=TEAM,
+                     source="C2: -20% электро сопротивления"),
                 Buff("res_reduction.anemo", 0.20, target=TEAM,
                      source="C2: -20% анемо сопротивления"),
             ),
@@ -125,6 +149,9 @@ ODETTE_KIT = Character(
                 "Навык — SSW, Plume Dance": lambda s: replace(s, mv=0.8612),
                 "Навык — SSW, Wing Dance": lambda s: replace(s, mv=1.0299),
                 "Особый навык — SSW": lambda s: replace(s, mv=9.7461),
+                "Навык — SC, Plume Dance": lambda s: replace(s, mv=0.5743),
+                "Навык — SC, Wing Dance": lambda s: replace(s, mv=0.6866),
+                "Особый навык — SC": lambda s: replace(s, mv=6.4974),
             },
         ),
         4: Constellation(number=4, name="C4"),
@@ -139,6 +166,9 @@ ODETTE_KIT = Character(
                 Buff(S.SSW_BONUS, 6 * SPLENDOR_PER_STACK,
                      target=SELF, requires=(OFF,),
                      source="C6: стаки Splendor не расходуются (бонус SSW вне поля)"),
+                Buff(S.SC_BONUS, 6 * SPLENDOR_PER_STACK,
+                     target=SELF, requires=(OFF,),
+                     source="C6: стаки Splendor не расходуются (бонус SC вне поля)"),
                 Buff(S.ATK_PCT, 6 * SPLENDOR_C2_ATK,
                      target=SELF, requires=(OFF,),
                      source="C6: стаки Splendor не расходуются (АТК вне поля)"),
@@ -148,6 +178,10 @@ ODETTE_KIT = Character(
                      source="C6: +25% возвышения урона SSW всем со стаками"),
                 Buff("elevation.stellar_swirl", 0.20, target=SELF,
                      source="C6: +20% возвышения урона SSW самой Одетте"),
+                Buff("elevation.stellar_conduct", 0.25, target=TEAM,
+                     source="C6: +25% возвышения урона SC всем со стаками"),
+                Buff("elevation.stellar_conduct", 0.20, target=SELF,
+                     source="C6: +20% возвышения урона SC самой Одетте"),
             ),
         ),
     },
@@ -221,6 +255,39 @@ ODETTE_COMBO_DICT = {
             stellar_swirl("C4: доп. атака",
                           "atk", 0.99, "cryo",
                           [occ(1, OFF,), occ(3, OFF, INST, DREAM, FROSTGLOW, BREEZEBORNE,VV_CRYO)], multipliers=("mp",)),
+        ),
+    },
+),
+
+    "odette_ssc_combo_vv_part_uptime" : with_rotation(
+    ODETTE_KIT,
+    sources=(
+        elemental("Использование навыка (АТК)", "atk", 1.9454, "cryo", "skill",
+                  [occ(1, ON,VV_CRYO)]),
+        elemental("Навык (АТК), Plume Dance", "atk", 0.7747, "cryo", "skill",
+                  [occ(4, OFF,VV_CRYO), occ(1, OFF,VV_CRYO)]),
+        elemental("Навык (АТК), Wing Dance", "atk", 0.9264, "cryo", "skill",
+                  [occ(3, OFF,VV_CRYO), occ(1, OFF,VV_CRYO)]),
+        
+        stellar_conduct("Навык — SC, Plume Dance", "atk", 0.4864, "cryo",
+                      [occ(1, OFF,VV_CRYO),occ(2, OFF, INST, BREEZEBORNE,VV_CRYO,SEVEN_SACRED),
+                       occ(2, OFF, INST, BREEZEBORNE,VV_CRYO,SEVEN_SACRED)], multipliers=("mp",),polar_stacks=6),
+        stellar_conduct("Навык — SC, Wing Dance", "atk", 0.5816, "cryo",
+                      [occ(1, OFF),occ(1, OFF, INST, BREEZEBORNE,VV_CRYO,SEVEN_SACRED),
+                       occ(2, OFF, INST, BREEZEBORNE,VV_CRYO,SEVEN_SACRED)], multipliers=("mp",),polar_stacks=6),
+        stellar_conduct("Особый навык — SC", "atk", 5.5037, "cryo",
+                      [occ(1, ON,BREEZEBORNE,VV_CRYO,CATS_TAIL,SEVEN_SACRED)], multipliers=("mp",),polar_stacks=5),
+    ),
+    constellation_sources={
+        1: (
+            stellar_conduct("C1: доп. атака после особого навыка",
+                          "atk", 3, "cryo",
+                          [occ(1, ON, BREEZEBORNE,VV_CRYO,CATS_TAIL,SEVEN_SACRED)], multipliers=("mp",),polar_stacks=5),
+        ),
+        4: (
+            stellar_conduct("C4: доп. атака",
+                          "atk", 0.66, "cryo",
+                          [occ(1, OFF,VV_CRYO), occ(3, OFF, INST, BREEZEBORNE,VV_CRYO,SEVEN_SACRED)], multipliers=("mp",),polar_stacks=6),
         ),
     },
 ),

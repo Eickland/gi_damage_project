@@ -22,6 +22,9 @@ from gi_damage.core.report import roster_report
 
 from dataclasses import replace
 
+from gi_damage.visual.rosters import RosterBook
+
+
 def keep_viridescent(team):
     """Изумрудная тень обязана быть в отряде.
 
@@ -54,7 +57,7 @@ SHOW_ALL_TEAMS = True
 
 def main(argv: list[str]) -> int:
     details = "--details" in argv
-
+    book = RosterBook() 
     print("Стандарты")
 
     teams = all_teams()
@@ -87,17 +90,11 @@ def main(argv: list[str]) -> int:
                                               FROSTFEATHER.at(3),
                                               FROSTFEATHER.at(5),
                                               FINALE.at(5),
-                                              LOW_BASE_CRIT_STATSTICK,
-                                              MID_BASE_CRIT_STATSTICK,
-                                              HIGH_BASE_CRIT_STATSTICK,
                                               HARBINGER.at(5),
                                               BOUGH.at(1),
                                               BOUGH.at(3),
                                               BOUGH.at(5)])])
-    print("========================")
-    print("=== Ростер: оружие Одетта (C0) ===")
-    print(roster_report(roster6.run(), title="оружие Одетта (C0)", ascending=True))
-    print()
+    book.add(roster6, "Оружие Одетты С0", ascending=True)
 
     roster7 = Roster(base, [Variation(slot="Фарузан",
                                      weapons=[FAV_BOW,
@@ -106,10 +103,7 @@ def main(argv: list[str]) -> int:
                                               BREEZEBORNE_BOW.at(3),
                                               BREEZEBORNE_BOW.at(4),
                                               BREEZEBORNE_BOW.at(5),])])
-    print("========================")
-    print("=== Ростер: оружие Фарузан (C6) ===")
-    print(roster_report(roster7.run(), title="оружие Фарузан (C6)", ascending=True))
-    print()
+    book.add(roster7, "Оружие Фарузан", ascending=True)
 
     # ------------------------------------------------------------------ #
     #  Пример 2: созвездия Мидзуки × оружие                                #
@@ -118,37 +112,29 @@ def main(argv: list[str]) -> int:
     roster2 = Roster(base, [
         Variation(slot="Мидзуки", constellations=[0, 1, 2, 3, 6]),
     ], tweak=c6_mizuki_main_stats)
-    print("========================")
-    print("=== Ростер: созвездия Мидзуки ===")
-    print(roster_report(roster2.run(), title="созвездия Мидзуки", ascending=True))
+    book.add(roster2, "Созвездия Мидзуки", ascending=True)
     
     roster3 = Roster(base, [
         Variation(slot="Крио ГГ", constellations=[0, 2, 3, 5, 6]),
     ],tweak=keep_viridescent)
-    print("========================")
-    print("=== Ростер: созвездия Крио ГГ ===")
-    print(roster_report(roster3.run(), title="созвездия Крио ГГ", ascending=True))
+    book.add(roster3, "Созвездия Крио ГГ", ascending=True)
     
     roster4 = Roster(base, [
         Variation(slot="Одетта", builds=[odette_build(constellation=c, weapon=SILVER_LIGHT) for c in (0, 1, 2,3, 4,5, 6)]),
     ],tweak=keep_viridescent)
-    print("========================")
-    print("=== Ростер: созвездия Одетта ===")
-    print(roster_report(roster4.run(), title="созвездия Одетта", ascending=True))
+    book.add(roster4, "Созвездия Одетта", ascending=True)
     
     roster5 = Roster(base, [
-        Variation(slot="Мидзуки", artifact_sets=[(VIRIDESCENT,), (NIGHT_SKY,AUBADE,), (SCARLET_PROOF,)]),
+        Variation(slot="Мидзуки", artifact_sets=[(VIRIDESCENT,), (NIGHT_SKY.at(2),AUBADE.at(2),), (SCARLET_PROOF,)]),
     ], tweak=keep_viridescent)
-    print("========================")
-    print("=== Ростер: наборы артефактов Мидзуки ===")
-    print(roster_report(roster5.run(), title="наборы артефактов Мидзуки", ascending=True))
+    book.add(roster5, "Наборы артефактов Мидзуки", ascending=True)
     
     roster63 = Roster(base, [
-        Variation(slot="Крио ГГ", artifact_sets=[(MILLELITH,), (HEART_OF_FORGE,SCARLET_PROOF,),]),
+        Variation(slot="Крио ГГ", artifact_sets=[(MILLELITH,), (HEART_OF_FORGE.at(2),SCARLET_PROOF.at(2),),]),
     ], tweak=keep_viridescent)
-    print("========================")
-    print("=== Ростер: наборы артефактов Крио ГГ ===")
-    print(roster_report(roster63.run(), title="наборы артефактов Крио ГГ", ascending=True))              
+    book.add(roster63, "Наборы артефактов Крио ГГ", ascending=True)              
+    
+    book.save("rosters.html")
     
     return 0
 
