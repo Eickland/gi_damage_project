@@ -11,7 +11,7 @@ from ...core.entities import Character, Constellation, with_rotation
 from ...core.sources import Occurrence, elemental, occ, stellar_swirl
 from ...core.stats import S
 from ..tags import (DREAM, INST, OFF, ON, FROSTGLOW, BREEZEBORNE,
-                    ARMED, DA1, DA2, DA3, DA4, DA5, DA6, VODYA_LEAD)
+                    ARMED, DA1, DA2, DA3, DA4, DA5, DA6, VODYA_LEAD,CATS_TAIL,TTDS_HALF)
 
 # =========================================================================== #
 #  Весна — анемо, main dps (меч)
@@ -101,40 +101,42 @@ VESNA_KIT = Character(
 VESNA_COMBO_DICT = {
     "ssw_burst_combo" : with_rotation(VESNA_KIT,sources=(
         elemental("Обычный удар, N1", "atk", 0.799, "anemo", "normal",
-                  [occ(4, ON)]),
+                  [occ(4, ON,TTDS_HALF)]),
         elemental("Заряженная атака", "atk", 2.6299, "anemo", "charged",
-                  [occ(4, ON)]),
+                  [occ(4, ON,TTDS_HALF)]),
         
         elemental("Использование навыка", "atk", 0.72, "anemo", "skill",
-                  [occ(1, ON)]),
+                  [occ(1, ON,TTDS_HALF)]),
 
         elemental("Windborne Sword Lv1", "atk", 0.72, "anemo", "skill",
-                  [occ(1, ON, ARMED)],
+                  [occ(1, ON, ARMED,TTDS_HALF)],
                   extra_tags=("windborne_sword",)),
 
         elemental("Windborne Sword Lv2", "atk", 1.08, "anemo", "skill",
-                  [occ(1, ON, ARMED)],
+                  [occ(1, ON, ARMED,TTDS_HALF)],
                   extra_tags=("windborne_sword",)),
 
         stellar_swirl("Windborne Sword Lv2 — Spirit Blade", "atk", 2.016,
-                  "anemo",[occ(1, ON, ARMED, DA1, BREEZEBORNE, FROSTGLOW,VODYA_LEAD)],"skill",
+                  "anemo",[occ(1, ON, ARMED, DA1, BREEZEBORNE, FROSTGLOW,VODYA_LEAD,CATS_TAIL,TTDS_HALF)],"skill",
                   extra_tags=("spirit_blade",),
                   multipliers=("disciplinary_action",)),
 
         stellar_swirl("Windborne Sword Lv3 — Spirit Blade x4", "atk", 0.8064,
                   "anemo",
-                  [occ(4, ON, ARMED, DA3, BREEZEBORNE, FROSTGLOW,VODYA_LEAD), occ(4, ON, ARMED, DA4, FROSTGLOW,VODYA_LEAD), occ(4, ON, ARMED, DA5, FROSTGLOW,VODYA_LEAD)], "skill",
+                  [occ(4, ON, ARMED, DA3, BREEZEBORNE, FROSTGLOW,VODYA_LEAD,CATS_TAIL,TTDS_HALF), occ(4, ON, ARMED, DA4, FROSTGLOW,VODYA_LEAD,CATS_TAIL,TTDS_HALF),
+                   occ(4, ON, ARMED, DA5, FROSTGLOW,VODYA_LEAD,CATS_TAIL)], "skill",
                   extra_tags=("spirit_blade",),multipliers=("disciplinary_action",)),
         stellar_swirl("Windborne Sword Lv3 Spirit Blade Final Hit", "atk",
                   2.8224, "anemo", 
-                  [occ(1, ON, ARMED, DA3, BREEZEBORNE, FROSTGLOW,VODYA_LEAD), occ(1, ON, ARMED, DA4, FROSTGLOW,VODYA_LEAD), occ(1, ON, ARMED, DA5, FROSTGLOW,VODYA_LEAD)],"skill",
+                  [occ(1, ON, ARMED, DA3, BREEZEBORNE, FROSTGLOW,VODYA_LEAD,CATS_TAIL,TTDS_HALF), occ(1, ON, ARMED, DA4, FROSTGLOW,VODYA_LEAD,CATS_TAIL,TTDS_HALF),
+                   occ(1, ON, ARMED, DA5, FROSTGLOW,VODYA_LEAD,CATS_TAIL)],"skill",
                   extra_tags=("spirit_blade",),multipliers=("disciplinary_action",)),
 
         elemental("Перо ветра", "atk", 0.1872, "anemo", "skill",
                   [occ(5, ON, ARMED)]),
 
         stellar_swirl("Взрыв — Клинок Духа", "atk", 4.7376, "anemo",
-                  [occ(1, ON, ARMED, DA2, BREEZEBORNE, FROSTGLOW,VODYA_LEAD)], "burst",
+                  [occ(1, ON, ARMED, DA2, BREEZEBORNE, FROSTGLOW,VODYA_LEAD,CATS_TAIL,TTDS_HALF)], "burst",
                   extra_tags=("spirit_blade",),multipliers=("disciplinary_action",)),
     
     ), constellation_sources={
@@ -188,7 +190,7 @@ VESNA_COMBO_DICT = {
                   extra_tags=("windborne_sword",)),
 
         stellar_swirl("Windborne Sword Lv2 — Spirit Blade", "atk", 2.016,
-                  "anemo",[occ(1, ON, ARMED, DA1, BREEZEBORNE, FROSTGLOW)],"skill",
+                  "anemo",[occ(1, ON, ARMED, DA1, BREEZEBORNE, FROSTGLOW,)],"skill",
                   extra_tags=("spirit_blade",),
                   multipliers=("disciplinary_action",)),
 

@@ -28,7 +28,7 @@ from ...core.reactions import ssw_anemo, ssw_vortex
 from ...core.stats import S
 from ...core.utilits import merge_dicts
 from ...data.artifacts import *
-from ...data.artifacts_presets import STANDART_SUBSTAT_PRESET
+from ...data.artifacts_presets import STANDART_SUBSTAT_PRESET,MY_MIZUKI_VV_BUILD
 from ...data.tags import DREAM, INST, OFF, ON, VODYA_CHORUS, VODYA_LEAD
 from ...data.weapons import *
 from ...data.characters.odette import odette_burst_buffs, ODETTE_BURST_TIME, ODETTE_COMBO_DICT, ODETTE_BURST_SOURCES
@@ -83,7 +83,7 @@ def mizuki_build(constellation: int, weapon, artifacts, extra_buffs: Sequence[Bu
         artifacts=artifacts,
         extra_stats=merge_dicts(
             main_stats,
-            STANDART_SUBSTAT_PRESET),
+            MY_MIZUKI_VV_BUILD),
         extra_buffs=tuple(extra_buffs),
         time=TIMES["Мидзуки"],
     )
@@ -91,7 +91,7 @@ def mizuki_build(constellation: int, weapon, artifacts, extra_buffs: Sequence[Bu
 
 def cryo_mc_build(constellation: int, artifacts, weapon=EXAIPHANES, extra_buffs: Sequence[Buff] = ()) -> Build:
     return Build(
-        character=CMC_COMBO_DICT["cmc_ssw_vodya_combo"],
+        character=CMC_COMBO_DICT["cmc_ssw_combo"],
         constellation=constellation,
         weapon=weapon,
         artifacts=artifacts,
@@ -194,7 +194,7 @@ def all_teams() -> Dict[str, Team]:
         ("Мидзуки C2, C2 Одетта, C2R3 Крио ГГ, С0 Водяница", 2, WANDERER_SONG.at(5), 2, SILVER_LIGHT,(VIRIDESCENT,),(MILLELITH,),TTDS_HALF_CATALYSATOR,0,4,(HEART_OF_FORGE.at(2),SCARLET_PROOF.at(2))),
         ("Мидзуки C3R1, C2R1 Одетта, C4R3 Крио ГГ, С0 Водяница", 3, SUNNY_MORNING_SLEEP_IN.at(1), 2, FROSTFEATHER,(VIRIDESCENT,),(MILLELITH,),TTDS_HALF_CATALYSATOR,0,4,(HEART_OF_FORGE.at(2),SCARLET_PROOF.at(2))),
         ("Мидзуки C3R1, C2R1 Одетта, C6R3 Крио ГГ, С0 Водяница", 3, SUNNY_MORNING_SLEEP_IN.at(1), 2, FROSTFEATHER,(VIRIDESCENT,),(MILLELITH,),TTDS_HALF_CATALYSATOR,0,6,(HEART_OF_FORGE.at(2),SCARLET_PROOF.at(2))),
-        ("Мидзуки C2R0, C2R1 Одетта, C4R3 Крио ГГ, С6R1 Водяница", 2, STARCALLERS_WATCH.at(1), 2, FROSTFEATHER,(VIRIDESCENT,),(MILLELITH,),MAELSTROM,6,4,(HEART_OF_FORGE.at(2),SCARLET_PROOF.at(2))),
+        ("Мидзуки C6R0, C2R0 Одетта, C4R3 Крио ГГ, С0R1 Водяница", 6, STARCALLERS_WATCH.at(1), 2, AZURELIGHT,(GILDED,),(MILLELITH,),MAELSTROM,0,4,(HEART_OF_FORGE.at(2),SCARLET_PROOF.at(2))),
 
 
     )

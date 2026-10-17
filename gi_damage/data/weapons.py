@@ -90,6 +90,15 @@ SUNNY_MORNING_SLEEP_IN = Weapon(
         1: {
             S.BASE_EM: 248.0,
         },
+        2: {
+            S.BASE_EM: 248.0*1.25,
+        },
+        3: {
+            S.BASE_EM: 248.0*1.5,
+        },
+        4: {
+            S.BASE_EM: 248.0*1.75,
+        },
         5: {
             S.BASE_EM: 248.0*2,
         },
@@ -419,7 +428,7 @@ CHRYSALIS = Weapon(
         },
         4: {
             S.SSW_BONUS: 0.63,
-            S.CRIT_VALUE: 1.4
+            S.CRIT_VALUE: 1.04
         },
         5: {
             S.SSW_BONUS: 0.72,
