@@ -148,5 +148,69 @@ SANDRONE_COMBO_DICT = {
         ),
     },
 ),
+    "sandrone_sc_combo" : with_rotation(
+    SANDRONE_KIT,
+    sources=(
+        elemental("Prism Shot DMG", "atk", 0.5832, "cryo", "skill",
+                  [occ(3, ON,VV_CRYO,TTDS_FULL)]),
+        elemental("Charged Attack Sweeping Fire DMG", "atk", 0.85, "cryo", "charged",
+                  [occ(27, ON,VV_CRYO,TTDS_FULL), occ(9, ON,)]),
+        elemental("Bombardment DMG", "atk", 1.5879, "cryo", "burst",
+                  [occ(3, ON,VV_CRYO,TTDS_FULL),]),
+        stellar_conduct("Charged Attack Condensed Beam Stellar-Conduct", "atk", 1.615,
+                      "cryo", [occ(4, ON, INST,BREEZEBORNE,VV_CRYO,TTDS_FULL,SEVEN_SACRED,CATS_TAIL),
+                               occ(3, ON, INST,BREEZEBORNE,VV_CRYO,SEVEN_SACRED,CATS_TAIL),
+                               occ(1, ON,BREEZEBORNE,VV_CRYO,TTDS_FULL),
+                               occ(1, ON,),], kind="charged",polar_stacks=9),
+        stellar_conduct("Prism Shot Stellar-Conduct DMG", "atk", 0.3888*4,
+                      "cryo", [occ(1, ON, INST,BREEZEBORNE,VV_CRYO,TTDS_FULL,CATS_TAIL,SEVEN_SACRED),
+                               occ(1, ON,BREEZEBORNE,VV_CRYO,TTDS_FULL,CATS_TAIL,SEVEN_SACRED),
+                               occ(1, ON,),], kind="skill",polar_stacks=9),
+        stellar_conduct("Convective Inhibition Ray Stellar-Conduct DMG", "atk", 2*3.9696, "cryo",
+                      [occ(1, ON, INST,BREEZEBORNE,FROSTGLOW,VV_CRYO,TTDS_FULL,CATS_TAIL,SEVEN_SACRED)], kind="burst",polar_stacks=10),
+    ),
+    constellation_patches={
+        1: {
+            "Charged Attack Condensed Beam Stellar-Conduct": lambda s: replace(s, occurrences=[
+                occ(5, ON, INST,BREEZEBORNE,VV_CRYO,TTDS_FULL,CATS_TAIL,SEVEN_SACRED),
+                occ(1, ON,BREEZEBORNE,VV_CRYO,TTDS_FULL,CATS_TAIL),
+                occ(2, ON,BREEZEBORNE,VV_CRYO,INST),
+                occ(4, ON,BREEZEBORNE,VV_CRYO,INST,CATS_TAIL,SEVEN_SACRED),
+                ]),
+            "Prism Shot Stellar-Conduct DMG": lambda s: replace(s, occurrences=[
+                occ(1, ON,BREEZEBORNE,VV_CRYO,TTDS_FULL,CATS_TAIL,SEVEN_SACRED),
+                occ(1, ON,BREEZEBORNE,VV_CRYO,SEVEN_SACRED),
+                ]),            
+        },
+        2: {
+            "Charged Attack Condensed Beam Stellar-Conduct": lambda s: replace(s, occurrences=[
+                occ(5, ON, INST,BREEZEBORNE,VV_CRYO,TTDS_FULL,CATS_TAIL,SEVEN_SACRED),
+                occ(1, ON,BREEZEBORNE,VV_CRYO,TTDS_FULL,CATS_TAIL),
+                occ(2, ON,BREEZEBORNE,VV_CRYO,INST,SANDRONE_CA_STACKS_1),
+                occ(2, ON,BREEZEBORNE,VV_CRYO,INST,CATS_TAIL,SEVEN_SACRED,SANDRONE_CA_STACKS_2),
+                occ(2, ON,BREEZEBORNE,VV_CRYO,INST,CATS_TAIL,SEVEN_SACRED,SANDRONE_CA_STACKS_3),
+                ]),
+            "Prism Shot Stellar-Conduct DMG": lambda s: replace(s, occurrences=[
+                occ(1, ON,BREEZEBORNE,VV_CRYO,TTDS_FULL,CATS_TAIL,SEVEN_SACRED),
+                occ(1, ON,BREEZEBORNE,VV_CRYO,SEVEN_SACRED),
+                ]),            
+        },
+    },
+    constellation_sources={
+        4: (
+            stellar_conduct("Prismatic Resonance Cannon",
+                          "atk", 1.25, "cryo",
+                          [occ(1, ON,VV_CRYO,CATS_TAIL,SEVEN_SACRED), occ(2, ON, INST, BREEZEBORNE,TTDS_HALF,VV_CRYO,CATS_TAIL,SEVEN_SACRED)],polar_stacks=9),
+        ),
+        6: (
+            stellar_conduct("Condensed Cluster Beam Stellar-Conduct",
+                          "atk", 0.8, "cryo",
+                          [occ(6, ON, INST, BREEZEBORNE,TTDS_HALF,VV_CRYO,CATS_TAIL,SEVEN_SACRED),
+                           occ(2, ON, INST,VV_CRYO,CATS_TAIL,SEVEN_SACRED),
+                           occ(2, ON, INST,VV_CRYO,SEVEN_SACRED),
+                           ],polar_stacks=9),
+        ),
+    },
+),
 
 }

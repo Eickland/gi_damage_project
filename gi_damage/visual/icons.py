@@ -41,6 +41,7 @@ ALIASES: Dict[str, Dict[str, str]] = {
         "Алеша" : "alyosha",
         "Сайно" : "cyno",
         "Яэ Мико" : "yae",
+        "Митя" : "mitya",
     },
     "weapons": {
         "Песнь странника": "wanderers_song",

@@ -291,6 +291,7 @@ ODETTE_COMBO_DICT = {
         ),
     },
 ),
+    
     "odette_ssc_combo_cyno" : with_rotation(
     ODETTE_KIT,
     sources=(
@@ -323,5 +324,38 @@ ODETTE_COMBO_DICT = {
         ),
     },
 ),
+
+    "odette_ssc_combo" : with_rotation(
+    ODETTE_KIT,
+    sources=(
+        elemental("Использование навыка (АТК)", "atk", 1.9454, "cryo", "skill",
+                  [occ(1, ON,VV_CRYO)]),
+        elemental("Навык (АТК), Plume Dance", "atk", 0.7747, "cryo", "skill",
+                  [occ(4, OFF,VV_CRYO), occ(1, OFF,VV_CRYO)]),
+        elemental("Навык (АТК), Wing Dance", "atk", 0.9264, "cryo", "skill",
+                  [occ(3, OFF,VV_CRYO), occ(1, OFF,VV_CRYO)]),
         
+        stellar_conduct("Навык — SC, Plume Dance", "atk", 0.4864, "cryo",
+                      [occ(1, OFF,VV_CRYO),occ(2, OFF, INST, BREEZEBORNE,VV_CRYO,SEVEN_SACRED),
+                       occ(2, OFF, INST, BREEZEBORNE,VV_CRYO,SEVEN_SACRED)], multipliers=("mp",),polar_stacks=8),
+        stellar_conduct("Навык — SC, Wing Dance", "atk", 0.5816, "cryo",
+                      [occ(1, OFF),occ(1, OFF, INST, BREEZEBORNE,VV_CRYO,SEVEN_SACRED),
+                       occ(2, OFF, INST, BREEZEBORNE,VV_CRYO,SEVEN_SACRED)], multipliers=("mp",),polar_stacks=8),
+        stellar_conduct("Особый навык — SC", "atk", 5.5037, "cryo",
+                      [occ(1, ON,BREEZEBORNE,VV_CRYO,CATS_TAIL,SEVEN_SACRED)], multipliers=("mp",),polar_stacks=7),
+    ),
+    constellation_sources={
+        1: (
+            stellar_conduct("C1: доп. атака после особого навыка",
+                          "atk", 3, "cryo",
+                          [occ(1, ON, BREEZEBORNE,VV_CRYO,CATS_TAIL,SEVEN_SACRED)], multipliers=("mp",),polar_stacks=7),
+        ),
+        4: (
+            stellar_conduct("C4: доп. атака",
+                          "atk", 0.66, "cryo",
+                          [occ(1, OFF,VV_CRYO), occ(3, OFF, INST, BREEZEBORNE,VV_CRYO,SEVEN_SACRED)], multipliers=("mp",),polar_stacks=8),
+        ),
+    },
+),
+          
 }

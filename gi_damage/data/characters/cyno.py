@@ -8,11 +8,6 @@ C1 — базовая линия (созвездие выдаётся беспл
 Звёздный урон Сайно — только «Duststalker Bolts - Starsame»
 (A1 Featherfall Judgment + C6). Всё остальное — обычный электро урон.
 
-Допущение: «+600% МС» от A4 к Starsame складывается с «200% АТК» ВНУТРИ
-базы прямого урона (Attribute × Multiplier), т.е. дальше умножается на
-(1 + Base DMG Increase) и на (1 + 6·МС/(МС+2000) + бонус SC). Так же
-«+150% МС» к обычным атакам — это прибавка к базе до бонуса урона.
-Реализовано через DamageSource.extra_scaling.
 """
 
 from __future__ import annotations
@@ -36,7 +31,7 @@ BURST_EM = 100.0              # МС в Pactsworn Pathclearer
 
 JUDICATION_BONUS = 0.35       # A1: +35% урона навыка при Judication
 STARSAME_ATK = 2.00           # Duststalker Bolt - Starsame: 200% АТК
-STARSAME_EM = 3.00            # A4: +600% МС
+STARSAME_EM = 6.00            # A4: +600% МС
 BOLT_ATK = 1.00               # обычный Duststalker Bolt (без Radiance) — для справки
 BOLT_EM = 2.50
 NA_EM = 1.50                  # A4: обычные атаки в Pathclearer +150% МС
