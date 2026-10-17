@@ -1,0 +1,454 @@
+diff --git a/gi_damage/core/engine.py b/gi_damage/core/engine.py
+index adef5ae..bf585dd 100644
+--- a/gi_damage/core/engine.py
++++ b/gi_damage/core/engine.py
+@@ -339,8 +339,10 @@ class Team:
+     def _source_damage(self, src: DamageSource, stats: Stats, b: Build,
+                        multipliers, crit_mode: str, ctx: TeamContext) -> float:
+         tags = src.tags()
+-        mv = src.motion_value(ctx)
+-        stat_value = stats.stat(src.scaling)
++        # Стат × Множитель (+ доп. слагаемые extra_scaling, напр. «+150% МС»).
++        # Дальше в формулы идёт уже готовая база с mv = 1.
++        stat_value = src.base_term(stats, ctx)
++        mv = 1.0
+         crit = crit_multiplier(stats, src.crit_mode or crit_mode, *tags)
+         res = self._res(src.element, stats, src.res_override)
+         elevation = self.enemy.elevation + stats.elevation(*tags)
+diff --git a/gi_damage/core/sources.py b/gi_damage/core/sources.py
+index 89f223c..38a804a 100644
+--- a/gi_damage/core/sources.py
++++ b/gi_damage/core/sources.py
+@@ -69,6 +69,10 @@ class DamageSource:
+     res_override: Optional[float] = None   # заменить множитель сопротивления цели
+     crit_mode: Optional[str] = None    # переопределить режим крита для этого источника
+     polar_stacks: int = 1 
++    #: Доп. слагаемые базы от других статов: (("em", 1.5),) = «+150% МС».
++    #: База удара = Стат × Множитель + Σ Стат_i × k_i (до бонусов урона /
++    #: множителя звёздной реакции). Пример: пассивка Сайно A4.
++    extra_scaling: Tuple[Tuple[str, float], ...] = ()
+     note: str = ""
+ 
+     # Дополнительные теги для поиска бонусов урона: element + kind + пользовательские
+@@ -80,6 +84,13 @@ class DamageSource:
+     def motion_value(self, ctx=None) -> float:
+         return self.mv(ctx) if callable(self.mv) else float(self.mv)
+ 
++    def base_term(self, stats, ctx=None) -> float:
++        """Стат × Множитель + доп. слагаемые от других статов (extra_scaling)."""
++        out = stats.stat(self.scaling) * self.motion_value(ctx)
++        for stat_name, k in self.extra_scaling:
++            out += stats.stat(stat_name) * k
++        return out
++
+ 
+ def elemental(name: str, scaling: str, mv: MotionValue, element: str, kind: str,
+               occurrences: Sequence[Occurrence], **kwargs) -> DamageSource:
+diff --git a/gi_damage/data/characters/cyno.py b/gi_damage/data/characters/cyno.py
+new file mode 100644
+index 0000000..a13d316
+--- /dev/null
++++ b/gi_damage/data/characters/cyno.py
+@@ -0,0 +1,148 @@
++"""
++Сайно — играет только в отрядах звёздного проводника
++(всегда действует Radiance: Stellar-Conduct).
++
++C1 — базовая линия (созвездие выдаётся бесплатно), поэтому сборки по
++умолчанию собираются с constellation=1.
++
++Звёздный урон Сайно — только «Duststalker Bolts - Starsame»
++(A1 Featherfall Judgment + C6). Всё остальное — обычный электро урон.
++
++Допущение: «+600% МС» от A4 к Starsame складывается с «200% АТК» ВНУТРИ
++базы прямого урона (Attribute × Multiplier), т.е. дальше умножается на
++(1 + Base DMG Increase) и на (1 + 6·МС/(МС+2000) + бонус SC). Так же
++«+150% МС» к обычным атакам — это прибавка к базе до бонуса урона.
++Реализовано через DamageSource.extra_scaling.
++"""
++
++from __future__ import annotations
++from dataclasses import replace  # noqa: F401 — для patches= в файлах отрядов
++
++from ...core.buffs import OTHERS, SELF, TEAM, Buff, temp
++from ...core.entities import Character, Constellation, with_rotation
++from ...core.stats import S
++from ..tags import *
++from ...core.sources import elemental, occ, stellar_conduct
++
++# --------------------------------------------------------------------------- #
++#  Множители талантов (в долях)                                                #
++# --------------------------------------------------------------------------- #
++SKILL_MV = 2.3472             # Secret Rite: Chasmic Soulfarer — обычный навык
++MORTUARY_RITE_MV = 2.8224     # навык в состоянии Pactsworn Pathclearer
++
++NA_MV = {1: 1.5475, 2: 1.6302, 3: 2.0683, 4: 1.0219, 5: 2.5865}  # 4-й удар — 2 инстанса
++CA_MV = 1.9975
++BURST_EM = 100.0              # МС в Pactsworn Pathclearer
++
++JUDICATION_BONUS = 0.35       # A1: +35% урона навыка при Judication
++STARSAME_ATK = 2.00           # Duststalker Bolt - Starsame: 200% АТК
++STARSAME_EM = 6.00            # A4: +600% МС
++BOLT_ATK = 1.00               # обычный Duststalker Bolt (без Radiance) — для справки
++BOLT_EM = 2.50
++NA_EM = 1.50                  # A4: обычные атаки в Pathclearer +150% МС
++
++TWR_EM = 200.0                # C1 Radiance: Together We Rise, +200 МС
++C2_ELECTRO_BONUS = 0.10 * 5   # C2: +10% электро урона × 5 стаков
++C2_SC_BONUS = 0.16 * 5        # C2: +16% урона звёздного проводника × 5 стаков
++
++#: Стаки «полярности» для звёздного проводника Сайно (см. formulas.stellar_conduct_multiplier).
++#: Взято как у Сандроне (основной персонаж на поле) — поправьте при необходимости.
++CYNO_POLAR_STACKS = 7
++
++#: Тег источника для +35% Judication (бафф «dmg_bonus.judication»)
++JUDICATION = "judication"
++
++
++CYNO_KIT = Character(
++    name="Сайно",
++    element="electro",
++    weapon_type="polearm",
++    default_field=ON,
++    crit_mode="balance",
++    stats={
++        S.BASE_ATK: 318.0,
++        # 5% КШ × 2 + 50% КУ + 38.4% КУ с возвышения
++        S.CRIT_VALUE: 0.6 + 0.384,
++    },
++    buffs=(
++        Buff(S.BASE_EM, BURST_EM, target=SELF, requires=(PACTSWORN,),
++             source="Pactsworn Pathclearer: +100 МС"),
++        Buff(f"{S.DMG_BONUS}.{JUDICATION}", JUDICATION_BONUS, target=SELF,
++             source="Featherfall Judgment: +35% урона навыка при Judication"),
++    ),
++    sources=(),
++    constellations={
++        1: Constellation(
++            number=1,
++            name="C1",
++            buffs=(
++                # Сам Сайно получает Together We Rise при входе в Pathclearer
++                Buff(S.BASE_EM, TWR_EM, target=SELF, requires=(PACTSWORN,),
++                     source="C1 Together We Rise: +200 МС (Сайно)"),
++                # Переходит к следующему активному персонажу — пока никуда не добавлен
++                temp(S.BASE_EM, TWR_EM, TOGETHER_WE_RISE, target=OTHERS,
++                     source="C1 Together We Rise: +200 МС (входящему персонажу)"),
++            ),
++        ),
++        2: Constellation(
++            number=2,
++            name="C2",
++            buffs=(
++                # Полные стаки сразу
++                Buff("dmg_bonus.electro", C2_ELECTRO_BONUS, target=SELF,
++                     requires=(PACTSWORN,),
++                     source="C2: +50% электро урона (5 стаков)"),
++                Buff(S.SC_BONUS, C2_SC_BONUS, target=SELF, requires=(PACTSWORN,),
++                     source="C2: +80% урона звёздного проводника (Together We Rise, 5 стаков)"),
++                # Для других носителей Together We Rise — пока никуда не добавлен
++                temp(S.SC_BONUS, C2_SC_BONUS, TOGETHER_WE_RISE, target=OTHERS,
++                     source="C2: +80% урона звёздного проводника (Together We Rise, 5 стаков)"),
++            ),
++        ),
++        6: Constellation(number=6, name="C6"),
++    },
++    note="Только отряды звёздного проводника.",
++)
++
++
++def _na(name: str, mv: float, count: float, tags) -> object:
++    """Обычная атака в Pathclearer: электро, +150% МС к базе (A4)."""
++    return elemental(name, "atk", mv, "electro", "normal", [occ(count, *tags)],
++                     extra_scaling=(("em", NA_EM),))
++
++
++def _starsame(name: str, count: float, tags) -> object:
++    return stellar_conduct(name, "atk", STARSAME_ATK, "electro",
++                           [occ(count, *tags)], kind="skill",
++                           extra_scaling=(("em", STARSAME_EM),),
++                           polar_stacks=CYNO_POLAR_STACKS)
++
++
++#: Все временные окна отряда Одетта/Алеша/Диона, в которых находится Сайно.
++#: Расставляйте по ударам, как нужно.
++_SC_TEAM_TAGS = (ON, PACTSWORN, CATS_TAIL, NOBLE)
++
++CYNO_COMBO_DICT = {
++    # Q, E, затем 3 × (N2, CA, N4, E с Judication). 15 с.
++    "sc_combo": with_rotation(
++        CYNO_KIT,
++        sources=(
++            _na("Pathclearer — 1-й удар", NA_MV[1], 3 * 2, _SC_TEAM_TAGS),
++            _na("Pathclearer — 2-й удар", NA_MV[2], 3 * 2, _SC_TEAM_TAGS),
++            _na("Pathclearer — 3-й удар", NA_MV[3], 3 * 1, _SC_TEAM_TAGS),
++            _na("Pathclearer — 4-й удар (2 инстанса)", NA_MV[4], 3 * 2, _SC_TEAM_TAGS),
++            elemental("Pathclearer — заряженная атака", "atk", CA_MV, "electro", "charged",
++                      [occ(3, *_SC_TEAM_TAGS)]),
++            elemental("Mortuary Rite", "atk", MORTUARY_RITE_MV, "electro", "skill",
++                      [occ(1, *_SC_TEAM_TAGS)]),
++            elemental("Mortuary Rite (Judication)", "atk", MORTUARY_RITE_MV, "electro", "skill",
++                      [occ(3, *_SC_TEAM_TAGS)], extra_tags=(JUDICATION,)),
++            _starsame("Duststalker Bolt - Starsame (A1)", 3 * 3, _SC_TEAM_TAGS),
++        ),
++        constellation_sources={
++            # Q даёт 4 стака, первый Judication ещё 4 → максимум 8 за Pathclearer.
++            # Сайно всегда под Together We Rise (C1), поэтому все — Starsame.
++            6: (_starsame("C6: Duststalker Bolt - Starsame", 8, _SC_TEAM_TAGS),),
++        },
++    ),
++}
+diff --git a/gi_damage/data/tags.py b/gi_damage/data/tags.py
+index 6543b15..048a292 100644
+--- a/gi_damage/data/tags.py
++++ b/gi_damage/data/tags.py
+@@ -70,7 +70,13 @@ SEVEN_SACRED = "seven_sacred"
+ #Церемония знати
+ NOBLE = "noble"
+ 
++# --- Сайно ------------------------------------ #
++#: Сайно в состоянии «Pactsworn Pathclearer» (после взрыва стихии)
++PACTSWORN = "pactsworn_pathclearer"
++#: «Together We Rise» (C1 Radiance) на персонаже, на которого Сайно переключился
++TOGETHER_WE_RISE = "together_we_rise"
++
+ __all__ = ["ON", "OFF", "INST", "DREAM", "FROSTGLOW", "BREEZEBORNE",
+            "ARMED", "DA1", "DA2", "DA3", "DA4", "DA5", "DA6","VODYA_LEAD","VODYA_CHORUS","TTDS_HALF","VV_CRYO","VV_PYRO"
+            ,"VV_HYDRO","VV_ELECTRO","CATS_TAIL","SEVEN_SACRED","MIZUKI_C1","DECODING","TTDS_FULL","SANDRONE_CA_STACKS_1","SANDRONE_CA_STACKS_2","SANDRONE_CA_STACKS_3",
+-           "NOBLE"]
++           "NOBLE","PACTSWORN","TOGETHER_WE_RISE"]
+diff --git a/gi_damage/data/weapons.py b/gi_damage/data/weapons.py
+index f51fe60..048eb4d 100644
+--- a/gi_damage/data/weapons.py
++++ b/gi_damage/data/weapons.py
+@@ -569,5 +569,17 @@ BREEZEBORNE_BOW = Weapon(
+     },
+ )
+ 
++#: Пассивка Смертельного боя (одна цель рядом): +24% АТК на R1, +6% за ранг.
++DEATHMATCH_ATK = {r: 0.24 + 0.06 * (r - 1) for r in range(1, 6)}
++
++DEATHMATCH = Weapon(
++    name="Смертельный бой",
++    base_atk=454.0,
++    refinement=1,
++    stats={S.CRIT_VALUE: 0.368 * 2},
++    stats_by_refinement={r: {S.ATK_PCT: DEATHMATCH_ATK[r]} for r in DEATHMATCH_ATK},
++    note="Копьё из боевого пропуска. Пассивка — вариант «меньше 2 врагов рядом».",
++)
++
+ ALL = {w.name: w for w in (WANDERER_SONG, SUNNY_MORNING_SLEEP_IN, EXAIPHANES,
+                            SILVER_LIGHT, SACFRAG,FAV_BOW)}
+diff --git a/gi_damage/teams/cyno_odette_alyosha_diona/builds.py b/gi_damage/teams/cyno_odette_alyosha_diona/builds.py
+new file mode 100644
+index 0000000..fb753e2
+--- /dev/null
++++ b/gi_damage/teams/cyno_odette_alyosha_diona/builds.py
+@@ -0,0 +1,137 @@
++"""
++Отряд звёздного проводника: Сайно / Одетта / Алеша / Диона.
++
++Реакций, наносящих урон, нет (звёздный проводник).
++"""
++
++from __future__ import annotations
++
++from typing import Dict, Sequence
++
++from ...core.buffs import OTHERS, SELF, TEAM, Buff, temp
++from ...core.engine import Config, Team
++from ...core.entities import Build, Enemy, ArtifactSet
++from ...core.stats import S
++from ...core.utilits import merge_dicts
++from ...data.artifacts import *
++from ...data.artifacts_presets import *
++from ...data.tags import *
++from ...data.characters.cyno import CYNO_COMBO_DICT
++from ...data.characters.odette import (odette_burst_buffs, ODETTE_BURST_TIME,
++                                       ODETTE_COMBO_DICT, ODETTE_BURST_SOURCES)
++from ...data.characters.alyosha import ALYOSHA_COMBO_DICT
++from ...data.characters.diona import DIONA_COMBO_DICT
++from ...data.weapons import *
++
++TEAM_BUFFS = (
++    Buff(S.CRIT_VALUE, 0.30, target=TEAM,
++         source="Крио резонанс: +15% крит. шанса (0.30 крит-вэлью)"),
++)
++
++#: Время каждого персонажа в ротации (секунды)
++TIMES = {"Сайно": 15.0, "Алеша": 1.65, "Одетта": 2.4, "Диона": 2.2}
++
++ROTATION = "Алеша EQ/Одетта E/Диона EQ/Сайно QE (N2 CA N4 E)×3"
++
++#: Главные статы Сайно: пески/кубок/корона (по умолчанию МС/АТК/крит — лучший из трёх)
++CYNO_MAIN_ATK = {S.ATK_PCT: 0.466 * 2, S.CRIT_VALUE: 0.622}          # АТК/АТК/крит
++CYNO_MAIN_EM = {S.BASE_EM: 187.0, S.ATK_PCT: 0.466, S.CRIT_VALUE: 0.622}  # МС/АТК/крит
++CYNO_MAIN_ELECTRO = {S.ATK_PCT: 0.466, "dmg_bonus.electro": 0.466,
++                     S.CRIT_VALUE: 0.622}                             # АТК/электро/крит
++
++
++def enemy() -> Enemy:
++    return Enemy(res={"anemo": 0.10, "cryo": 0.10, "electro": 0.10},
++                 def_mult=0.4875, elevation=0.0)
++
++
++def cyno_build(constellation: int = 1, weapon=DEATHMATCH, artifacts=(DISENCHANTMENT,),
++               main_stats=CYNO_MAIN_EM, extra_buffs: Sequence[Buff] = ()) -> Build:
++    return Build(
++        character=CYNO_COMBO_DICT["sc_combo"],
++        constellation=constellation,
++        weapon=weapon,
++        artifacts=artifacts,
++        extra_stats=merge_dicts(main_stats, STANDART_SUBSTAT_PRESET),
++        extra_buffs=tuple(extra_buffs),
++        time=TIMES["Сайно"],
++    )
++
++
++def odette_build(constellation: int = 0, weapon=SILVER_LIGHT, artifacts=(MILLELITH,),
++                 use_burst: bool | None = None,
++                 extra_buffs: Sequence[Buff] = ()) -> Build:
++    """use_burst=None — авто: до C4 не применяем, с C4 применяем."""
++    if use_burst is None:
++        use_burst = constellation >= 4
++    return Build(
++        character=ODETTE_COMBO_DICT["odette_ssc_combo_sucrose"],
++        constellation=constellation,
++        weapon=weapon,
++        artifacts=artifacts,
++        extra_stats=merge_dicts(
++            {S.ATK_PCT: 0.466 * 2, S.CRIT_VALUE: 0.622},
++            STANDART_SUBSTAT_PRESET),
++        extra_sources=ODETTE_BURST_SOURCES if use_burst else (),
++        extra_buffs=tuple(extra_buffs) + (odette_burst_buffs(constellation)
++                                          if use_burst else ()),
++        time=TIMES["Одетта"] + (ODETTE_BURST_TIME if use_burst else 0.0),
++    )
++
++
++def alyosha_build(constellation: int = 2, weapon=FAV_LANCE, artifacts=(HEART_OF_FORGE,),
++                  extra_buffs: Sequence[Buff] = ()) -> Build:
++    return Build(
++        character=ALYOSHA_COMBO_DICT["sc_combo"],
++        constellation=constellation,
++        weapon=weapon,
++        artifacts=artifacts,
++        extra_stats=merge_dicts(
++            {S.ATK_PCT: 0.466 * 1, S.CRIT_VALUE: 0.622},
++            STANDART_SUBSTAT_PRESET),
++        extra_buffs=tuple(extra_buffs),
++        time=TIMES["Алеша"],
++    )
++
++
++def diona_build(constellation: int = 6, weapon=FAV_BOW.at(5), artifacts=(NOBLESSE,),
++                extra_buffs: Sequence[Buff] = ()) -> Build:
++    return Build(
++        character=DIONA_COMBO_DICT["off_field"],
++        constellation=constellation,
++        weapon=weapon,
++        artifacts=artifacts,
++        extra_stats=merge_dicts(
++            {S.ATK_PCT: 0.466 * 1, S.CRIT_VALUE: 0.622},
++            STANDART_SUBSTAT_PRESET),
++        extra_buffs=tuple(extra_buffs),
++        time=TIMES["Диона"],
++    )
++
++
++def make_team(name: str, cyno_c: int = 1, cyno_weapon=DEATHMATCH,
++              odette_c: int = 0, odette_weapon=SILVER_LIGHT,
++              cyno_artifacts=(DISENCHANTMENT,), odette_artifacts=(MILLELITH,),
++              alyosha_c: int = 2, alyosha_weapon=FAV_LANCE, alyosha_artifacts=(HEART_OF_FORGE,),
++              diona_c: int = 6, diona_weapon=FAV_BOW.at(5), diona_artifacts=(NOBLESSE,),
++              cyno_main_stats=CYNO_MAIN_EM) -> Team:
++    return Team(
++        name=name,
++        builds=[
++            cyno_build(cyno_c, cyno_weapon, cyno_artifacts, cyno_main_stats),
++            odette_build(odette_c, odette_weapon, odette_artifacts),
++            alyosha_build(alyosha_c, alyosha_weapon, alyosha_artifacts),
++            diona_build(diona_c, diona_weapon, diona_artifacts),
++        ],
++        enemy=enemy(),
++        buffs=TEAM_BUFFS,
++        rotation=ROTATION,
++        config=Config(),
++    )
++
++
++BASE_NAME = "C1R1 Сайно, C0R0 Одетта, С2R0 Алеша, С6R0 Диона"
++
++
++def all_teams() -> Dict[str, Team]:
++    return {BASE_NAME: make_team(BASE_NAME)}
+diff --git a/gi_damage/teams/cyno_odette_alyosha_diona/rosters.py b/gi_damage/teams/cyno_odette_alyosha_diona/rosters.py
+new file mode 100644
+index 0000000..f46bf30
+--- /dev/null
++++ b/gi_damage/teams/cyno_odette_alyosha_diona/rosters.py
+@@ -0,0 +1,64 @@
++#!/usr/bin/env python3
++"""
++Запуск:  python -m gi_damage.teams.cyno_odette_alyosha_diona.rosters
++         python -m gi_damage.teams.cyno_odette_alyosha_diona.rosters --details
++"""
++
++from __future__ import annotations
++
++import sys
++from pathlib import Path
++
++sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
++
++from gi_damage.core.report import compare, hit_details, source_breakdown, team_summary
++from gi_damage.core.roster import Roster, Variation
++from gi_damage.data.weapons import *
++from gi_damage.data.artifacts import *
++from gi_damage.teams.cyno_odette_alyosha_diona.builds import (
++    BASE_NAME, CYNO_MAIN_ATK, CYNO_MAIN_EM, CYNO_MAIN_ELECTRO,
++    all_teams, make_team, odette_build, alyosha_build)
++from gi_damage.visual.rosters import RosterBook
++
++
++def main(argv: list[str]) -> int:
++    details = "--details" in argv
++    book = RosterBook()
++
++    for team in all_teams().values():
++        result = team.compute()
++        print(team_summary(result))
++        if details:
++            print(source_breakdown(result))
++            print()
++            print(hit_details(result))
++            print()
++
++    base = make_team(BASE_NAME)
++
++    book.add(Roster(base, [Variation(slot="Сайно", constellations=[1, 2, 6])]),
++             "Созвездия Сайно", ascending=True)
++    book.add(Roster(base, [Variation(slot="Сайно",
++                                     weapons=[DEATHMATCH.at(r) for r in (1, 3, 5)])]),
++             "Оружие Сайно", ascending=True)
++    # Главные статы в карточках ростера не различимы — сравниваем текстом
++    print("=== Главные статы Сайно ===")
++    for label, main in (("АТК/АТК/крит", CYNO_MAIN_ATK), ("МС/АТК/крит", CYNO_MAIN_EM),
++                        ("АТК/электро/крит", CYNO_MAIN_ELECTRO)):
++        r = make_team(label, cyno_main_stats=main).compute()
++        print(f"{label:<18} DPR {r.dpr:>12,.0f}  DPS {r.dps:>10,.0f}")
++    print()
++
++    book.add(Roster(base, [Variation(slot="Одетта", builds=[
++        odette_build(constellation=c) for c in (0, 1, 2, 4, 6)])]),
++             "Созвездия Одетты", ascending=True)
++    book.add(Roster(base, [Variation(slot="Алеша", builds=[
++        alyosha_build(constellation=c) for c in (2, 3, 6)])]),
++             "Созвездия Алеши", ascending=True)
++
++    book.save("rosters.html")
++    return 0
++
++
++if __name__ == "__main__":
++    raise SystemExit(main(sys.argv[1:]))

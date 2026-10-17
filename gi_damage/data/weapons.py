@@ -569,5 +569,17 @@ BREEZEBORNE_BOW = Weapon(
     },
 )
 
+#: Пассивка Смертельного боя (одна цель рядом): +24% АТК на R1, +6% за ранг.
+DEATHMATCH_ATK = {r: 0.24 + 0.06 * (r - 1) for r in range(1, 6)}
+
+DEATHMATCH = Weapon(
+    name="Смертельный бой",
+    base_atk=454.0,
+    refinement=1,
+    stats={S.CRIT_VALUE: 0.368 * 2},
+    stats_by_refinement={r: {S.ATK_PCT: DEATHMATCH_ATK[r]} for r in DEATHMATCH_ATK},
+    note="Копьё из боевого пропуска. Пассивка — вариант «меньше 2 врагов рядом».",
+)
+
 ALL = {w.name: w for w in (WANDERER_SONG, SUNNY_MORNING_SLEEP_IN, EXAIPHANES,
                            SILVER_LIGHT, SACFRAG,FAV_BOW)}

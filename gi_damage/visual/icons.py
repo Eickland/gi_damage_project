@@ -39,6 +39,7 @@ ALIASES: Dict[str, Dict[str, str]] = {
         "Ци Ци" : "qiqi",
         "Сандроне" : "sandrone",
         "Алеша" : "alyosha",
+        "Сайно" : "cyno",
     },
     "weapons": {
         "Песнь странника": "wanderers_song",
@@ -70,6 +71,7 @@ ALIASES: Dict[str, Dict[str, str]] = {
         "Чайная ложка":"teaspoon",
         "Тысяча солнц":"thousand_suns",
         "Симфонист ароматов":"symphonist",
+        "Смертельный бой":"dmatch",
     },
     "artifacts": {
         "Инструктор": "instructor",

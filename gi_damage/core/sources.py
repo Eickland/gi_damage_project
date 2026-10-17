@@ -69,6 +69,10 @@ class DamageSource:
     res_override: Optional[float] = None   # заменить множитель сопротивления цели
     crit_mode: Optional[str] = None    # переопределить режим крита для этого источника
     polar_stacks: int = 1 
+    #: Доп. слагаемые базы от других статов: (("em", 1.5),) = «+150% МС».
+    #: База удара = Стат × Множитель + Σ Стат_i × k_i (до бонусов урона /
+    #: множителя звёздной реакции). Пример: пассивка Сайно A4.
+    extra_scaling: Tuple[Tuple[str, float], ...] = ()
     note: str = ""
 
     # Дополнительные теги для поиска бонусов урона: element + kind + пользовательские
@@ -79,6 +83,13 @@ class DamageSource:
 
     def motion_value(self, ctx=None) -> float:
         return self.mv(ctx) if callable(self.mv) else float(self.mv)
+
+    def base_term(self, stats, ctx=None) -> float:
+        """Стат × Множитель + доп. слагаемые от других статов (extra_scaling)."""
+        out = stats.stat(self.scaling) * self.motion_value(ctx)
+        for stat_name, k in self.extra_scaling:
+            out += stats.stat(stat_name) * k
+        return out
 
 
 def elemental(name: str, scaling: str, mv: MotionValue, element: str, kind: str,

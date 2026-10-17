@@ -339,8 +339,10 @@ class Team:
     def _source_damage(self, src: DamageSource, stats: Stats, b: Build,
                        multipliers, crit_mode: str, ctx: TeamContext) -> float:
         tags = src.tags()
-        mv = src.motion_value(ctx)
-        stat_value = stats.stat(src.scaling)
+        # Стат × Множитель (+ доп. слагаемые extra_scaling, напр. «+150% МС»).
+        # Дальше в формулы идёт уже готовая база с mv = 1.
+        stat_value = src.base_term(stats, ctx)
+        mv = 1.0
         crit = crit_multiplier(stats, src.crit_mode or crit_mode, *tags)
         res = self._res(src.element, stats, src.res_override)
         elevation = self.enemy.elevation + stats.elevation(*tags)
