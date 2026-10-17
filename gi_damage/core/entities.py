@@ -300,7 +300,7 @@ class Build:
 
     # ---- замены (для ростеров) --------------------------------------------- #
     def with_weapon(self, weapon: Weapon) -> "Build":
-        return replace(self, weapon=weapon)
+        return replace(self, weapon=weapon) # type: ignore
 
     def with_constellation(self, n: int) -> "Build":
         return replace(self, constellation=n)

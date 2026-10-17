@@ -68,7 +68,7 @@ def vesna_build(constellation: int, weapon, artifacts, extra_buffs: Sequence[Buf
 
 def cryo_mc_build(constellation: int, artifacts, weapon=EXAIPHANES, extra_buffs: Sequence[Buff] = ()) -> Build:
     return Build(
-        character=CMC_COMBO_DICT["cmc_ssw_combo"],
+        character=CMC_COMBO_DICT["cmc_ssw_mizuki_combo"],
         constellation=constellation,
         weapon=weapon,
         artifacts=(artifacts,),
@@ -88,7 +88,7 @@ def odette_build(constellation: int = 0, weapon=SILVER_LIGHT,
         use_burst = constellation >= 4
         
     return Build(
-        character=ODETTE_COMBO_DICT["odette_ssw_combo_vv_full_uptime_mizuki"],
+        character=ODETTE_COMBO_DICT["odette_ssw_mizuki_combo"],
         constellation=constellation,
         weapon=weapon,
         artifacts=(HEART_OF_FORGE,),

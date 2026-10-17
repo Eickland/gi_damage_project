@@ -67,7 +67,10 @@ CATS_TAIL = "cats_tail"
 #Ци ци
 SEVEN_SACRED = "seven_sacred"
 
+#Церемония знати
+NOBLE = "noble"
+
 __all__ = ["ON", "OFF", "INST", "DREAM", "FROSTGLOW", "BREEZEBORNE",
            "ARMED", "DA1", "DA2", "DA3", "DA4", "DA5", "DA6","VODYA_LEAD","VODYA_CHORUS","TTDS_HALF","VV_CRYO","VV_PYRO"
            ,"VV_HYDRO","VV_ELECTRO","CATS_TAIL","SEVEN_SACRED","MIZUKI_C1","DECODING","TTDS_FULL","SANDRONE_CA_STACKS_1","SANDRONE_CA_STACKS_2","SANDRONE_CA_STACKS_3",
-           ]
+           "NOBLE"]

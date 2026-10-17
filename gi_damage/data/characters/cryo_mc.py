@@ -70,7 +70,7 @@ CRYO_MC_KIT = Character(
 )
 
 CMC_COMBO_DICT = {
-    "cmc_ssw_combo" : with_rotation(
+    "cmc_ssw_mizuki_combo" : with_rotation(
     CRYO_MC_KIT,
     sources=(
         elemental("Использование навыка (АТК)", "atk", 1.6502, "cryo", "skill",
@@ -87,6 +87,26 @@ CMC_COMBO_DICT = {
     constellation_patches={
         4: {
             "Навык (АТК)": lambda s: replace(s, occurrences=[occ(9, OFF, DREAM,VV_CRYO), occ(3, OFF,VV_CRYO)]),
+        },
+    },
+),
+    "cmc_ssw_vesna_combo" : with_rotation(
+    CRYO_MC_KIT,
+    sources=(
+        elemental("Использование навыка (АТК)", "atk", 1.6502, "cryo", "skill",
+                  [occ(1, ON,VV_CRYO)]),
+        elemental("Навык (АТК)", "atk", 0.3851, "cryo", "skill",
+                  [occ(5, OFF,VV_CRYO), occ(3, OFF,VV_CRYO)]),
+        stellar_swirl("Заряженная атака — SSW, 1", "atk", (1.105) + 1.40,
+                      "cryo", [occ(1, ON, INST,FROSTGLOW,VV_CRYO)], kind="charged"),
+        stellar_swirl("Заряженная атака — SSW, 2", "atk", (1.428) + 1.40,
+                      "cryo", [occ(1, ON, INST,FROSTGLOW,VV_CRYO)], kind="charged"),
+        stellar_swirl("Взрыв — SSW", "atk", (0.9924 + 8 * 0.0496), "cryo",
+                      [occ(5, ON, INST,FROSTGLOW,VV_CRYO)], kind="burst"),
+    ),
+    constellation_patches={
+        4: {
+            "Навык (АТК)": lambda s: replace(s, occurrences=[occ(9, OFF,VV_CRYO), occ(3, OFF,VV_CRYO)]),
         },
     },
 )

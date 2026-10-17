@@ -16,7 +16,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Dict, Iterable, List, Optional, Sequence, Tuple
 
 from .buffs import Buff, BuffContext, State, state
@@ -26,7 +26,7 @@ from .formulas import (elemental_damage, stellar_swirl_direct,
 from .reactions import ReactionEvent, distribute, pick_primary
 from .sources import ELEMENTAL, STELLAR_SWIRL,STELLAR_CONDUCT, DamageSource
 from .stats import S, Stats, crit_multiplier
-
+from .cycle import Phase
 
 # --------------------------------------------------------------------------- #
 #  Конфигурация расчёта                                                        #
@@ -222,6 +222,7 @@ class Team:
     config: Config = field(default_factory=Config)
     #: если задано — используется вместо суммы времён персонажей
     rotation_time_override: Optional[float] = None
+    phases: Sequence[Phase] = field(default_factory=tuple)
 
     # ---- вспомогательное --------------------------------------------------- #
     @property
@@ -241,6 +242,20 @@ class Team:
 
     # ---- расчёт ------------------------------------------------------------ #
     def compute(self) -> TeamResult:
+        phases = [p for p in self.phases if p.count > 0]
+        if not phases:
+            return self._compute_rotation()
+        parts = []
+        for ph in phases:
+            builds = [ph.builds[b.name](b) if b.name in ph.builds else b
+                      for b in self.builds]
+            sub = replace(self, phases=(), builds=builds,
+                          reactions=self.reactions if ph.reactions is None else ph.reactions,
+                          rotation=ph.rotation or self.rotation)
+            parts.append((ph, sub._compute_rotation()))
+        return self._merge_phases(parts)    
+    
+    def _compute_rotation(self) -> TeamResult:
         resolver = StatResolver(self.builds, self.config.resolve_passes, self.buffs)
         ctx = TeamContext(self.rotation_time,
                           {b.name: b.time for b in self.builds},
@@ -297,6 +312,28 @@ class Team:
         }
         return TeamResult(self.name, results, self.rotation_time,
                           setup=setup, rotation=self.rotation)
+
+    def _merge_phases(self, parts) -> TeamResult:
+        chars: Dict[str, CharacterResult] = {}
+        for ph, res in parts:
+            for name, cr in res.characters.items():
+                out = chars.setdefault(name, CharacterResult(name))
+                for h in cr.hits:
+                    out.hits.append(HitResult(h.source, h.state,
+                                              h.count * ph.count, h.per_hit))
+                out.reaction += cr.reaction * ph.count
+                for k, v in cr.reaction_breakdown.items():
+                    out.reaction_breakdown[k] = (
+                        out.reaction_breakdown.get(k, 0.0) + v * ph.count)
+
+        total_time = sum(ph.count * res.rotation_time for ph, res in parts)
+        # setup берём из первой фазы, время слота — суммарное за цикл
+        first = parts[0][1].setup
+        setup = {n: replace(s, time=sum(ph.count * res.setup[n].time
+                                        for ph, res in parts))
+                 for n, s in first.items()}
+        rotation = " + ".join(f"{ph.count:g}×[{ph.name}]" for ph, _ in parts)
+        return TeamResult(self.name, chars, total_time, setup=setup, rotation=rotation)
 
     # ---- отдельные формулы ------------------------------------------------- #
     def _source_damage(self, src: DamageSource, stats: Stats, b: Build,

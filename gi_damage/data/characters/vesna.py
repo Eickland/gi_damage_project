@@ -10,8 +10,8 @@ from ...core.buffs import OTHERS, SELF, TEAM, Buff, temp
 from ...core.entities import Character, Constellation, with_rotation
 from ...core.sources import Occurrence, elemental, occ, stellar_swirl
 from ...core.stats import S
-from ..tags import (DREAM, INST, OFF, ON, FROSTGLOW, BREEZEBORNE,
-                    ARMED, DA1, DA2, DA3, DA4, DA5, DA6, VODYA_LEAD,CATS_TAIL,TTDS_HALF)
+from ..tags import (ON, FROSTGLOW, BREEZEBORNE,
+                    ARMED, DA1, DA2, DA3, DA4, DA5, DA6, VODYA_LEAD,CATS_TAIL,TTDS_HALF, SEVEN_SACRED, NOBLE)
 
 # =========================================================================== #
 #  Весна — анемо, main dps (меч)
@@ -99,143 +99,150 @@ VESNA_KIT = Character(
 )
 
 VESNA_COMBO_DICT = {
-    "ssw_burst_combo" : with_rotation(VESNA_KIT,sources=(
+    "vesna_ssw_burst_combo" : with_rotation(VESNA_KIT,sources=(
         elemental("Обычный удар, N1", "atk", 0.799, "anemo", "normal",
-                  [occ(4, ON,TTDS_HALF)]),
+                  [occ(4, ON,TTDS_HALF, NOBLE)]),
         elemental("Заряженная атака", "atk", 2.6299, "anemo", "charged",
-                  [occ(4, ON,TTDS_HALF)]),
+                  [occ(4, ON,TTDS_HALF, NOBLE)]),
         
         elemental("Использование навыка", "atk", 0.72, "anemo", "skill",
-                  [occ(1, ON,TTDS_HALF)]),
+                  [occ(1, ON,TTDS_HALF, NOBLE)]),
 
         elemental("Windborne Sword Lv1", "atk", 0.72, "anemo", "skill",
-                  [occ(1, ON, ARMED,TTDS_HALF)],
+                  [occ(1, ON, ARMED,TTDS_HALF, NOBLE)],
                   extra_tags=("windborne_sword",)),
 
         elemental("Windborne Sword Lv2", "atk", 1.08, "anemo", "skill",
-                  [occ(1, ON, ARMED,TTDS_HALF)],
+                  [occ(1, ON, ARMED,TTDS_HALF, NOBLE)],
                   extra_tags=("windborne_sword",)),
 
         stellar_swirl("Windborne Sword Lv2 — Spirit Blade", "atk", 2.016,
-                  "anemo",[occ(1, ON, ARMED, DA1, BREEZEBORNE, FROSTGLOW,VODYA_LEAD,CATS_TAIL,TTDS_HALF)],"skill",
+                  "anemo",[occ(1, ON, ARMED, DA1, BREEZEBORNE, FROSTGLOW,VODYA_LEAD,CATS_TAIL,TTDS_HALF, SEVEN_SACRED, NOBLE)],"skill",
                   extra_tags=("spirit_blade",),
                   multipliers=("disciplinary_action",)),
 
         stellar_swirl("Windborne Sword Lv3 — Spirit Blade x4", "atk", 0.8064,
                   "anemo",
-                  [occ(4, ON, ARMED, DA3, BREEZEBORNE, FROSTGLOW,VODYA_LEAD,CATS_TAIL,TTDS_HALF), occ(4, ON, ARMED, DA4, FROSTGLOW,VODYA_LEAD,CATS_TAIL,TTDS_HALF),
-                   occ(4, ON, ARMED, DA5, FROSTGLOW,VODYA_LEAD,CATS_TAIL)], "skill",
+                  [occ(4, ON, ARMED, DA3, BREEZEBORNE, FROSTGLOW,VODYA_LEAD,CATS_TAIL,TTDS_HALF, SEVEN_SACRED, NOBLE), 
+                   occ(4, ON, ARMED, DA4, FROSTGLOW,VODYA_LEAD,CATS_TAIL,TTDS_HALF, SEVEN_SACRED, NOBLE),
+                   occ(4, ON, ARMED, DA5, FROSTGLOW,VODYA_LEAD,CATS_TAIL, SEVEN_SACRED)], "skill",
                   extra_tags=("spirit_blade",),multipliers=("disciplinary_action",)),
         stellar_swirl("Windborne Sword Lv3 Spirit Blade Final Hit", "atk",
                   2.8224, "anemo", 
-                  [occ(1, ON, ARMED, DA3, BREEZEBORNE, FROSTGLOW,VODYA_LEAD,CATS_TAIL,TTDS_HALF), occ(1, ON, ARMED, DA4, FROSTGLOW,VODYA_LEAD,CATS_TAIL,TTDS_HALF),
-                   occ(1, ON, ARMED, DA5, FROSTGLOW,VODYA_LEAD,CATS_TAIL)],"skill",
+                  [occ(1, ON, ARMED, DA3, BREEZEBORNE, FROSTGLOW,VODYA_LEAD,CATS_TAIL,TTDS_HALF, SEVEN_SACRED, NOBLE), 
+                   occ(1, ON, ARMED, DA4, FROSTGLOW,VODYA_LEAD,CATS_TAIL,TTDS_HALF, SEVEN_SACRED, NOBLE),
+                   occ(1, ON, ARMED, DA5, FROSTGLOW,VODYA_LEAD,CATS_TAIL, SEVEN_SACRED)],"skill",
                   extra_tags=("spirit_blade",),multipliers=("disciplinary_action",)),
 
         elemental("Перо ветра", "atk", 0.1872, "anemo", "skill",
                   [occ(5, ON, ARMED)]),
 
         stellar_swirl("Взрыв — Клинок Духа", "atk", 4.7376, "anemo",
-                  [occ(1, ON, ARMED, DA2, BREEZEBORNE, FROSTGLOW,VODYA_LEAD,CATS_TAIL,TTDS_HALF)], "burst",
+                  [occ(1, ON, ARMED, DA2, BREEZEBORNE, FROSTGLOW,VODYA_LEAD,CATS_TAIL,TTDS_HALF, SEVEN_SACRED, NOBLE)], "burst",
                   extra_tags=("spirit_blade",),multipliers=("disciplinary_action",)),
     
     ), constellation_sources={
         1: (
             stellar_swirl("Windborne Sword Lv3 — Spirit Blade x4, C1", "atk", 0.8064,
                         "anemo",
-                        [occ(4, ON, ARMED, DA6, BREEZEBORNE, FROSTGLOW)], "skill",
+                        [occ(4, ON, ARMED, DA6, FROSTGLOW,CATS_TAIL, SEVEN_SACRED)], "skill",
                         extra_tags=("spirit_blade",),multipliers=("disciplinary_action",)),
             stellar_swirl("Windborne Sword Lv3 Spirit Blade Final Hit, C1", "atk",
                         2.8224, "anemo", 
-                        [occ(1, ON, ARMED, DA6, BREEZEBORNE, FROSTGLOW)],"skill",
+                        [occ(1, ON, ARMED, DA6, FROSTGLOW,CATS_TAIL, SEVEN_SACRED)],"skill",
                         extra_tags=("spirit_blade",),multipliers=("disciplinary_action",)),                
             ),
         6: (elemental("C6: Windborne Sword: Transpose", "atk", 1.50,
-                          "anemo", "skill", [occ(3, ON, ARMED, BREEZEBORNE, FROSTGLOW)],
+                          "anemo", "skill", [occ(3, ON, ARMED)],
                           extra_tags=("transpose",)),
             stellar_swirl("C6: Windborne Sword: Transpose — Клинок Духа",
                           "atk", 2.00, "anemo", 
-                          [occ(3, ON, ARMED, DA6, BREEZEBORNE, FROSTGLOW)],"skill",
+                          [occ(3, ON, ARMED, DA6, BREEZEBORNE, FROSTGLOW,CATS_TAIL, SEVEN_SACRED, NOBLE)],"skill",
                           extra_tags=("spirit_blade",
                                       "transpose"),multipliers=("disciplinary_action",)),
             ),      
         },
     constellation_patches={
-        2: {"Windborne Sword Lv2 — Spirit Blade": lambda s: replace(s, occurrences=[occ(1, ON, ARMED, DA6, BREEZEBORNE, FROSTGLOW,VODYA_LEAD)]),
-                "Windborne Sword Lv3 — Spirit Blade x4": lambda s: replace(s, occurrences=[occ(12, ON, ARMED, DA6, BREEZEBORNE, FROSTGLOW,VODYA_LEAD)]),
-                "Windborne Sword Lv3 Spirit Blade Final Hit": lambda s: replace(s, occurrences=[occ(3, ON, ARMED, DA6, BREEZEBORNE, FROSTGLOW,VODYA_LEAD)]),
-                "Взрыв — Клинок Духа": lambda s: replace(s, occurrences=[occ(1, ON, ARMED, DA6, BREEZEBORNE, FROSTGLOW,VODYA_LEAD)]),
+        2: {"Windborne Sword Lv2 — Spirit Blade": lambda s: replace(s, occurrences=[occ(1, ON, ARMED, DA6, BREEZEBORNE, FROSTGLOW,VODYA_LEAD,CATS_TAIL,SEVEN_SACRED,TTDS_HALF, NOBLE)]),
+                "Windborne Sword Lv3 — Spirit Blade x4": lambda s: replace(s, occurrences=[occ(6, ON, ARMED, DA6, BREEZEBORNE, FROSTGLOW,VODYA_LEAD,SEVEN_SACRED,TTDS_HALF,CATS_TAIL, NOBLE),
+                                                                                           occ(6, ON, ARMED, DA6, FROSTGLOW,VODYA_LEAD,SEVEN_SACRED,TTDS_HALF)]),
+                "Windborne Sword Lv3 Spirit Blade Final Hit": lambda s: replace(s, occurrences=[occ(1, ON, ARMED, DA6, BREEZEBORNE, FROSTGLOW,VODYA_LEAD,SEVEN_SACRED,TTDS_HALF,CATS_TAIL, NOBLE),
+                                                                                                occ(2, ON, ARMED, DA6, FROSTGLOW,VODYA_LEAD,SEVEN_SACRED,CATS_TAIL, NOBLE)]),
+                "Взрыв — Клинок Духа": lambda s: replace(s, occurrences=[occ(1, ON, ARMED, DA6, BREEZEBORNE, FROSTGLOW,VODYA_LEAD,VODYA_LEAD,SEVEN_SACRED,CATS_TAIL, NOBLE)]),
             },
         }),
 
-    "ssw_no_burst_combo" : with_rotation(VESNA_KIT,sources=(
+    "vesna_ssw_no_burst_combo" : with_rotation(VESNA_KIT,sources=(
         elemental("Обычный удар, N1", "atk", 0.799, "anemo", "normal",
-                  [occ(5, ON)]),
+                  [occ(5, ON, NOBLE)]),
         elemental("Обычный удар, N2", "atk", 0.9622, "anemo", "normal",
-                  [occ(1, ON)]),
+                  [occ(1, ON, NOBLE)]),
         elemental("Обычный удар, N3", "atk", 0.5551, "anemo", "normal",
-                  [occ(2, ON)]),
+                  [occ(2, ON, NOBLE)]),
         elemental("Заряженная атака", "atk", 2.6299, "anemo", "charged",
-                  [occ(5, ON)]),
+                  [occ(5, ON, NOBLE)]),
         
         elemental("Использование навыка", "atk", 0.72, "anemo", "skill",
-                  [occ(1, ON)]),
+                  [occ(1, ON, NOBLE)]),
 
         elemental("Windborne Sword Lv1", "atk", 0.72, "anemo", "skill",
-                  [occ(1, ON, ARMED)],
+                  [occ(1, ON, ARMED, NOBLE)],
                   extra_tags=("windborne_sword",)),
 
         elemental("Windborne Sword Lv2", "atk", 1.08, "anemo", "skill",
-                  [occ(1, ON, ARMED)],
+                  [occ(1, ON, ARMED, NOBLE)],
                   extra_tags=("windborne_sword",)),
 
         stellar_swirl("Windborne Sword Lv2 — Spirit Blade", "atk", 2.016,
-                  "anemo",[occ(1, ON, ARMED, DA1, BREEZEBORNE, FROSTGLOW,)],"skill",
+                  "anemo",[occ(1, ON, ARMED, DA1, BREEZEBORNE, FROSTGLOW,TTDS_HALF,SEVEN_SACRED,CATS_TAIL, NOBLE)],"skill",
                   extra_tags=("spirit_blade",),
                   multipliers=("disciplinary_action",)),
 
         stellar_swirl("Windborne Sword Lv3 — Spirit Blade x4", "atk", 0.8064,
                   "anemo",
-                  [occ(4, ON, ARMED, DA2, BREEZEBORNE, FROSTGLOW), occ(4, ON, ARMED, DA3, BREEZEBORNE, FROSTGLOW),
-                   occ(4, ON, ARMED, DA4, BREEZEBORNE, FROSTGLOW)], "skill",
+                  [occ(4, ON, ARMED, DA2, BREEZEBORNE, FROSTGLOW,TTDS_HALF,SEVEN_SACRED,CATS_TAIL, NOBLE), 
+                   occ(4, ON, ARMED, DA3, BREEZEBORNE, FROSTGLOW,SEVEN_SACRED,CATS_TAIL, NOBLE),
+                   occ(4, ON, ARMED, DA4, FROSTGLOW,SEVEN_SACRED,CATS_TAIL)], "skill",
                   extra_tags=("spirit_blade",),multipliers=("disciplinary_action",)),
         stellar_swirl("Windborne Sword Lv3 Spirit Blade Final Hit", "atk",
                   2.8224, "anemo", 
-                  [occ(1, ON, ARMED, DA2, BREEZEBORNE, FROSTGLOW), occ(1, ON, ARMED, DA3, BREEZEBORNE, FROSTGLOW),
-                   occ(1, ON, ARMED, DA4, BREEZEBORNE, FROSTGLOW)],"skill",
+                  [occ(1, ON, ARMED, DA2, BREEZEBORNE, FROSTGLOW,TTDS_HALF,SEVEN_SACRED,CATS_TAIL, NOBLE), 
+                   occ(1, ON, ARMED, DA3, BREEZEBORNE, FROSTGLOW,SEVEN_SACRED,CATS_TAIL, NOBLE),
+                   occ(1, ON, ARMED, DA4, FROSTGLOW,SEVEN_SACRED,CATS_TAIL)],"skill",
                   extra_tags=("spirit_blade",),multipliers=("disciplinary_action",)),
 
         elemental("Перо ветра", "atk", 0.1872, "anemo", "skill",
-                  [occ(5, ON, ARMED)]),
+                  [occ(5, ON, ARMED, NOBLE)]),
 
     
     ), constellation_sources={
         1: (stellar_swirl("Windborne Sword Lv3 — Spirit Blade x4, C1", "atk", 0.8064,
                         "anemo",
-                        [occ(4, ON, ARMED, DA5, BREEZEBORNE, FROSTGLOW)], "skill",
+                        [occ(4, ON, ARMED, DA5, FROSTGLOW,SEVEN_SACRED,CATS_TAIL)], "skill",
                         extra_tags=("spirit_blade",),multipliers=("disciplinary_action",)),
             stellar_swirl("Windborne Sword Lv3 Spirit Blade Final Hit, C1", "atk",
                         2.8224, "anemo", 
-                        [occ(1, ON, ARMED, DA5, BREEZEBORNE, FROSTGLOW)],"skill",
+                        [occ(1, ON, ARMED, DA5, FROSTGLOW,SEVEN_SACRED,CATS_TAIL)],"skill",
                         extra_tags=("spirit_blade",),multipliers=("disciplinary_action",)),                
             ),
         6: (elemental("C6: Windborne Sword: Transpose", "atk", 1.50,
-                          "anemo", "skill", [occ(3, ON, ARMED, BREEZEBORNE, FROSTGLOW)],
+                          "anemo", "skill", [occ(3, ON, ARMED)],
                           extra_tags=("transpose",)),
             stellar_swirl("C6: Windborne Sword: Transpose — Клинок Духа",
                           "atk", 2.00, "anemo", 
-                          [occ(3, ON, ARMED, DA6, BREEZEBORNE, FROSTGLOW)],"skill",
+                          [occ(3, ON, ARMED, DA6, BREEZEBORNE,FROSTGLOW,SEVEN_SACRED,CATS_TAIL, NOBLE)],"skill",
                           extra_tags=("spirit_blade",
                                       "transpose"),multipliers=("disciplinary_action",)),
             ),      
         },
     constellation_patches={
-        2: {"Windborne Sword Lv2 — Spirit Blade": lambda s: replace(s, occurrences=[occ(1, ON, ARMED, DA6, BREEZEBORNE,    FROSTGLOW)]),
-            "Windborne Sword Lv3 — Spirit Blade x4": lambda s: replace(s, occurrences=[occ(12, ON, ARMED, DA6, BREEZEBORNE, FROSTGLOW)]),
-            "Windborne Sword Lv3 Spirit Blade Final Hit": lambda s: replace(s, occurrences=[occ(3, ON, ARMED, DA6, BREEZEBORNE, FROSTGLOW)]),
-            "Взрыв — Клинок Духа": lambda s: replace(s, occurrences=[occ(1, ON, ARMED, DA6, BREEZEBORNE, FROSTGLOW)]),
-            "Windborne Sword Lv3 — Spirit Blade x4, C1": lambda s: replace(s, occurrences=[occ(4, ON, ARMED, DA6, BREEZEBORNE, FROSTGLOW)]),
-            "Windborne Sword Lv3 Spirit Blade Final Hit, C1": lambda s: replace(s, occurrences=[occ(1, ON, ARMED, DA6, BREEZEBORNE, FROSTGLOW)]),
+        2: {"Windborne Sword Lv2 — Spirit Blade": lambda s: replace(s, occurrences=[occ(1, ON, ARMED, DA6, BREEZEBORNE,FROSTGLOW,TTDS_HALF,SEVEN_SACRED,CATS_TAIL, NOBLE)]),
+            "Windborne Sword Lv3 — Spirit Blade x4": lambda s: replace(s, occurrences=[occ(6, ON, ARMED, DA6, BREEZEBORNE, FROSTGLOW,TTDS_HALF,SEVEN_SACRED,CATS_TAIL, NOBLE),
+                                                                                       occ(6, ON, ARMED, DA6, FROSTGLOW,SEVEN_SACRED,CATS_TAIL)]),
+            "Windborne Sword Lv3 Spirit Blade Final Hit": lambda s: replace(s, occurrences=[occ(1, ON, ARMED, DA6, BREEZEBORNE, FROSTGLOW,TTDS_HALF,SEVEN_SACRED,CATS_TAIL, NOBLE),
+                                                                                            occ(2, ON, ARMED, DA6, FROSTGLOW,SEVEN_SACRED,CATS_TAIL)]),
+            "Windborne Sword Lv3 — Spirit Blade x4, C1": lambda s: replace(s, occurrences=[occ(4, ON, ARMED, DA6, FROSTGLOW,SEVEN_SACRED,CATS_TAIL)]),
+            "Windborne Sword Lv3 Spirit Blade Final Hit, C1": lambda s: replace(s, occurrences=[occ(1, ON, ARMED, DA6, FROSTGLOW,SEVEN_SACRED,CATS_TAIL)]),
             },
         })    
 

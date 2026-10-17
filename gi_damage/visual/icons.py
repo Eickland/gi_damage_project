@@ -82,6 +82,7 @@ ALIASES: Dict[str, Dict[str, str]] = {
         "Ночь неба": "night_sky",
         "Позолоченные сны":"gilded",
         "Разочарование":"disenchantment",
+        "Знать":"noble",
     },
 }
 

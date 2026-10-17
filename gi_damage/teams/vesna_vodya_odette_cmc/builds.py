@@ -22,7 +22,39 @@ from ...data.characters.faruzan import FARUZAN_COMBO_DICT
 from ...data.characters.cryo_mc import CMC_COMBO_DICT
 from ...data.characters.vesna import VESNA_COMBO_DICT
 from ...data.weapons import *
+from dataclasses import replace
+from gi_damage.core.cycle import Phase
 
+VESNA_BASE_TIME = {"burst": 11.5, "no_burst": 11.5}
+VESNA_C1_EXTRA = 0.5
+
+
+def vesna_time(base: float, constellation: int) -> float:
+    return base + (VESNA_C1_EXTRA if constellation > 0 else 0.0)
+
+
+def vesna_combo(combo_key: str, base_time: float):
+    """Правка сборки Весны: подставляет комбо и считает время по её созвездию."""
+    return lambda b: replace(
+        b,
+        character=VESNA_COMBO_DICT[combo_key],
+        time=vesna_time(base_time, b.constellation),
+    )
+
+
+def vesna_burst_cycle(burst_n: int, total_n: int):
+    """взрыв в burst_n ротациях из total_n"""
+    with_q = Phase(
+        "Vesna (N1CE)2 QE (N1CE)2", burst_n,
+        builds={"Весна": vesna_combo("vesna_ssw_burst_combo", VESNA_BASE_TIME["burst"])},
+        reactions=reactions(),
+    )
+    without_q = Phase(
+        "Vesna (N1CE)2 N3CE (N1CE)2", total_n - burst_n,
+        builds={"Весна": vesna_combo("vesna_ssw_no_burst_combo", VESNA_BASE_TIME["no_burst"])},
+        reactions=reactions(),
+    )
+    return (with_q, without_q)
 # =========================================================================== #
 #  Баффы уровня ОТРЯДА                                                        #
 # =========================================================================== #
@@ -32,9 +64,9 @@ TEAM_BUFFS = (
 )
 
 #: Время каждого персонажа в ротации (секунды)
-TIMES = {"Весна": 11.25, "Крио ГГ": 3.65, "Одетта": 2.4, "Водяница": 1.7}
+TIMES = {"Весна": 11.5, "Крио ГГ": 3.65, "Одетта": 2.4, "Водяница": 1.6}
 
-ROTATION = "CMC E CA Q/ Odette EE /Водяница E /Vesna E sEsE N3CsE Q sE N3CsE"
+ROTATION = " Odette EE/CMC E Q CA/Водяница E /Vesna combo"
 
 
 # =========================================================================== #
@@ -57,7 +89,7 @@ def enemy() -> Enemy:
 def vesna_build(constellation: int, weapon, artifacts, extra_buffs: Sequence[Buff] = ()) -> Build:
 
     return Build(
-        character=VESNA_COMBO_DICT["ssw_burst_combo"],
+        character=VESNA_COMBO_DICT["vesna_ssw_burst_combo"],
         constellation=constellation,
         weapon=weapon,
         artifacts=(artifacts,),
@@ -65,14 +97,14 @@ def vesna_build(constellation: int, weapon, artifacts, extra_buffs: Sequence[Buf
             {S.ATK_PCT: 0.466 * 2, S.CRIT_VALUE: 0.622},
             STANDART_SUBSTAT_PRESET),
         extra_buffs=tuple(extra_buffs),
-        time=TIMES["Весна"],
+        time=vesna_time(VESNA_BASE_TIME['burst'],constellation),
     )
 
 
 
 def cryo_mc_build(constellation: int, artifacts, weapon=EXAIPHANES, extra_buffs: Sequence[Buff] = ()) -> Build:
     return Build(
-        character=CMC_COMBO_DICT["cmc_ssw_combo"],
+        character=CMC_COMBO_DICT["cmc_ssw_vesna_combo"],
         constellation=constellation,
         weapon=weapon,
         artifacts=artifacts,
@@ -92,7 +124,7 @@ def odette_build(constellation: int = 0, weapon=SILVER_LIGHT,
         use_burst = constellation >= 4
         
     return Build(
-        character=ODETTE_COMBO_DICT["odette_ssw_combo_vv_full_uptime_mizuki"],
+        character=ODETTE_COMBO_DICT["odette_ssw_combo_vesna"],
         constellation=constellation,
         weapon=weapon,
         artifacts=(HEART_OF_FORGE,),
@@ -157,15 +189,18 @@ def make_team(name: str, vesna_c: int, vesna_weapon, odette_c, odette_weapon, ve
         buffs=TEAM_BUFFS,
         rotation=ROTATION,
         config=Config(),
+        phases=vesna_burst_cycle(1, 2)
     )
 
 
 def all_teams() -> Dict[str, Team]:
     variants = (
         ("Весна C0R0, C0R0 Одетта, C4R3 Крио ГГ, С0R0 Водяница", 0, EMBERWELL.at(5), 0, SILVER_LIGHT,SCARLET_PROOF,MILLELITH,TTDS_HALF_CATALYSATOR,0,4,(HEART_OF_FORGE.at(2),SCARLET_PROOF.at(2))),
+        ("Весна C1R1, C0R0 Одетта, C4R3 Крио ГГ, С0R1 Водяница", 1, CHRYSALIS, 0, SILVER_LIGHT,SCARLET_PROOF,MILLELITH,MAELSTROM,0,4,(NOBLESSE,)),
         ("Весна C0R1, C0R0 Одетта, C4R3 Крио ГГ, С0R0 Водяница", 0, CHRYSALIS.at(1), 0, SILVER_LIGHT, SCARLET_PROOF, MILLELITH, TTDS_HALF_CATALYSATOR,0,4,(HEART_OF_FORGE.at(2),SCARLET_PROOF.at(2))),
         ("Весна C0R1, C0R0 Одетта, C4R3 Крио ГГ, С0R1 Водяница", 0, CHRYSALIS.at(1), 0, SILVER_LIGHT, SCARLET_PROOF, MILLELITH, MAELSTROM,0,4,(HEART_OF_FORGE.at(2),SCARLET_PROOF.at(2))),
         ("Весна C0R0, C2R0 Одетта, C4R3 Крио ГГ, С0R0 Водяница", 0, EMBERWELL.at(5), 2, SILVER_LIGHT,SCARLET_PROOF,MILLELITH,TTDS_HALF_CATALYSATOR,0,4,(HEART_OF_FORGE.at(2),SCARLET_PROOF.at(2))),
+        ("Весна C0R1, C2R0 Одетта, C4R3 Крио ГГ, С0R0 Водяница", 0, CHRYSALIS, 2, SILVER_LIGHT,SCARLET_PROOF,MILLELITH,TTDS_HALF_CATALYSATOR,0,4,(HEART_OF_FORGE.at(2),SCARLET_PROOF.at(2))),
 
 
     )

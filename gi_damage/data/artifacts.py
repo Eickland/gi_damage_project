@@ -65,6 +65,17 @@ MILLELITH = ArtifactSet(
     note="",
 )
 
+NOBLESSE = ArtifactSet(
+    name="Знать",
+    pieces=4,
+    buffs_by_pieces={
+        4: (Buff(S.ATK_PCT, 0.2, target=TEAM, requires=(NOBLE,), temporary=True,
+                 source="Знать 4ч: +20% атаки всему отряду"),
+            )
+        },
+    note="",
+)
+
 HEART_OF_FORGE = ArtifactSet(
     name="Сердце горна",
     pieces=4,

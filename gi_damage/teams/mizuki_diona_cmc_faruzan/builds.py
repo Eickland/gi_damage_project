@@ -86,7 +86,7 @@ def diona_build(constellation: int, artifacts, weapon=FAV_BOW, extra_buffs: Sequ
 
 def cryo_mc_build(constellation: int, artifacts, weapon=EXAIPHANES, extra_buffs: Sequence[Buff] = ()) -> Build:
     return Build(
-        character=CMC_COMBO_DICT["cmc_ssw_combo"],
+        character=CMC_COMBO_DICT["cmc_ssw_mizuki_combo"],
         constellation=constellation,
         weapon=weapon,
         artifacts=artifacts,

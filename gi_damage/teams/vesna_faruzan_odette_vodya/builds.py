@@ -88,7 +88,7 @@ def odette_build(constellation: int = 0, weapon=SILVER_LIGHT,
         use_burst = constellation >= 4
         
     return Build(
-        character=ODETTE_COMBO_DICT["ssw_combo_vv_full_uptime_no_bow"],
+        character=ODETTE_COMBO_DICT["odette_ssw_combo_vesna"],
         constellation=constellation,
         weapon=weapon,
         artifacts=(HEART_OF_FORGE,),
