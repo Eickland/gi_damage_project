@@ -1,0 +1,71 @@
+diff --git a/gi_damage/data/characters/cyno.py b/gi_damage/data/characters/cyno.py
+index 4f1bc90..345fc9a 100644
+--- a/gi_damage/data/characters/cyno.py
++++ b/gi_damage/data/characters/cyno.py
+@@ -8,11 +8,14 @@ C1 — базовая линия (созвездие выдаётся беспл
+ Звёздный урон Сайно — только «Duststalker Bolts - Starsame»
+ (A1 Featherfall Judgment + C6). Всё остальное — обычный электро урон.
+ 
+-Допущение: «+600% МС» от A4 к Starsame складывается с «200% АТК» ВНУТРИ
+-базы прямого урона (Attribute × Multiplier), т.е. дальше умножается на
+-(1 + Base DMG Increase) и на (1 + 6·МС/(МС+2000) + бонус SC). Так же
+-«+150% МС» к обычным атакам — это прибавка к базе до бонуса урона.
+-Реализовано через DamageSource.extra_scaling.
++«+600% МС» от A4 к Starsame — это «Additional Increase» (доп. базовый
++урон, как у Водяницы): прибавляется ПОСЛЕ множителей звёздного проводника,
++    Итог = (База + 6·МС) × Сопр. × Крит × Возвышение,
++то есть на него НЕ действуют стаки, Base DMG Increase и (1 + 6·МС/(МС+2000)
+++ бонус SC). Реализовано баффом "flat_base_dmg.starsame" + extra_tags.
++
++«+150% МС» к обычным атакам — обычная прибавка к базе элементального урона
++(DamageSource.extra_scaling), на неё действуют бонусы урона и защита.
+ """
+ 
+ from __future__ import annotations
+@@ -69,6 +72,9 @@ CYNO_KIT = Character(
+              source="Pactsworn Pathclearer: +100 МС"),
+         Buff(f"{S.DMG_BONUS}.{JUDICATION}", JUDICATION_BONUS, target=SELF,
+              source="Featherfall Judgment: +35% урона навыка при Judication"),
++        Buff(f"{S.FLAT_BASE_DMG}.{STARSAME}",
++             lambda ctx: STARSAME_EM * ctx.own("em"), target=SELF,
++             source="Authority Over the Nine Bows: Starsame +600% МС (доп. базовый урон)"),
+     ),
+     sources=(),
+     constellations={
+@@ -114,7 +120,7 @@ def _na(name: str, mv: float, count: float, tags) -> object:
+ def _starsame(name: str, count: float, tags) -> object:
+     return stellar_conduct(name, "atk", STARSAME_ATK, "electro",
+                            [occ(count, *tags)], kind="skill",
+-                           extra_scaling=(("em", STARSAME_EM),),
++                           extra_tags=(STARSAME,),
+                            polar_stacks=CYNO_POLAR_STACKS)
+ 
+ 
+@@ -141,7 +147,7 @@ CYNO_COMBO_DICT = {
+             # поэтому разные окна — это разные occurrences одного источника.
+             stellar_conduct("Duststalker Bolt - Starsame (A1)", "atk", STARSAME_ATK, "electro",
+                             [occ(3 * 2, *_SC_TEAM_TAGS), occ(3 * 1, ON, PACTSWORN)],
+-                            kind="skill", extra_scaling=(("em", STARSAME_EM),),
++                            kind="skill", extra_tags=(STARSAME,),
+                             polar_stacks=CYNO_POLAR_STACKS),
+         ), # type: ignore
+         constellation_sources={
+diff --git a/gi_damage/data/tags.py b/gi_damage/data/tags.py
+index 7bdd90f..13d3cda 100644
+--- a/gi_damage/data/tags.py
++++ b/gi_damage/data/tags.py
+@@ -75,6 +75,8 @@ NOBLE = "noble"
+ PACTSWORN = "pactsworn_pathclearer"
+ #: «Together We Rise» (C1 Radiance) на персонаже, на которого Сайно переключился
+ TOGETHER_WE_RISE = "together_we_rise"
++#: Тег источников «Duststalker Bolt - Starsame» (доп. базовый урон от МС, A4)
++STARSAME = "starsame"
+ 
+ # --- Яэ Мико ------------------------------------ #
+ #: Тег источников «Сесшо Сакура» (бонус от МС, C6 игнор защиты)
+@@ -83,4 +85,4 @@ SESSHOU_SAKURA = "sesshou_sakura"
+ __all__ = ["ON", "OFF", "INST", "DREAM", "FROSTGLOW", "BREEZEBORNE",
+            "ARMED", "DA1", "DA2", "DA3", "DA4", "DA5", "DA6","VODYA_LEAD","VODYA_CHORUS","TTDS_HALF","VV_CRYO","VV_PYRO"
+            ,"VV_HYDRO","VV_ELECTRO","CATS_TAIL","SEVEN_SACRED","MIZUKI_C1","DECODING","TTDS_FULL","SANDRONE_CA_STACKS_1","SANDRONE_CA_STACKS_2","SANDRONE_CA_STACKS_3",
+-           "NOBLE","PACTSWORN","TOGETHER_WE_RISE","SESSHOU_SAKURA"]
++           "NOBLE","PACTSWORN","TOGETHER_WE_RISE","STARSAME","SESSHOU_SAKURA"]

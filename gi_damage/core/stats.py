@@ -72,6 +72,10 @@ class S:
     # Пробитие/снижение сопротивления цели (учитывается в Enemy)
     RES_REDUCTION = "res_reduction"  # можно "res_reduction.cryo"
 
+    # Игнорирование защиты цели (в долях, 0.6 = 60%), можно точечно:
+    # "def_ignore.sesshou_sakura"
+    DEF_IGNORE = "def_ignore"
+
 
 # Ключи, которые складываются напрямую (все — по умолчанию).
 SCALING_KEYS = {
@@ -210,6 +214,10 @@ class Stats:
         и "res_reduction.<стихия>". Значения — в долях: 0.20 = -20% RES.
         """
         return self._tagged_sum(S.RES_REDUCTION, tags)
+
+    def def_ignore(self, *tags: str) -> float:
+        """Доля игнорируемой защиты цели для удара с данными тегами."""
+        return self._tagged_sum(S.DEF_IGNORE, tags)
 
     def _tagged_sum(self, prefix: str, tags: Iterable[str]) -> float:
         tagset = set(tags)

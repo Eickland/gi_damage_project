@@ -1,0 +1,468 @@
+diff --git a/gi_damage/core/engine.py b/gi_damage/core/engine.py
+index bf585dd..75c73d3 100644
+--- a/gi_damage/core/engine.py
++++ b/gi_damage/core/engine.py
+@@ -21,7 +21,7 @@ from typing import Dict, Iterable, List, Optional, Sequence, Tuple
+ 
+ from .buffs import Buff, BuffContext, State, state
+ from .entities import Build, Enemy
+-from .formulas import (elemental_damage, stellar_swirl_direct,
++from .formulas import (defense_multiplier, elemental_damage, stellar_swirl_direct,
+                        stellar_swirl_reaction,stellar_conduct_direct)
+ from .reactions import ReactionEvent, distribute, pick_primary
+ from .sources import ELEMENTAL, STELLAR_SWIRL,STELLAR_CONDUCT, DamageSource
+@@ -358,6 +358,13 @@ class Team:
+                 polar_stacks=src.polar_stacks)
+         else:
+             def_mult = self.enemy.def_mult if src.applies_def else 1.0
++            ignore = stats.def_ignore(*tags)
++            if src.applies_def and ignore:
++                # Масштабируем заданный def_mult отношением формульных множителей,
++                # чтобы базовая калибровка цели (0.4875) не менялась.
++                lvl, elvl = b.character.level, self.enemy.level
++                def_mult *= (defense_multiplier(lvl, elvl, def_ignore=ignore)
++                             / defense_multiplier(lvl, elvl))
+             value = elemental_damage(
+                 stat_value * mv, stats, tags, def_mult, res, crit, elevation,
+                 flat_base=src.flat_base)
+diff --git a/gi_damage/core/stats.py b/gi_damage/core/stats.py
+index 170db52..a4a7eee 100644
+--- a/gi_damage/core/stats.py
++++ b/gi_damage/core/stats.py
+@@ -72,6 +72,10 @@ class S:
+     # Пробитие/снижение сопротивления цели (учитывается в Enemy)
+     RES_REDUCTION = "res_reduction"  # можно "res_reduction.cryo"
+ 
++    # Игнорирование защиты цели (в долях, 0.6 = 60%), можно точечно:
++    # "def_ignore.sesshou_sakura"
++    DEF_IGNORE = "def_ignore"
++
+ 
+ # Ключи, которые складываются напрямую (все — по умолчанию).
+ SCALING_KEYS = {
+@@ -211,6 +215,10 @@ class Stats:
+         """
+         return self._tagged_sum(S.RES_REDUCTION, tags)
+ 
++    def def_ignore(self, *tags: str) -> float:
++        """Доля игнорируемой защиты цели для удара с данными тегами."""
++        return self._tagged_sum(S.DEF_IGNORE, tags)
++
+     def _tagged_sum(self, prefix: str, tags: Iterable[str]) -> float:
+         tagset = set(tags)
+         total = 0.0
+diff --git a/gi_damage/data/characters/cyno.py b/gi_damage/data/characters/cyno.py
+index b6e2134..4f1bc90 100644
+--- a/gi_damage/data/characters/cyno.py
++++ b/gi_damage/data/characters/cyno.py
+@@ -137,8 +137,12 @@ CYNO_COMBO_DICT = {
+                       [occ(1, *_SC_TEAM_TAGS)]),
+             elemental("Mortuary Rite (Judication)", "atk", MORTUARY_RITE_MV, "electro", "skill",
+                       [occ(3, *_SC_TEAM_TAGS)], extra_tags=(JUDICATION,)),
+-            _starsame("Duststalker Bolt - Starsame (A1)", 3 * 2, _SC_TEAM_TAGS),
+-            _starsame("Duststalker Bolt - Starsame (A1)", 3 * 1, (ON, PACTSWORN)),
++            # Одно имя = один источник (Build.all_sources ключует по имени),
++            # поэтому разные окна — это разные occurrences одного источника.
++            stellar_conduct("Duststalker Bolt - Starsame (A1)", "atk", STARSAME_ATK, "electro",
++                            [occ(3 * 2, *_SC_TEAM_TAGS), occ(3 * 1, ON, PACTSWORN)],
++                            kind="skill", extra_scaling=(("em", STARSAME_EM),),
++                            polar_stacks=CYNO_POLAR_STACKS),
+         ), # type: ignore
+         constellation_sources={
+             # Q даёт 4 стака, первый Judication ещё 4 → максимум 8 за Pathclearer.
+diff --git a/gi_damage/data/characters/yae.py b/gi_damage/data/characters/yae.py
+new file mode 100644
+index 0000000..e1500bb
+--- /dev/null
++++ b/gi_damage/data/characters/yae.py
+@@ -0,0 +1,130 @@
++"""
++Яэ Мико — карманный саб-ДД, катализатор. Всегда в отрядах звёздного
++проводника (Radiance: Stellar-Conduct). Ротация: EEE, 2.4 с, без взрыва.
++
++C1 — базовая линия. Все её баффы считаются постоянными.
++
++ВНИМАНИЕ: множители молний Сесшо Сакуры в задании не даны — взяты
++значения 10 уровня навыка (60.67/75.84/94.80/118.50 % на 1 ур. × 1.8).
++Поправьте SAKURA_MV, если нужен другой уровень таланта.
++"""
++
++from __future__ import annotations
++from dataclasses import replace  # noqa: F401 — для patches= в файлах отрядов
++
++from ...core.buffs import OTHERS, SELF, TEAM, Buff, temp
++from ...core.entities import Character, Constellation, with_rotation
++from ...core.stats import S
++from ..tags import *
++from ...core.sources import elemental, occ, stellar_conduct
++
++# --------------------------------------------------------------------------- #
++#  Множители (в долях)                                                         #
++# --------------------------------------------------------------------------- #
++#: Урон молнии Сесшо Сакуры по уровню сакуры (талант 10)
++SAKURA_MV = {1: 1.0921, 2: 1.3651, 3: 1.7064, 4: 2.1330}
++SAKURA_LEVEL_C0 = 3      # 3 сакуры рядом, максимум 3 ур.
++SAKURA_LEVEL_C2 = 4      # C2: максимум 4 ур.
++
++EM_SAKURA_BONUS = 0.0015      # A4 Enlightened Blessing: +0.15% урона сакуры за 1 МС
++ENHANCED_ATK = 0.80           # Edict of Cleansing: усиленная молния +80% АТК
++ENHANCED_SC_ATK = 2.00        # Radiance: доп. инстанс 200% АТК (звёздный проводник)
++A1_SC_ATK = 0.50              # Radiance A1: доп. молния 50% АТК (звёздный проводник)
++
++C1_BONUS = 0.50               # C1: +50% электро урона и урона SC отряду
++C2_EM = 200.0                 # C2: +200 МС при сакуре 4 ур.
++C6_DEF_IGNORE = 0.60          # C6: молнии сакуры игнорируют 60% защиты
++C6_SC_CRIT_DMG = 2.00         # C6: +200% крит. урона звёздного проводника
++
++#: Количество ударов за ротацию отряда
++ENHANCED_HITS = 7             # усиленных молний (раз в ~3 с)
++NORMAL_HITS = 15              # обычных: 3 сакуры × ~22 с / 2.9 с ≈ 22 удара, минус 7 усиленных
++A1_STRIKES = 3                # доп. молний A1 (по одной на каждое E при 3 сакурах рядом)
++
++#: Стаки «полярности» для звёздного проводника Яэ (как у Одетты вне поля)
++YAE_POLAR_STACKS = 6
++
++
++YAE_KIT = Character(
++    name="Яэ Мико",
++    element="electro",
++    weapon_type="catalyst",
++    default_field=OFF,
++    crit_mode="balance",
++    stats={
++        S.BASE_ATK: 340.0,
++        # 24.2% КШ × 2 + 50% КУ
++        S.CRIT_VALUE: 0.242 * 2 + 0.50,
++    },
++    buffs=(
++        Buff(f"{S.DMG_BONUS}.{SESSHOU_SAKURA}",
++             lambda ctx: EM_SAKURA_BONUS * ctx.own("em"), target=SELF,
++             source="Enlightened Blessing: +0.15% урона сакуры за 1 МС"),
++    ),
++    sources=(),
++    constellations={
++        1: Constellation(
++            number=1,
++            name="C1",
++            buffs=(
++                Buff("dmg_bonus.electro", C1_BONUS, target=TEAM,
++                     source="C1 Яэ: +50% электро урона отряду"),
++                Buff(S.SC_BONUS, C1_BONUS, target=TEAM,
++                     source="C1 Яэ: +50% урона звёздного проводника отряду"),
++            ),
++        ),
++        2: Constellation(
++            number=2,
++            name="C2",
++            buffs=(
++                Buff(S.BASE_EM, C2_EM, target=SELF,
++                     source="C2 Яэ: +200 МС (сакура 4 ур.)"),
++                Buff(S.BASE_EM, C2_EM, target=OTHERS, requires=(ON,),
++                     source="C2 Яэ: +200 МС активному персонажу"),
++            ),
++            patches={
++                "Сесшо Сакура — молния":
++                    lambda s: replace(s, mv=SAKURA_MV[SAKURA_LEVEL_C2]),
++                "Сесшо Сакура — усиленная молния":
++                    lambda s: replace(s, mv=SAKURA_MV[SAKURA_LEVEL_C2] + ENHANCED_ATK),
++            },
++        ),
++        6: Constellation(
++            number=6,
++            name="C6",
++            buffs=(
++                Buff(f"{S.DEF_IGNORE}.{SESSHOU_SAKURA}", C6_DEF_IGNORE, target=SELF,
++                     source="C6 Яэ: молнии сакуры игнорируют 60% защиты"),
++                Buff("crit_value.stellar_conduct", C6_SC_CRIT_DMG, target=SELF,
++                     source="C6 Яэ: +200% крит. урона звёздного проводника"),
++            ),
++        ),
++    },
++    note="Только отряды звёздного проводника.",
++)
++
++#: Окна отряда, в которых находится Яэ (вне поля). Расставляйте, как нужно.
++_YAE_TAGS = (OFF, NOBLE)
++
++YAE_COMBO_DICT = {
++    "sc_eee": with_rotation(
++        YAE_KIT,
++        sources=(
++            elemental("Сесшо Сакура — молния", "atk", SAKURA_MV[SAKURA_LEVEL_C0],
++                      "electro", "skill", [occ(NORMAL_HITS, *_YAE_TAGS)],
++                      extra_tags=(SESSHOU_SAKURA,)),
++            elemental("Сесшо Сакура — усиленная молния", "atk",
++                      SAKURA_MV[SAKURA_LEVEL_C0] + ENHANCED_ATK,
++                      "electro", "skill", [occ(ENHANCED_HITS, *_YAE_TAGS)],
++                      extra_tags=(SESSHOU_SAKURA,)),
++            stellar_conduct("Усиленная молния — звёздный проводник", "atk",
++                            ENHANCED_SC_ATK, "electro",
++                            [occ(ENHANCED_HITS, *_YAE_TAGS)], kind="skill",
++                            polar_stacks=YAE_POLAR_STACKS),
++            stellar_conduct("A1: доп. молния — звёздный проводник", "atk",
++                            A1_SC_ATK, "electro",
++                            [occ(A1_STRIKES, ON, NOBLE)], kind="skill",
++                            polar_stacks=YAE_POLAR_STACKS),
++        ),
++    ),
++}
+diff --git a/gi_damage/data/tags.py b/gi_damage/data/tags.py
+index 048a292..7bdd90f 100644
+--- a/gi_damage/data/tags.py
++++ b/gi_damage/data/tags.py
+@@ -76,7 +76,11 @@ PACTSWORN = "pactsworn_pathclearer"
+ #: «Together We Rise» (C1 Radiance) на персонаже, на которого Сайно переключился
+ TOGETHER_WE_RISE = "together_we_rise"
+ 
++# --- Яэ Мико ------------------------------------ #
++#: Тег источников «Сесшо Сакура» (бонус от МС, C6 игнор защиты)
++SESSHOU_SAKURA = "sesshou_sakura"
++
+ __all__ = ["ON", "OFF", "INST", "DREAM", "FROSTGLOW", "BREEZEBORNE",
+            "ARMED", "DA1", "DA2", "DA3", "DA4", "DA5", "DA6","VODYA_LEAD","VODYA_CHORUS","TTDS_HALF","VV_CRYO","VV_PYRO"
+            ,"VV_HYDRO","VV_ELECTRO","CATS_TAIL","SEVEN_SACRED","MIZUKI_C1","DECODING","TTDS_FULL","SANDRONE_CA_STACKS_1","SANDRONE_CA_STACKS_2","SANDRONE_CA_STACKS_3",
+-           "NOBLE","PACTSWORN","TOGETHER_WE_RISE"]
++           "NOBLE","PACTSWORN","TOGETHER_WE_RISE","SESSHOU_SAKURA"]
+diff --git a/gi_damage/data/weapons.py b/gi_damage/data/weapons.py
+index 048eb4d..dff3995 100644
+--- a/gi_damage/data/weapons.py
++++ b/gi_damage/data/weapons.py
+@@ -26,6 +26,23 @@ WANDERER_SONG = Weapon(
+     note="Усредненный бонус за 6 ротаций",
+ )
+ 
++#: Та же «Песнь странника», но элементальный бонус пассивки — электро
++#: (для Яэ Мико). Значения те же, что у WANDERER_SONG.
++WANDERER_SONG_ELECTRO = Weapon(
++    name="Песнь странника",
++    base_atk=510.0,
++    stats={S.CRIT_VALUE: 0.551},
++    refinement=5,
++    stats_by_refinement={
++        5: {
++            S.ATK_PCT: 0.20,
++            S.BASE_EM: 80.0,
++            "dmg_bonus.electro": 0.16,
++        },
++    },
++    note="Усредненный бонус за 6 ротаций, элементальный бонус — электро",
++)
++
+ WINTER = Weapon(
+     name="Застывшее сердце зимы",
+     base_atk=510.0,
+diff --git a/gi_damage/teams/cyno_odette_yae_alyosha/builds.py b/gi_damage/teams/cyno_odette_yae_alyosha/builds.py
+new file mode 100644
+index 0000000..8190448
+--- /dev/null
++++ b/gi_damage/teams/cyno_odette_yae_alyosha/builds.py
+@@ -0,0 +1,138 @@
++"""
++Отряд звёздного проводника: Сайно / Одетта / Яэ Мико / Алеша.
++
++Реакций, наносящих урон, нет (звёздный проводник). Резонанс — электро
++(без бонуса урона), поэтому отрядных баффов нет.
++"""
++
++from __future__ import annotations
++
++from typing import Dict, Sequence
++
++from ...core.buffs import OTHERS, SELF, TEAM, Buff, temp
++from ...core.engine import Config, Team
++from ...core.entities import Build, Enemy, ArtifactSet
++from ...core.stats import S
++from ...core.utilits import merge_dicts
++from ...data.artifacts import *
++from ...data.artifacts_presets import *
++from ...data.tags import *
++from ...data.characters.cyno import CYNO_COMBO_DICT
++from ...data.characters.odette import (odette_burst_buffs, ODETTE_BURST_TIME,
++                                       ODETTE_COMBO_DICT, ODETTE_BURST_SOURCES)
++from ...data.characters.yae import YAE_COMBO_DICT
++from ...data.characters.alyosha import ALYOSHA_COMBO_DICT
++from ...data.weapons import *
++
++TEAM_BUFFS: tuple = ()
++
++#: Время каждого персонажа в ротации (секунды)
++TIMES = {"Сайно": 15.0, "Алеша": 1.65, "Одетта": 2.4, "Яэ Мико": 2.4}
++
++ROTATION = "Алеша EQ/Одетта EE/Яэ EEE/Сайно QE (N2 CA N4 E)×3"
++
++#: Главные статы: пески/кубок/корона
++MAIN_ATK = {S.ATK_PCT: 0.466 * 2, S.CRIT_VALUE: 0.622}                    # АТК/АТК/крит
++MAIN_EM = {S.BASE_EM: 187.0, S.ATK_PCT: 0.466, S.CRIT_VALUE: 0.622}       # МС/АТК/крит
++MAIN_ELECTRO = {S.ATK_PCT: 0.466, "dmg_bonus.electro": 0.466,
++                S.CRIT_VALUE: 0.622}                                      # АТК/электро/крит
++
++CYNO_MAIN = MAIN_EM
++YAE_MAIN = MAIN_ATK
++
++
++def enemy() -> Enemy:
++    return Enemy(res={"anemo": 0.10, "cryo": 0.10, "electro": 0.10},
++                 def_mult=0.4875, elevation=0.0)
++
++
++def cyno_build(constellation: int = 1, weapon=DEATHMATCH, artifacts=(DISENCHANTMENT,),
++               main_stats=CYNO_MAIN, extra_buffs: Sequence[Buff] = ()) -> Build:
++    return Build(
++        character=CYNO_COMBO_DICT["sc_combo"],
++        constellation=constellation,
++        weapon=weapon,
++        artifacts=artifacts,
++        extra_stats=merge_dicts(main_stats, STANDART_SUBSTAT_PRESET),
++        extra_buffs=tuple(extra_buffs),
++        time=TIMES["Сайно"],
++    )
++
++
++def odette_build(constellation: int = 0, weapon=SILVER_LIGHT, artifacts=(HEART_OF_FORGE,),
++                 use_burst: bool | None = None,
++                 extra_buffs: Sequence[Buff] = ()) -> Build:
++    """use_burst=None — авто: до C4 не применяем, с C4 применяем."""
++    if use_burst is None:
++        use_burst = constellation >= 4
++    return Build(
++        character=ODETTE_COMBO_DICT["odette_ssc_combo_sucrose"],
++        constellation=constellation,
++        weapon=weapon,
++        artifacts=artifacts,
++        extra_stats=merge_dicts(
++            {S.ATK_PCT: 0.466 * 2, S.CRIT_VALUE: 0.622},
++            STANDART_SUBSTAT_PRESET),
++        extra_sources=ODETTE_BURST_SOURCES if use_burst else (),
++        extra_buffs=tuple(extra_buffs) + (odette_burst_buffs(constellation)
++                                          if use_burst else ()),
++        time=TIMES["Одетта"] + (ODETTE_BURST_TIME if use_burst else 0.0),
++    )
++
++
++def yae_build(constellation: int = 1, weapon=WANDERER_SONG_ELECTRO.at(5),
++              artifacts=(DISENCHANTMENT,), main_stats=YAE_MAIN,
++              extra_buffs: Sequence[Buff] = ()) -> Build:
++    return Build(
++        character=YAE_COMBO_DICT["sc_eee"],
++        constellation=constellation,
++        weapon=weapon,
++        artifacts=artifacts,
++        extra_stats=merge_dicts(main_stats, STANDART_SUBSTAT_PRESET),
++        extra_buffs=tuple(extra_buffs),
++        time=TIMES["Яэ Мико"],
++    )
++
++
++def alyosha_build(constellation: int = 6, weapon=FAV_LANCE, artifacts=(NOBLESSE,),
++                  extra_buffs: Sequence[Buff] = ()) -> Build:
++    return Build(
++        character=ALYOSHA_COMBO_DICT["sc_combo"],
++        constellation=constellation,
++        weapon=weapon,
++        artifacts=artifacts,
++        extra_stats=merge_dicts(
++            {S.ATK_PCT: 0.466 * 1, S.CRIT_VALUE: 0.622},
++            STANDART_SUBSTAT_PRESET),
++        extra_buffs=tuple(extra_buffs),
++        time=TIMES["Алеша"],
++    )
++
++
++def make_team(name: str, cyno_c: int = 1, cyno_weapon=DEATHMATCH,
++              odette_c: int = 0, odette_weapon=SILVER_LIGHT,
++              yae_c: int = 1, yae_weapon=WANDERER_SONG_ELECTRO.at(5),
++              alyosha_c: int = 6, alyosha_weapon=FAV_LANCE,
++              cyno_artifacts=(DISENCHANTMENT,), odette_artifacts=(HEART_OF_FORGE,),
++              yae_artifacts=(DISENCHANTMENT,), alyosha_artifacts=(NOBLESSE,),
++              cyno_main_stats=CYNO_MAIN, yae_main_stats=YAE_MAIN) -> Team:
++    return Team(
++        name=name,
++        builds=[
++            cyno_build(cyno_c, cyno_weapon, cyno_artifacts, cyno_main_stats),
++            odette_build(odette_c, odette_weapon, odette_artifacts),
++            yae_build(yae_c, yae_weapon, yae_artifacts, yae_main_stats),
++            alyosha_build(alyosha_c, alyosha_weapon, alyosha_artifacts),
++        ],
++        enemy=enemy(),
++        buffs=TEAM_BUFFS,
++        rotation=ROTATION,
++        config=Config(),
++    )
++
++
++BASE_NAME = "C1R1 Сайно, C0R0 Одетта, C1R5 Яэ, С6R0 Алеша"
++
++
++def all_teams() -> Dict[str, Team]:
++    return {BASE_NAME: make_team(BASE_NAME)}
+diff --git a/gi_damage/teams/cyno_odette_yae_alyosha/rosters.py b/gi_damage/teams/cyno_odette_yae_alyosha/rosters.py
+new file mode 100644
+index 0000000..df7d68a
+--- /dev/null
++++ b/gi_damage/teams/cyno_odette_yae_alyosha/rosters.py
+@@ -0,0 +1,65 @@
++#!/usr/bin/env python3
++"""
++Запуск:  python -m gi_damage.teams.cyno_odette_yae_alyosha.rosters
++         python -m gi_damage.teams.cyno_odette_yae_alyosha.rosters --details
++"""
++
++from __future__ import annotations
++
++import sys
++from pathlib import Path
++
++sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
++
++from gi_damage.core.report import hit_details, source_breakdown, team_summary
++from gi_damage.core.roster import Roster, Variation
++from gi_damage.data.weapons import *
++from gi_damage.data.artifacts import *
++from gi_damage.teams.cyno_odette_yae_alyosha.builds import (
++    BASE_NAME, MAIN_ATK, MAIN_EM, MAIN_ELECTRO, all_teams, make_team,
++    odette_build, alyosha_build)
++from gi_damage.visual.rosters import RosterBook
++
++
++def main(argv: list[str]) -> int:
++    details = "--details" in argv
++    book = RosterBook()
++
++    for team in all_teams().values():
++        result = team.compute()
++        print(team_summary(result))
++        if details:
++            print(source_breakdown(result))
++            print()
++            print(hit_details(result))
++            print()
++
++    # Главные статы в карточках ростера не различимы — сравниваем текстом
++    mains = (("АТК/АТК/крит", MAIN_ATK), ("МС/АТК/крит", MAIN_EM),
++             ("АТК/электро/крит", MAIN_ELECTRO))
++    for who, key in (("Сайно", "cyno_main_stats"), ("Яэ Мико", "yae_main_stats")):
++        print(f"=== Главные статы: {who} ===")
++        for label, main in mains:
++            r = make_team(label, **{key: main}).compute()
++            print(f"{label:<18} DPR {r.dpr:>12,.0f}  DPS {r.dps:>10,.0f}")
++        print()
++
++    base = make_team(BASE_NAME)
++
++    book.add(Roster(base, [Variation(slot="Яэ Мико", constellations=[1, 2, 6])]),
++             "Созвездия Яэ", ascending=True)
++    book.add(Roster(base, [Variation(slot="Сайно", constellations=[1, 2, 6])]),
++             "Созвездия Сайно", ascending=True)
++    book.add(Roster(base, [Variation(slot="Одетта", builds=[
++        odette_build(constellation=c) for c in (0, 1, 2, 4, 6)])]),
++             "Созвездия Одетты", ascending=True)
++    book.add(Roster(base, [Variation(slot="Алеша", builds=[
++        alyosha_build(constellation=c) for c in (2, 3, 6)])]),
++             "Созвездия Алеши", ascending=True)
++
++    book.save("rosters.html")
++    return 0
++
++
++if __name__ == "__main__":
++    raise SystemExit(main(sys.argv[1:]))

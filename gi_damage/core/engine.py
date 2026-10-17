@@ -21,7 +21,7 @@ from typing import Dict, Iterable, List, Optional, Sequence, Tuple
 
 from .buffs import Buff, BuffContext, State, state
 from .entities import Build, Enemy
-from .formulas import (elemental_damage, stellar_swirl_direct,
+from .formulas import (defense_multiplier, elemental_damage, stellar_swirl_direct,
                        stellar_swirl_reaction,stellar_conduct_direct)
 from .reactions import ReactionEvent, distribute, pick_primary
 from .sources import ELEMENTAL, STELLAR_SWIRL,STELLAR_CONDUCT, DamageSource
@@ -358,6 +358,13 @@ class Team:
                 polar_stacks=src.polar_stacks)
         else:
             def_mult = self.enemy.def_mult if src.applies_def else 1.0
+            ignore = stats.def_ignore(*tags)
+            if src.applies_def and ignore:
+                # Масштабируем заданный def_mult отношением формульных множителей,
+                # чтобы базовая калибровка цели (0.4875) не менялась.
+                lvl, elvl = b.character.level, self.enemy.level
+                def_mult *= (defense_multiplier(lvl, elvl, def_ignore=ignore)
+                             / defense_multiplier(lvl, elvl))
             value = elemental_damage(
                 stat_value * mv, stats, tags, def_mult, res, crit, elevation,
                 flat_base=src.flat_base)

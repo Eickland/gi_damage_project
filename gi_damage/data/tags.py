@@ -75,8 +75,17 @@ NOBLE = "noble"
 PACTSWORN = "pactsworn_pathclearer"
 #: «Together We Rise» (C1 Radiance) на персонаже, на которого Сайно переключился
 TOGETHER_WE_RISE = "together_we_rise"
+#: Тег источников «Duststalker Bolt - Starsame» (доп. базовый урон от МС, A4)
+STARSAME = "starsame"
+
+# --- Яэ Мико ------------------------------------ #
+#: Тег источников «Сесшо Сакура» (бонус от МС, C6 игнор защиты)
+SESSHOU_SAKURA = "sesshou_sakura"
+
+#Элегия
+ELEGY = "ELEGY"
 
 __all__ = ["ON", "OFF", "INST", "DREAM", "FROSTGLOW", "BREEZEBORNE",
            "ARMED", "DA1", "DA2", "DA3", "DA4", "DA5", "DA6","VODYA_LEAD","VODYA_CHORUS","TTDS_HALF","VV_CRYO","VV_PYRO"
            ,"VV_HYDRO","VV_ELECTRO","CATS_TAIL","SEVEN_SACRED","MIZUKI_C1","DECODING","TTDS_FULL","SANDRONE_CA_STACKS_1","SANDRONE_CA_STACKS_2","SANDRONE_CA_STACKS_3",
-           "NOBLE","PACTSWORN","TOGETHER_WE_RISE"]
+           "NOBLE","PACTSWORN","TOGETHER_WE_RISE","SESSHOU_SAKURA","STARSAME","ELEGY"]

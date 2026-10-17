@@ -8,7 +8,7 @@ from __future__ import annotations
 from ..core.buffs import SELF, Buff, TEAM, temp
 from ..core.entities import Weapon
 from ..core.stats import S
-from .tags import BREEZEBORNE, TTDS_HALF, ON,TTDS_FULL
+from .tags import BREEZEBORNE, TTDS_HALF, ON,TTDS_FULL, ELEGY
 
 # --------------------------------------------------------------------------- #
 WANDERER_SONG = Weapon(
@@ -24,6 +24,23 @@ WANDERER_SONG = Weapon(
         },
     },
     note="Усредненный бонус за 6 ротаций",
+)
+
+#: Та же «Песнь странника», но элементальный бонус пассивки — электро
+#: (для Яэ Мико). Значения те же, что у WANDERER_SONG.
+WANDERER_SONG_ELECTRO = Weapon(
+    name="Песнь странника",
+    base_atk=510.0,
+    stats={S.CRIT_VALUE: 0.551},
+    refinement=5,
+    stats_by_refinement={
+        5: {
+            S.ATK_PCT: 0.20,
+            S.BASE_EM: 80.0,
+            "dmg_bonus.electro": 0.16,
+        },
+    },
+    note="Усредненный бонус за 6 ротаций, элементальный бонус — электро",
 )
 
 WINTER = Weapon(
@@ -569,6 +586,24 @@ BREEZEBORNE_BOW = Weapon(
     },
 )
 
+ELEGY_BONUS_ATK = {r: 0.2 + 0.05 * (r - 1) for r in range(1, 6)}
+ELEGY_BONUS_EM = {r: 100 + 20 * (r - 1) for r in range(1, 6)}
+
+ELEGY_BOW = Weapon(
+    name="Элегия",
+    base_atk=608.0,
+    refinement=1,
+    buffs_by_refinement={
+        r: (temp(S.ATK_PCT, ELEGY_BONUS_ATK[r], ELEGY, target=TEAM,
+                 source=f"Элегия R{r}: +{ELEGY_BONUS_ATK[r]:.0%} "
+                        f""),
+            temp(S.BASE_EM, ELEGY_BONUS_EM[r], ELEGY, target=TEAM,
+                 source=f"Элегия R{r}: +{ELEGY_BONUS_EM[r]:.0%} "
+                        f""),)
+        for r in ELEGY_BONUS_ATK
+    },
+)
+
 #: Пассивка Смертельного боя (одна цель рядом): +24% АТК на R1, +6% за ранг.
 DEATHMATCH_ATK = {r: 0.24 + 0.06 * (r - 1) for r in range(1, 6)}
 
@@ -579,6 +614,49 @@ DEATHMATCH = Weapon(
     stats={S.CRIT_VALUE: 0.368 * 2},
     stats_by_refinement={r: {S.ATK_PCT: DEATHMATCH_ATK[r]} for r in DEATHMATCH_ATK},
     note="Копьё из боевого пропуска. Пассивка — вариант «меньше 2 врагов рядом».",
+)
+
+SCARLET_SANDS_BONUS = {r: 0.52 + 0.13 * (r - 1) + 3 * (0.28 + 0.07 * (r - 1))
+                       for r in range(1, 6)}
+
+SCARLET_SANDS = Weapon(
+    name="Посох алых песков",
+    base_atk=542.0,
+    refinement=1,
+    stats={S.CRIT_VALUE: 0.441 * 2},
+    buffs_by_refinement={
+        r: (Buff(S.FLAT_ATK,
+                 lambda ctx, k=SCARLET_SANDS_BONUS[r]: k * ctx.own("em"),
+                 target=SELF,
+                 source=f"Посох алых песков R{r}: +{SCARLET_SANDS_BONUS[r]:.0%} МС в атаку"),)
+        for r in SCARLET_SANDS_BONUS
+    },
+    note="Стаки Dream of the Scarlet Sands считаются полными (3).",
+)
+
+
+ECHOES = Weapon(
+    name="Отголоски сердца",
+    base_atk=565.0,
+    refinement=5,
+    stats={S.ATK_PCT: 0.276},
+    stats_by_refinement={5:{S.BASE_EM:120,S.SC_BONUS:0.32}},
+    note="",
+)
+
+KAGURA = Weapon(
+    name="Истина кагура",
+    base_atk=608.0,
+    refinement=1,
+    stats={S.CRIT_VALUE: 0.662},
+    stats_by_refinement={1:{"dmg_bonus.skill":0.72,S.SC_BONUS:0.36},
+        2:{"dmg_bonus.skill":0.90,S.SC_BONUS:0.45},
+        3:{"dmg_bonus.skill":0.18*6,S.SC_BONUS:0.18*3},
+        4:{"dmg_bonus.skill":0.21*6,S.SC_BONUS:0.21*3},
+        5:{"dmg_bonus.skill":0.24*6,S.SC_BONUS:0.24*3},
+        },
+    
+    note="",
 )
 
 ALL = {w.name: w for w in (WANDERER_SONG, SUNNY_MORNING_SLEEP_IN, EXAIPHANES,

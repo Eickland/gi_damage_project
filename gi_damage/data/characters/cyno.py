@@ -36,7 +36,7 @@ BURST_EM = 100.0              # МС в Pactsworn Pathclearer
 
 JUDICATION_BONUS = 0.35       # A1: +35% урона навыка при Judication
 STARSAME_ATK = 2.00           # Duststalker Bolt - Starsame: 200% АТК
-STARSAME_EM = 6.00            # A4: +600% МС
+STARSAME_EM = 3.00            # A4: +600% МС
 BOLT_ATK = 1.00               # обычный Duststalker Bolt (без Radiance) — для справки
 BOLT_EM = 2.50
 NA_EM = 1.50                  # A4: обычные атаки в Pathclearer +150% МС
@@ -47,7 +47,7 @@ C2_SC_BONUS = 0.16 * 5        # C2: +16% урона звёздного пров�
 
 #: Стаки «полярности» для звёздного проводника Сайно (см. formulas.stellar_conduct_multiplier).
 #: Взято как у Сандроне (основной персонаж на поле) — поправьте при необходимости.
-CYNO_POLAR_STACKS = 7
+CYNO_POLAR_STACKS = 10
 
 #: Тег источника для +35% Judication (бафф «dmg_bonus.judication»)
 JUDICATION = "judication"
@@ -69,6 +69,9 @@ CYNO_KIT = Character(
              source="Pactsworn Pathclearer: +100 МС"),
         Buff(f"{S.DMG_BONUS}.{JUDICATION}", JUDICATION_BONUS, target=SELF,
              source="Featherfall Judgment: +35% урона навыка при Judication"),
+        Buff(f"{S.FLAT_BASE_DMG}.{STARSAME}",
+             lambda ctx: STARSAME_EM * ctx.own("em"), target=SELF,
+             source="Authority Over the Nine Bows: Starsame +600% МС (доп. базовый урон)"),
     ),
     sources=(),
     constellations={
@@ -94,9 +97,6 @@ CYNO_KIT = Character(
                      source="C2: +50% электро урона (5 стаков)"),
                 Buff(S.SC_BONUS, C2_SC_BONUS, target=SELF, requires=(PACTSWORN,),
                      source="C2: +80% урона звёздного проводника (Together We Rise, 5 стаков)"),
-                # Для других носителей Together We Rise — пока никуда не добавлен
-                temp(S.SC_BONUS, C2_SC_BONUS, TOGETHER_WE_RISE, target=OTHERS,
-                     source="C2: +80% урона звёздного проводника (Together We Rise, 5 стаков)"),
             ),
         ),
         6: Constellation(number=6, name="C6"),
@@ -113,14 +113,14 @@ def _na(name: str, mv: float, count: float, tags) -> object:
 
 def _starsame(name: str, count: float, tags) -> object:
     return stellar_conduct(name, "atk", STARSAME_ATK, "electro",
-                           [occ(count, *tags)], kind="skill",
-                           extra_scaling=(("em", STARSAME_EM),),
+                           [occ(count, *tags)], kind="sc_skill",
+                            extra_tags=(STARSAME,),
                            polar_stacks=CYNO_POLAR_STACKS)
 
 
 #: Все временные окна отряда Одетта/Алеша/Диона, в которых находится Сайно.
 #: Расставляйте по ударам, как нужно.
-_SC_TEAM_TAGS = (ON, PACTSWORN, CATS_TAIL, NOBLE)
+_SC_TEAM_TAGS = (ON, PACTSWORN, CATS_TAIL, NOBLE,ELEGY)
 
 CYNO_COMBO_DICT = {
     # Q, E, затем 3 × (N2, CA, N4, E с Judication). 15 с.
@@ -137,8 +137,12 @@ CYNO_COMBO_DICT = {
                       [occ(1, *_SC_TEAM_TAGS)]),
             elemental("Mortuary Rite (Judication)", "atk", MORTUARY_RITE_MV, "electro", "skill",
                       [occ(3, *_SC_TEAM_TAGS)], extra_tags=(JUDICATION,)),
-            _starsame("Duststalker Bolt - Starsame (A1)", 3 * 2, _SC_TEAM_TAGS),
-            _starsame("Duststalker Bolt - Starsame (A1)", 3 * 1, (ON, PACTSWORN)),
+            # Одно имя = один источник (Build.all_sources ключует по имени),
+            # поэтому разные окна — это разные occurrences одного источника.
+            stellar_conduct("Duststalker Bolt - Starsame (A1)", "atk", STARSAME_ATK, "electro",
+                            [occ(3 * 2, *_SC_TEAM_TAGS), occ(3 * 1, ON, PACTSWORN)],
+                            kind="skill", extra_tags=(STARSAME,),
+                            polar_stacks=CYNO_POLAR_STACKS),
         ), # type: ignore
         constellation_sources={
             # Q даёт 4 стака, первый Judication ещё 4 → максимум 8 за Pathclearer.
