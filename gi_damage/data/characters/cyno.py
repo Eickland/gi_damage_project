@@ -115,7 +115,9 @@ def _starsame(name: str, count: float, tags) -> object:
 
 #: Все временные окна отряда Одетта/Алеша/Диона, в которых находится Сайно.
 #: Расставляйте по ударам, как нужно.
-_SC_TEAM_TAGS = (ON, PACTSWORN, CATS_TAIL, NOBLE,ELEGY)
+_SC_TEAM_TAGS = (ON, PACTSWORN, CATS_TAIL, NOBLE,ELEGY, OFFENSIVE_DIRECTIVE)
+#: То же без Offensive Directive Валеры (15 стаков на ротацию)
+_SC_TEAM_TAGS_NO_OD = tuple(t for t in _SC_TEAM_TAGS if t != OFFENSIVE_DIRECTIVE)
 
 CYNO_COMBO_DICT = {
     # Q, E, затем 3 × (N2, CA, N4, E с Judication). 15 с.
@@ -135,14 +137,18 @@ CYNO_COMBO_DICT = {
             # Одно имя = один источник (Build.all_sources ключует по имени),
             # поэтому разные окна — это разные occurrences одного источника.
             stellar_conduct("Duststalker Bolt - Starsame (A1)", "atk", STARSAME_ATK, "electro",
-                            [occ(3 * 2, *_SC_TEAM_TAGS), occ(3 * 1, ON, PACTSWORN)],
+                            [occ(3 * 2, *_SC_TEAM_TAGS), occ(3 * 1, ON, PACTSWORN, OFFENSIVE_DIRECTIVE)],
                             kind="skill", extra_tags=(STARSAME,),
                             polar_stacks=CYNO_POLAR_STACKS),
         ), # type: ignore
         constellation_sources={
             # Q даёт 4 стака, первый Judication ещё 4 → максимум 8 за Pathclearer.
             # Сайно всегда под Together We Rise (C1), поэтому все — Starsame.
-            6: (_starsame("C6: Duststalker Bolt - Starsame", 8, _SC_TEAM_TAGS),),
+            # Offensive Directive Валеры — 15 стаков: 9 ушли на A1, на C6 остаётся 6 из 8.
+            6: (stellar_conduct("C6: Duststalker Bolt - Starsame", "atk", STARSAME_ATK, "electro",
+                                [occ(6, *_SC_TEAM_TAGS), occ(2, *_SC_TEAM_TAGS_NO_OD)],
+                                kind="sc_skill", extra_tags=(STARSAME,),
+                                polar_stacks=CYNO_POLAR_STACKS),),
         }, # type: ignore
     ),
 }

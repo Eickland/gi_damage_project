@@ -1,0 +1,407 @@
+diff --git a/gi_damage/data/characters/cyno.py b/gi_damage/data/characters/cyno.py
+index 1cf4389..83b146c 100644
+--- a/gi_damage/data/characters/cyno.py
++++ b/gi_damage/data/characters/cyno.py
+@@ -115,7 +115,9 @@ def _starsame(name: str, count: float, tags) -> object:
+ 
+ #: Все временные окна отряда Одетта/Алеша/Диона, в которых находится Сайно.
+ #: Расставляйте по ударам, как нужно.
+-_SC_TEAM_TAGS = (ON, PACTSWORN, CATS_TAIL, NOBLE,ELEGY)
++_SC_TEAM_TAGS = (ON, PACTSWORN, CATS_TAIL, NOBLE,ELEGY, OFFENSIVE_DIRECTIVE)
++#: То же без Offensive Directive Валеры (15 стаков на ротацию)
++_SC_TEAM_TAGS_NO_OD = tuple(t for t in _SC_TEAM_TAGS if t != OFFENSIVE_DIRECTIVE)
+ 
+ CYNO_COMBO_DICT = {
+     # Q, E, затем 3 × (N2, CA, N4, E с Judication). 15 с.
+@@ -135,14 +137,18 @@ CYNO_COMBO_DICT = {
+             # Одно имя = один источник (Build.all_sources ключует по имени),
+             # поэтому разные окна — это разные occurrences одного источника.
+             stellar_conduct("Duststalker Bolt - Starsame (A1)", "atk", STARSAME_ATK, "electro",
+-                            [occ(3 * 2, *_SC_TEAM_TAGS), occ(3 * 1, ON, PACTSWORN)],
++                            [occ(3 * 2, *_SC_TEAM_TAGS), occ(3 * 1, ON, PACTSWORN, OFFENSIVE_DIRECTIVE)],
+                             kind="skill", extra_tags=(STARSAME,),
+                             polar_stacks=CYNO_POLAR_STACKS),
+         ), # type: ignore
+         constellation_sources={
+             # Q даёт 4 стака, первый Judication ещё 4 → максимум 8 за Pathclearer.
+             # Сайно всегда под Together We Rise (C1), поэтому все — Starsame.
+-            6: (_starsame("C6: Duststalker Bolt - Starsame", 8, _SC_TEAM_TAGS),),
++            # Offensive Directive Валеры — 15 стаков: 9 ушли на A1, на C6 остаётся 6 из 8.
++            6: (stellar_conduct("C6: Duststalker Bolt - Starsame", "atk", STARSAME_ATK, "electro",
++                                [occ(6, *_SC_TEAM_TAGS), occ(2, *_SC_TEAM_TAGS_NO_OD)],
++                                kind="sc_skill", extra_tags=(STARSAME,),
++                                polar_stacks=CYNO_POLAR_STACKS),),
+         }, # type: ignore
+     ),
+ }
+diff --git a/gi_damage/data/characters/valera.py b/gi_damage/data/characters/valera.py
+new file mode 100644
+index 0000000..18e7dbe
+--- /dev/null
++++ b/gi_damage/data/characters/valera.py
+@@ -0,0 +1,127 @@
++"""
++Валера — электро, одноручник. Чистый саппорт. Всегда в звёздном проводнике
++(Radiance: Stellar-Conduct). Ротация: E Q CA (особая заряженная атака), 2.4 с.
++
++Все баффы постоянные, Impact Momentum всегда хватает (40 — с навыка).
++
++Offensive Directive (15 стаков после особой заряженной атаки):
++    электро урон звёздного проводника АКТИВНОГО персонажа (обычные, заряженные,
++    в падении, навык, взрыв) получает доп. базовый урон
++        АТК Валеры × (131.33% + 0.9% × Impact Momentum)
++    Это «Additional Increase» звёздного проводника (как бафф Водяницы):
++        Итог = (База + доп.) × Сопр. × Крит × Возвышение.
++    Бафф работает только в окне OFFENSIVE_DIRECTIVE — этим тегом отмечаются
++    удары, которые тратят стаки (не больше 15 за ротацию).
++
++ВНИМАНИЕ: множители взрыва стихии в задании не даны — BURST_MV и
++BURST_SHELL_MV стоят 0.0, впишите значения.
++"""
++
++from __future__ import annotations
++from dataclasses import replace  # noqa: F401 — для patches= в файлах отрядов
++
++from ...core.buffs import OTHERS, SELF, TEAM, Buff, temp
++from ...core.entities import Character, Constellation, with_rotation
++from ...core.stats import S
++from ..tags import *
++from ...core.sources import elemental, occ
++
++VALERA_NAME = "Валера"
++
++# --------------------------------------------------------------------------- #
++#  Множители (в долях)                                                         #
++# --------------------------------------------------------------------------- #
++CA_MV = 1.9822                # обычная заряженная атака (физ.)
++MORTAR_MV = 4.1256            # Direct-Fire Mortar: Point-Blank Bombardment
++SKILL_MV = 2.988              # Active Defense: Bastion Charge
++BURST_MV = 0.0                # TODO: урон взрыва при применении (не дан)
++BURST_SHELL_MV = 0.0          # TODO: урон снарядов Thunderburst Shell (не дан)
++BURST_SHELL_HITS = 6          # раз в 3.5 с
++
++OD_STACKS = 15                # стаков Offensive Directive
++OD_ELECTRO_ATK = 0.4378       # вне Radiance: +43.78% АТК Валеры (для справки)
++OD_SC_ATK = 1.3133            # в Radiance: +131.33% АТК Валеры
++IMPACT_MOMENTUM = 40          # тратится особой заряженной атакой
++A1_SC_PER_MOMENTUM = 0.009    # Into the Breach: +0.9% АТК за 1 Impact Momentum (Radiance)
++A1_ELECTRO_PER_MOMENTUM = 0.003
++
++C2_EM = 100.0                 # C2: +100 МС отряду
++C6_DMG = 1.00                 # C6: +100% урона мортиры и снарядов взрыва
++C6_ELECTRO_CR = 0.10          # C6: +10% КШ электро урона по цели
++C6_SC_CD = 0.40               # C6: +40% КУ электро урона звёздного проводника
++
++#: Тег источников, усиливаемых C6 (мортира и снаряды взрыва)
++VALERA_C6 = "valera_c6"
++
++#: Доп. базовый урон за один стак Offensive Directive, в долях АТК Валеры
++OD_SC_TOTAL = OD_SC_ATK + A1_SC_PER_MOMENTUM * IMPACT_MOMENTUM   # 1.6733
++
++
++def offensive_directive_bonus(ctx) -> float:
++    """АТК Валеры (вне поля) × (131.33% + 0.9% × 40)."""
++    return OD_SC_TOTAL * ctx.stat(VALERA_NAME, "atk", frozenset({OFF}))
++
++
++VALERA_KIT = Character(
++    name=VALERA_NAME,
++    element="electro",
++    weapon_type="sword",
++    default_field=OFF,
++    crit_mode="balance",
++    stats={
++        S.BASE_ATK: 255.0,
++        S.ATK_PCT: 0.24,
++        S.CRIT_VALUE: 0.6,
++    },
++    buffs=(
++        # Только электро урон звёздного проводника, только активному персонажу
++        # и только в ударах, помеченных OFFENSIVE_DIRECTIVE.
++        Buff(f"{S.FLAT_BASE_DMG}.electro.stellar_conduct", offensive_directive_bonus,
++             target=OTHERS, requires=(ON, OFFENSIVE_DIRECTIVE),
++             source="Offensive Directive + Into the Breach: +167.33% АТК Валеры "
++                    "(доп. базовый урон SC)"),
++    ),
++    sources=(),
++    constellations={
++        2: Constellation(
++            number=2,
++            name="C2",
++            buffs=(
++                Buff(S.BASE_EM, C2_EM, target=TEAM,
++                     source="C2 Валеры: +100 МС отряду"),
++            ),
++        ),
++        6: Constellation(
++            number=6,
++            name="C6",
++            buffs=(
++                Buff(f"{S.DMG_BONUS}.{VALERA_C6}", C6_DMG, target=SELF,
++                     source="C6 Валеры: +100% урона мортиры и снарядов взрыва"),
++                Buff("crit_value.electro", C6_ELECTRO_CR * 2, target=TEAM,
++                     source="C6 Валеры: +10% КШ электро урона по цели"),
++                Buff("crit_value.electro.stellar_conduct", C6_SC_CD, target=TEAM,
++                     source="C6 Валеры: +40% КУ электро урона звёздного проводника"),
++            ),
++        ),
++    },
++    note="Чистый саппорт.",
++)
++
++_VALERA_TAGS = (ON, NOBLE)
++
++VALERA_COMBO_DICT = {
++    # E Q CA (особая заряженная атака), 2.4 с; снаряды взрыва — вне поля.
++    "support_eq_ca": with_rotation(
++        VALERA_KIT,
++        sources=(
++            elemental("Навык", "atk", SKILL_MV, "electro", "skill",
++                      [occ(1, *_VALERA_TAGS)]),
++            elemental("Взрыв стихии", "atk", BURST_MV, "electro", "burst",
++                      [occ(1, *_VALERA_TAGS)]),
++            elemental("Особая заряженная атака (мортира)", "atk", MORTAR_MV, "electro",
++                      "charged", [occ(1, *_VALERA_TAGS)], extra_tags=(VALERA_C6,)),
++            elemental("Снаряды Thunderburst Shell", "atk", BURST_SHELL_MV, "electro",
++                      "burst", [occ(BURST_SHELL_HITS, OFF, NOBLE)], extra_tags=(VALERA_C6,)),
++        ),
++    ),
++}
+diff --git a/gi_damage/data/tags.py b/gi_damage/data/tags.py
+index b5fb442..bda2c5a 100644
+--- a/gi_damage/data/tags.py
++++ b/gi_damage/data/tags.py
+@@ -82,10 +82,15 @@ STARSAME = "starsame"
+ #: Тег источников «Сесшо Сакура» (бонус от МС, C6 игнор защиты)
+ SESSHOU_SAKURA = "sesshou_sakura"
+ 
++# --- Валера ------------------------------------ #
++#: Окно «Offensive Directive»: удар активного персонажа, тратящий стак
++#: (электро урон звёздного проводника получает доп. базовый урон от АТК Валеры)
++OFFENSIVE_DIRECTIVE = "offensive_directive"
++
+ #Элегия
+ ELEGY = "ELEGY"
+ 
+ __all__ = ["ON", "OFF", "INST", "DREAM", "FROSTGLOW", "BREEZEBORNE",
+            "ARMED", "DA1", "DA2", "DA3", "DA4", "DA5", "DA6","VODYA_LEAD","VODYA_CHORUS","TTDS_HALF","VV_CRYO","VV_PYRO"
+            ,"VV_HYDRO","VV_ELECTRO","CATS_TAIL","SEVEN_SACRED","MIZUKI_C1","DECODING","TTDS_FULL","SANDRONE_CA_STACKS_1","SANDRONE_CA_STACKS_2","SANDRONE_CA_STACKS_3",
+-           "NOBLE","PACTSWORN","TOGETHER_WE_RISE","SESSHOU_SAKURA","STARSAME","ELEGY"]
++           "NOBLE","PACTSWORN","TOGETHER_WE_RISE","SESSHOU_SAKURA","STARSAME","ELEGY","OFFENSIVE_DIRECTIVE"]
+diff --git a/gi_damage/teams/cyno_yae_odette_valera/builds.py b/gi_damage/teams/cyno_yae_odette_valera/builds.py
+new file mode 100644
+index 0000000..6af1c4a
+--- /dev/null
++++ b/gi_damage/teams/cyno_yae_odette_valera/builds.py
+@@ -0,0 +1,141 @@
++"""
++Отряд звёздного проводника: Сайно / Яэ Мико / Одетта / Валера.
++
++Реакций, наносящих урон, нет (звёздный проводник). Резонанс — электро
++(без бонуса урона), поэтому отрядных баффов нет.
++"""
++
++from __future__ import annotations
++
++from typing import Dict, Sequence
++
++from ...core.buffs import OTHERS, SELF, TEAM, Buff, temp
++from ...core.engine import Config, Team
++from ...core.entities import Build, Enemy, ArtifactSet
++from ...core.stats import S
++from ...core.utilits import merge_dicts
++from ...data.artifacts import *
++from ...data.artifacts_presets import *
++from ...data.tags import *
++from ...data.characters.cyno import CYNO_COMBO_DICT
++from ...data.characters.odette import (odette_burst_buffs, ODETTE_BURST_TIME,
++                                       ODETTE_COMBO_DICT, ODETTE_BURST_SOURCES)
++from ...data.characters.yae import YAE_COMBO_DICT
++from ...data.characters.valera import VALERA_COMBO_DICT
++from ...data.weapons import *
++
++TEAM_BUFFS: tuple = ()
++
++#: Время каждого персонажа в ротации (секунды)
++TIMES = {"Сайно": 15.0, "Валера": 2.4, "Одетта": 2.4, "Яэ Мико": 2.4}
++
++ROTATION = "Одетта EE/Яэ EEE/Валера EQ CA/Сайно QE (N2 CA N4 E)×3"
++
++#: Главные статы: пески/кубок/корона
++MAIN_ATK = {S.ATK_PCT: 0.466 * 2, S.CRIT_VALUE: 0.622}                    # АТК/АТК/крит
++MAIN_EM = {S.BASE_EM: 187.0*2, S.CRIT_VALUE: 0.622}       # МС/АТК/крит
++MAIN_ELECTRO = {S.ATK_PCT: 0.466, "dmg_bonus.electro": 0.466,
++                S.CRIT_VALUE: 0.622}                                      # АТК/электро/крит
++
++CYNO_MAIN = MAIN_EM
++YAE_MAIN = MAIN_ATK
++
++
++def enemy() -> Enemy:
++    return Enemy(res={"anemo": 0.10, "cryo": 0.10, "electro": 0.10},
++                 def_mult=0.4875, elevation=0.0)
++
++
++def cyno_build(constellation: int = 1, weapon=DEATHMATCH, artifacts=(DISENCHANTMENT,),
++               main_stats=CYNO_MAIN, extra_buffs: Sequence[Buff] = ()) -> Build:
++    return Build(
++        character=CYNO_COMBO_DICT["sc_combo"],
++        constellation=constellation,
++        weapon=weapon,
++        artifacts=artifacts,
++        extra_stats=merge_dicts(main_stats, STANDART_SUBSTAT_PRESET),
++        extra_buffs=tuple(extra_buffs),
++        time=TIMES["Сайно"],
++    )
++
++
++def odette_build(constellation: int = 0, weapon=SILVER_LIGHT, artifacts=(HEART_OF_FORGE,),
++                 use_burst: bool | None = None,
++                 extra_buffs: Sequence[Buff] = ()) -> Build:
++    """use_burst=None — авто: до C4 не применяем, с C4 применяем."""
++    if use_burst is None:
++        use_burst = constellation >= 4
++    return Build(
++        character=ODETTE_COMBO_DICT["odette_ssc_combo_cyno"],
++        constellation=constellation,
++        weapon=weapon,
++        artifacts=artifacts,
++        extra_stats=merge_dicts(
++            {S.ATK_PCT: 0.466 * 2, S.CRIT_VALUE: 0.622},
++            STANDART_SUBSTAT_PRESET),
++        extra_sources=ODETTE_BURST_SOURCES if use_burst else (),
++        extra_buffs=tuple(extra_buffs) + (odette_burst_buffs(constellation)
++                                          if use_burst else ()),
++        time=TIMES["Одетта"] + (ODETTE_BURST_TIME if use_burst else 0.0),
++    )
++
++
++def yae_build(constellation: int = 1, weapon=ECHOES.at(5),
++              artifacts=(DISENCHANTMENT,), main_stats=YAE_MAIN,
++              extra_buffs: Sequence[Buff] = ()) -> Build:
++    return Build(
++        character=YAE_COMBO_DICT["sc_eee"],
++        constellation=constellation,
++        weapon=weapon,
++        artifacts=artifacts,
++        extra_stats=merge_dicts(main_stats, STANDART_SUBSTAT_PRESET),
++        extra_buffs=tuple(extra_buffs),
++        time=TIMES["Яэ Мико"],
++    )
++
++
++def valera_build(constellation: int = 0, weapon=FINALE, artifacts=(NOBLESSE,),
++                 main_stats={S.ATK_PCT: 0.466 * 3},
++                 extra_buffs: Sequence[Buff] = ()) -> Build:
++    return Build(
++        character=VALERA_COMBO_DICT["support_eq_ca"],
++        constellation=constellation,
++        weapon=weapon,
++        artifacts=artifacts,
++        extra_stats=merge_dicts(main_stats, STANDART_SUBSTAT_PRESET),
++        extra_buffs=tuple(extra_buffs),
++        time=TIMES["Валера"],
++    )
++
++
++def make_team(name: str, cyno_c: int = 2, cyno_weapon=SCARLET_SANDS.at(2),
++              odette_c: int = 0, odette_weapon=SILVER_LIGHT,
++              yae_c: int = 2, yae_weapon=KAGURA,
++              valera_c: int = 0, valera_weapon=FINALE,
++              cyno_artifacts=(DISENCHANTMENT,), odette_artifacts=(HEART_OF_FORGE,),
++              yae_artifacts=(DISENCHANTMENT,), valera_artifacts=(NOBLESSE,),
++              cyno_main_stats=CYNO_MAIN, yae_main_stats=YAE_MAIN) -> Team:
++    return Team(
++        name=name,
++        builds=[
++            cyno_build(cyno_c, cyno_weapon, cyno_artifacts, cyno_main_stats),
++            odette_build(odette_c, odette_weapon, odette_artifacts),
++            yae_build(yae_c, yae_weapon, yae_artifacts, yae_main_stats),
++            valera_build(valera_c, valera_weapon, valera_artifacts),
++        ],
++        enemy=enemy(),
++        buffs=TEAM_BUFFS,
++        rotation=ROTATION,
++        config=Config(),
++    )
++
++
++BASE_NAME = "C2R2 Сайно, C0R0 Одетта, C2R1 Яэ, С0R5 Валера"
++
++
++def team_name(valera_c: int) -> str:
++    return f"C2R2 Сайно, C0R0 Одетта, C2R1 Яэ, С{valera_c}R5 Валера"
++
++
++def all_teams() -> Dict[str, Team]:
++    return {team_name(c): make_team(team_name(c), valera_c=c) for c in (0, 2, 6)}
+diff --git a/gi_damage/teams/cyno_yae_odette_valera/rosters.py b/gi_damage/teams/cyno_yae_odette_valera/rosters.py
+new file mode 100644
+index 0000000..dddf15d
+--- /dev/null
++++ b/gi_damage/teams/cyno_yae_odette_valera/rosters.py
+@@ -0,0 +1,64 @@
++#!/usr/bin/env python3
++"""
++Запуск:  python -m gi_damage.teams.cyno_yae_odette_valera.rosters
++         python -m gi_damage.teams.cyno_yae_odette_valera.rosters --details
++"""
++
++from __future__ import annotations
++
++import sys
++from pathlib import Path
++
++sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
++
++from gi_damage.core.report import hit_details, source_breakdown, team_summary
++from gi_damage.core.roster import Roster, Variation
++from gi_damage.data.weapons import *
++from gi_damage.data.artifacts import *
++from gi_damage.teams.cyno_yae_odette_valera.builds import (
++    BASE_NAME, MAIN_ATK, MAIN_EM, MAIN_ELECTRO, all_teams, make_team,
++    odette_build)
++from gi_damage.visual.rosters import RosterBook
++
++
++def main(argv: list[str]) -> int:
++    details = "--details" in argv
++    book = RosterBook()
++
++    for team in all_teams().values():
++        result = team.compute()
++        print(team_summary(result))
++        if details:
++            print(source_breakdown(result))
++            print()
++            print(hit_details(result))
++            print()
++
++    # Главные статы в карточках ростера не различимы — сравниваем текстом
++    mains = (("АТК/АТК/крит", MAIN_ATK), ("МС/АТК/крит", MAIN_EM),
++             ("АТК/электро/крит", MAIN_ELECTRO))
++    for who, key in (("Сайно", "cyno_main_stats"), ("Яэ Мико", "yae_main_stats")):
++        print(f"=== Главные статы: {who} ===")
++        for label, main in mains:
++            r = make_team(label, **{key: main}).compute()
++            print(f"{label:<18} DPR {r.dpr:>12,.0f}  DPS {r.dps:>10,.0f}")
++        print()
++
++    base = make_team(BASE_NAME)
++
++    book.add(Roster(base, [Variation(slot="Яэ Мико", constellations=[1, 2, 6])]),
++             "Созвездия Яэ", ascending=True)
++    book.add(Roster(base, [Variation(slot="Сайно", constellations=[1, 2, 6])]),
++             "Созвездия Сайно", ascending=True)
++    book.add(Roster(base, [Variation(slot="Одетта", builds=[
++        odette_build(constellation=c) for c in (0, 1, 2, 4, 6)])]),
++             "Созвездия Одетты", ascending=True)
++    book.add(Roster(base, [Variation(slot="Валера", constellations=[0, 2, 6])]),
++             "Созвездия Валеры", ascending=True)
++
++    book.save("rosters.html")
++    return 0
++
++
++if __name__ == "__main__":
++    raise SystemExit(main(sys.argv[1:]))
