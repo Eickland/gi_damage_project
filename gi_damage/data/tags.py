@@ -87,10 +87,19 @@ SESSHOU_SAKURA = "sesshou_sakura"
 #: (электро урон звёздного проводника получает доп. базовый урон от АТК Валеры)
 OFFENSIVE_DIRECTIVE = "offensive_directive"
 
+# --- Ризли ------------------------------------ #
+#: C1 Ризли: +50% урона SC 5-го удара после Luster: Vaulting Fist и
+#: +50% урона Luster: Vaulting Fist после 5-го удара
+WRIO_C1 = "wriothesley_c1"
+
+# --- Николь ------------------------------------ #
+#: Guidance of Theosis (Methexis): активный персонаж провёл на поле 3 с → +300 АТК
+THEOSIS = "guidance_of_theosis"
+
 #Элегия
 ELEGY = "ELEGY"
 
 __all__ = ["ON", "OFF", "INST", "DREAM", "FROSTGLOW", "BREEZEBORNE",
            "ARMED", "DA1", "DA2", "DA3", "DA4", "DA5", "DA6","VODYA_LEAD","VODYA_CHORUS","TTDS_HALF","VV_CRYO","VV_PYRO"
            ,"VV_HYDRO","VV_ELECTRO","CATS_TAIL","SEVEN_SACRED","MIZUKI_C1","DECODING","TTDS_FULL","SANDRONE_CA_STACKS_1","SANDRONE_CA_STACKS_2","SANDRONE_CA_STACKS_3",
-           "NOBLE","PACTSWORN","TOGETHER_WE_RISE","SESSHOU_SAKURA","STARSAME","ELEGY","OFFENSIVE_DIRECTIVE"]
+           "NOBLE","PACTSWORN","TOGETHER_WE_RISE","SESSHOU_SAKURA","STARSAME","ELEGY","OFFENSIVE_DIRECTIVE","WRIO_C1","THEOSIS"]

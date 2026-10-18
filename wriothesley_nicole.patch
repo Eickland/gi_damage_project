@@ -1,0 +1,474 @@
+diff --git a/gi_damage/data/characters/nicole.py b/gi_damage/data/characters/nicole.py
+new file mode 100644
+index 0000000..4558194
+--- /dev/null
++++ b/gi_damage/data/characters/nicole.py
+@@ -0,0 +1,63 @@
++"""
++Николь — пиро, катализатор. Чистый саппорт: только активация навыка
++Revelation: Uncreated Light.
++
++Grace of Kenosis — всему отряду (кроме самой Николь) +15% её АТК,
++не больше 600. Methexis — Guidance of Theosis: ещё +300 АТК активному
++персонажу, который провёл на поле 3 с (окно THEOSIS).
++
++АТК Николь берётся вне поля и без её собственного Kenosis (бафф только
++другим), поэтому зацикливания нет.
++"""
++
++from __future__ import annotations
++from dataclasses import replace  # noqa: F401 — для patches= в файлах отрядов
++
++from ...core.buffs import OTHERS, SELF, TEAM, Buff, temp
++from ...core.entities import Character, Constellation, with_rotation
++from ...core.stats import S
++from ...core.sources import elemental, occ
++from ..tags import *
++
++NICOLE_NAME = "Николь"
++
++SKILL_MV = 2.4912
++KENOSIS_RATIO = 0.15          # Grace of Kenosis: 15% АТК Николь
++KENOSIS_CAP = 600.0           # … максимум 600
++THEOSIS_ATK = 300.0           # Guidance of Theosis: ещё +300 АТК
++
++
++def kenosis_bonus(ctx) -> float:
++    return min(KENOSIS_CAP,
++               KENOSIS_RATIO * ctx.stat(NICOLE_NAME, "atk", frozenset({OFF})))
++
++
++NICOLE_KIT = Character(
++    name=NICOLE_NAME,
++    element="pyro",
++    weapon_type="catalyst",
++    default_field=OFF,
++    crit_mode="balance",
++    stats={
++        S.BASE_ATK: 342.0,
++        S.ATK_PCT: 0.288,
++        S.CRIT_VALUE: 0.6,
++    },
++    buffs=(
++        Buff(S.FLAT_ATK, kenosis_bonus, target=OTHERS,
++             source="Grace of Kenosis: +15% АТК Николь (макс. 600)"),
++        temp(S.FLAT_ATK, THEOSIS_ATK, THEOSIS, target=OTHERS,
++             source="Methexis: Guidance of Theosis, ещё +300 АТК"),
++    ),
++    sources=(),
++    note="Чистый саппорт.",
++)
++
++NICOLE_COMBO_DICT = {
++    "support_e": with_rotation(
++        NICOLE_KIT,
++        sources=(
++            elemental("Навык", "atk", SKILL_MV, "pyro", "skill", [occ(1, ON)]),
++        ),
++    ),
++}
+diff --git a/gi_damage/data/characters/wriothesley.py b/gi_damage/data/characters/wriothesley.py
+new file mode 100644
+index 0000000..43b47ed
+--- /dev/null
++++ b/gi_damage/data/characters/wriothesley.py
+@@ -0,0 +1,150 @@
++"""
++Ризли — крио, катализатор. ДД звёздного проводника (всегда Radiance:
++Stellar-Conduct). C1 — базовая линия.
++
++Базовое комбо: 3 × (N5 CA) в Chilling Penalty, 10.1 с.
++    Все обычные атаки усилены Chilling Penalty: 170.31% урона обычной атаки.
++    3-й и 5-й удары — звёздный проводник: 60% / 80% исходного урона
++    (C2: 90% / 120%). Заряженная (Luster: Vaulting Fist) — звёздный
++    проводник, 100% (C2: 150%). 1-й, 2-й, 4-й удары — обычный крио урон.
++
++Баффы:
++    A4 Prosecution Edict — сразу 5 стаков: +30% АТК;
++    Radiance — +30% урона звёздного проводника (SC_BONUS);
++    C1 — +50% урона SC 5-го удара после Luster и +50% урона Luster после
++         5-го удара (окно WRIO_C1: 5-й удар первого круга его не получает);
++    C6 — +10% КШ / +80% КУ усиленным ударам и Luster, сосульки 20% урона
++         5-го удара и Luster (звёздный проводник).
++
++Окно THEOSIS (Guidance of Theosis Николь) стоит на всех ударах после первой
++связки N5 CA.
++"""
++
++from __future__ import annotations
++from dataclasses import replace  # noqa: F401 — для patches= в файлах отрядов
++
++from ...core.buffs import OTHERS, SELF, TEAM, Buff, temp
++from ...core.entities import Character, Constellation, with_rotation
++from ...core.stats import S
++from ...core.sources import elemental, occ, stellar_conduct
++from ..tags import *
++
++# --------------------------------------------------------------------------- #
++#  Множители (в долях)                                                         #
++# --------------------------------------------------------------------------- #
++NA_MV = {1: 1.0548, 2: 1.0239, 3: 1.3288, 4: 0.7493, 5: 1.7937}   # 4-й удар — 2 инстанса
++CA_MV = 2.7533
++CHILLING_PENALTY = 1.7031         # усиленный удар: 170.31% урона обычной атаки
++
++SC_SHARE = {3: 0.60, 5: 0.80, "ca": 1.00}       # Radiance: доля исходного урона как SC
++SC_SHARE_C2 = {3: 0.90, 5: 1.20, "ca": 1.50}    # C2 (5 стаков Prosecution Edict)
++
++A4_ATK = 0.06 * 5                 # Prosecution Edict: +6% АТК × 5 стаков
++RADIANCE_SC_BONUS = 0.30          # +30% урона звёздного проводника
++C1_SC_BONUS = 0.50                # C1: +50% урона
++C6_CRIT_RATE = 0.10               # C6: +10% КШ
++C6_CRIT_DMG = 0.80                # C6: +80% КУ
++C6_ICICLE = 0.20                  # C6: сосулька — 20% урона 5-го удара / Luster
++
++LOOPS = 3                         # 3 × (N5 CA)
++
++#: Стаки «полярности» для звёздного проводника Ризли (основной на поле)
++WRIO_POLAR_STACKS = 8
++
++
++def _na(n: int) -> float:
++    """Множитель усиленного удара n (обычной атаки × Chilling Penalty)."""
++    return NA_MV[n] * CHILLING_PENALTY
++
++
++WRIO_KIT = Character(
++    name="Ризли",
++    element="cryo",
++    weapon_type="catalyst",
++    default_field=ON,
++    crit_mode="balance",
++    stats={
++        S.BASE_ATK: 311.0,
++        S.CRIT_VALUE: 0.984,
++    },
++    buffs=(
++        Buff(S.ATK_PCT, A4_ATK, target=SELF,
++             source="There Shall Be a Reckoning for Sin: +30% АТК (5 стаков)"),
++        Buff(S.SC_BONUS, RADIANCE_SC_BONUS, target=SELF,
++             source="There Shall Be an Unveiling for Injustice: +30% урона звёздного проводника"),
++    ),
++    sources=(),
++    constellations={
++        1: Constellation(
++            number=1,
++            name="C1",
++            buffs=(
++                Buff(S.SC_BONUS, C1_SC_BONUS, target=SELF, requires=(WRIO_C1,),
++                     source="C1 Ризли: +50% урона 5-го удара / Luster: Vaulting Fist"),
++            ),
++        ),
++        2: Constellation(
++            number=2,
++            name="C2",
++            patches={
++                "3-й удар — SC": lambda s: replace(s, mv=_na(3) * SC_SHARE_C2[3]),
++                "5-й удар — SC": lambda s: replace(s, mv=_na(5) * SC_SHARE_C2[5]),
++                "Luster: Vaulting Fist — SC": lambda s: replace(s, mv=CA_MV * SC_SHARE_C2["ca"]),
++            },
++        ),
++        6: Constellation(
++            number=6,
++            name="C6",
++            buffs=(
++                Buff("crit_value.normal", C6_CRIT_RATE * 2 + C6_CRIT_DMG, target=SELF,
++                     source="C6 Ризли: +10% КШ / +80% КУ усиленным ударам"),
++                Buff("crit_value.charged", C6_CRIT_RATE * 2 + C6_CRIT_DMG, target=SELF,
++                     source="C6 Ризли: +10% КШ / +80% КУ Luster: Vaulting Fist"),
++            ),
++        ),
++    },
++    note="ДД звёздного проводника.",
++)
++
++#: Окна отряда, в которых находится Ризли. Расставляйте, как нужно.
++_FIRST = (ON,)                     # первая связка N5 CA
++_LATER = (ON, THEOSIS)             # остальные — под Guidance of Theosis Николь
++
++
++def _occ_all(per_loop: float = 1):
++    """Удар в каждом из 3 кругов: 1-й без Theosis, 2-й и 3-й — с ним."""
++    return [occ(per_loop, *_FIRST), occ(per_loop * (LOOPS - 1), *_LATER)]
++
++
++WRIO_COMBO_DICT = {
++    "sc_n5ca": with_rotation(
++        WRIO_KIT,
++        sources=(
++            elemental("1-й удар", "atk", _na(1), "cryo", "normal", _occ_all()),
++            elemental("2-й удар", "atk", _na(2), "cryo", "normal", _occ_all()),
++            stellar_conduct("3-й удар — SC", "atk", _na(3) * SC_SHARE[3], "cryo",
++                            _occ_all(), kind="normal", polar_stacks=WRIO_POLAR_STACKS),
++            elemental("4-й удар (2 инстанса)", "atk", _na(4), "cryo", "normal", _occ_all(2)),
++            # 5-й удар первого круга идёт до первой Luster — без бонуса C1
++            stellar_conduct("5-й удар — SC", "atk", _na(5) * SC_SHARE[5], "cryo",
++                            [occ(1, *_FIRST), occ(LOOPS - 1, *_LATER, WRIO_C1)],
++                            kind="normal", polar_stacks=WRIO_POLAR_STACKS),
++            stellar_conduct("Luster: Vaulting Fist — SC", "atk", CA_MV * SC_SHARE["ca"], "cryo",
++                            [occ(1, *_FIRST, WRIO_C1), occ(LOOPS - 1, *_LATER, WRIO_C1)],
++                            kind="charged", polar_stacks=WRIO_POLAR_STACKS),
++        ),
++        constellation_sources={
++            # C6 включает C2 — сосульки считаются от множителей C2
++            6: (
++                stellar_conduct("C6: сосулька 5-го удара — SC", "atk",
++                                _na(5) * SC_SHARE_C2[5] * C6_ICICLE, "cryo",
++                                [occ(1, *_FIRST), occ(LOOPS - 1, *_LATER, WRIO_C1)],
++                                kind="icicle", polar_stacks=WRIO_POLAR_STACKS),
++                stellar_conduct("C6: сосулька Luster — SC", "atk",
++                                CA_MV * SC_SHARE_C2["ca"] * C6_ICICLE, "cryo",
++                                [occ(1, *_FIRST, WRIO_C1), occ(LOOPS - 1, *_LATER, WRIO_C1)],
++                                kind="icicle", polar_stacks=WRIO_POLAR_STACKS),
++            ),
++        },
++    ),
++}
+diff --git a/gi_damage/data/tags.py b/gi_damage/data/tags.py
+index bda2c5a..6a08eaa 100644
+--- a/gi_damage/data/tags.py
++++ b/gi_damage/data/tags.py
+@@ -87,10 +87,19 @@ SESSHOU_SAKURA = "sesshou_sakura"
+ #: (электро урон звёздного проводника получает доп. базовый урон от АТК Валеры)
+ OFFENSIVE_DIRECTIVE = "offensive_directive"
+ 
++# --- Ризли ------------------------------------ #
++#: C1 Ризли: +50% урона SC 5-го удара после Luster: Vaulting Fist и
++#: +50% урона Luster: Vaulting Fist после 5-го удара
++WRIO_C1 = "wriothesley_c1"
++
++# --- Николь ------------------------------------ #
++#: Guidance of Theosis (Methexis): активный персонаж провёл на поле 3 с → +300 АТК
++THEOSIS = "guidance_of_theosis"
++
+ #Элегия
+ ELEGY = "ELEGY"
+ 
+ __all__ = ["ON", "OFF", "INST", "DREAM", "FROSTGLOW", "BREEZEBORNE",
+            "ARMED", "DA1", "DA2", "DA3", "DA4", "DA5", "DA6","VODYA_LEAD","VODYA_CHORUS","TTDS_HALF","VV_CRYO","VV_PYRO"
+            ,"VV_HYDRO","VV_ELECTRO","CATS_TAIL","SEVEN_SACRED","MIZUKI_C1","DECODING","TTDS_FULL","SANDRONE_CA_STACKS_1","SANDRONE_CA_STACKS_2","SANDRONE_CA_STACKS_3",
+-           "NOBLE","PACTSWORN","TOGETHER_WE_RISE","SESSHOU_SAKURA","STARSAME","ELEGY","OFFENSIVE_DIRECTIVE"]
++           "NOBLE","PACTSWORN","TOGETHER_WE_RISE","SESSHOU_SAKURA","STARSAME","ELEGY","OFFENSIVE_DIRECTIVE","WRIO_C1","THEOSIS"]
+diff --git a/gi_damage/data/weapons.py b/gi_damage/data/weapons.py
+index 1284d58..aee4783 100644
+--- a/gi_damage/data/weapons.py
++++ b/gi_damage/data/weapons.py
+@@ -43,6 +43,22 @@ WANDERER_SONG_ELECTRO = Weapon(
+     note="Усредненный бонус за 6 ротаций, элементальный бонус — электро",
+ )
+ 
++#: «Песнь странника» с крио элементальным бонусом (для Ризли).
++WANDERER_SONG_CRYO = Weapon(
++    name="Песнь странника",
++    base_atk=510.0,
++    stats={S.CRIT_VALUE: 0.551},
++    refinement=5,
++    stats_by_refinement={
++        5: {
++            S.ATK_PCT: 0.20,
++            S.BASE_EM: 80.0,
++            "dmg_bonus.cryo": 0.16,
++        },
++    },
++    note="Усредненный бонус за 6 ротаций, элементальный бонус — крио",
++)
++
+ WINTER = Weapon(
+     name="Застывшее сердце зимы",
+     base_atk=510.0,
+diff --git a/gi_damage/teams/wriothesley_odette_yae_nicole/builds.py b/gi_damage/teams/wriothesley_odette_yae_nicole/builds.py
+new file mode 100644
+index 0000000..bf9405a
+--- /dev/null
++++ b/gi_damage/teams/wriothesley_odette_yae_nicole/builds.py
+@@ -0,0 +1,134 @@
++"""
++Отряд звёздного проводника: Ризли / Одетта / Яэ Мико / Николь.
++
++Реакций, наносящих урон, нет. Резонанс — крио (Ризли + Одетта).
++"""
++
++from __future__ import annotations
++
++from typing import Dict, Sequence
++
++from ...core.buffs import OTHERS, SELF, TEAM, Buff, temp
++from ...core.engine import Config, Team
++from ...core.entities import Build, Enemy, ArtifactSet
++from ...core.stats import S
++from ...core.utilits import merge_dicts
++from ...data.artifacts import *
++from ...data.artifacts_presets import *
++from ...data.tags import *
++from ...data.characters.wriothesley import WRIO_COMBO_DICT
++from ...data.characters.odette import (odette_burst_buffs, ODETTE_BURST_TIME,
++                                       ODETTE_COMBO_DICT, ODETTE_BURST_SOURCES)
++from ...data.characters.yae import YAE_COMBO_DICT
++from ...data.characters.nicole import NICOLE_COMBO_DICT
++from ...data.weapons import *
++
++TEAM_BUFFS = (
++    Buff(S.CRIT_VALUE, 0.30, target=TEAM,
++         source="Крио резонанс: +15% крит. шанса (0.30 крит-вэлью)"),
++)
++
++#: Время каждого персонажа в ротации (секунды)
++TIMES = {"Ризли": 10.1, "Одетта": 2.4, "Яэ Мико": 2.4, "Николь": 1.0}
++
++ROTATION = "Одетта EE/Яэ EEE/Николь E/Ризли 3×(N5 CA)"
++
++#: Николь: 2+2 на АТК (по 18% АТК с каждой пары)
++NICOLE_ARTIFACTS = (HEART_OF_FORGE.at(2), SCARLET_PROOF.at(2))
++
++
++def enemy() -> Enemy:
++    return Enemy(res={"anemo": 0.10, "cryo": 0.10, "electro": 0.10, "pyro": 0.10},
++                 def_mult=0.4875, elevation=0.0)
++
++
++def wriothesley_build(constellation: int = 1, weapon=WANDERER_SONG_CRYO.at(5),
++                      artifacts=(DISENCHANTMENT,),
++                      main_stats={S.ATK_PCT: 0.466 * 2, S.CRIT_VALUE: 0.622},
++                      extra_buffs: Sequence[Buff] = ()) -> Build:
++    return Build(
++        character=WRIO_COMBO_DICT["sc_n5ca"],
++        constellation=constellation,
++        weapon=weapon,
++        artifacts=artifacts,
++        extra_stats=merge_dicts(main_stats, STANDART_SUBSTAT_PRESET),
++        extra_buffs=tuple(extra_buffs),
++        time=TIMES["Ризли"],
++    )
++
++
++def odette_build(constellation: int = 0, weapon=SILVER_LIGHT, artifacts=(HEART_OF_FORGE,),
++                 use_burst: bool | None = None,
++                 extra_buffs: Sequence[Buff] = ()) -> Build:
++    """use_burst=None — авто: до C4 не применяем, с C4 применяем."""
++    if use_burst is None:
++        use_burst = constellation >= 4
++    return Build(
++        character=ODETTE_COMBO_DICT["odette_ssc_combo"],
++        constellation=constellation,
++        weapon=weapon,
++        artifacts=artifacts,
++        extra_stats=merge_dicts(
++            {S.ATK_PCT: 0.466 * 2, S.CRIT_VALUE: 0.622},
++            STANDART_SUBSTAT_PRESET),
++        extra_sources=ODETTE_BURST_SOURCES if use_burst else (),
++        extra_buffs=tuple(extra_buffs) + (odette_burst_buffs(constellation)
++                                          if use_burst else ()),
++        time=TIMES["Одетта"] + (ODETTE_BURST_TIME if use_burst else 0.0),
++    )
++
++
++def yae_build(constellation: int = 1, weapon=ECHOES.at(5), artifacts=(DISENCHANTMENT,),
++              main_stats={S.ATK_PCT: 0.466 * 2, S.CRIT_VALUE: 0.622},
++              extra_buffs: Sequence[Buff] = ()) -> Build:
++    return Build(
++        character=YAE_COMBO_DICT["yae_sc_long_combo"],
++        constellation=constellation,
++        weapon=weapon,
++        artifacts=artifacts,
++        extra_stats=merge_dicts(main_stats, STANDART_SUBSTAT_PRESET),
++        extra_buffs=tuple(extra_buffs),
++        time=TIMES["Яэ Мико"],
++    )
++
++
++def nicole_build(constellation: int = 0, weapon=ECHOES.at(5), artifacts=NICOLE_ARTIFACTS,
++                 main_stats={S.ATK_PCT: 0.466 * 3},
++                 extra_buffs: Sequence[Buff] = ()) -> Build:
++    return Build(
++        character=NICOLE_COMBO_DICT["support_e"],
++        constellation=constellation,
++        weapon=weapon,
++        artifacts=artifacts,
++        extra_stats=merge_dicts(main_stats, STANDART_SUBSTAT_PRESET),
++        extra_buffs=tuple(extra_buffs),
++        time=TIMES["Николь"],
++    )
++
++
++def make_team(name: str, wrio_c: int = 1, wrio_weapon=WANDERER_SONG_CRYO.at(5),
++              odette_c: int = 0, odette_weapon=SILVER_LIGHT,
++              yae_c: int = 1, yae_weapon=ECHOES.at(5),
++              nicole_c: int = 0, nicole_weapon=ECHOES.at(5),
++              wrio_artifacts=(DISENCHANTMENT,), odette_artifacts=(HEART_OF_FORGE,),
++              yae_artifacts=(DISENCHANTMENT,), nicole_artifacts=NICOLE_ARTIFACTS) -> Team:
++    return Team(
++        name=name,
++        builds=[
++            wriothesley_build(wrio_c, wrio_weapon, wrio_artifacts),
++            odette_build(odette_c, odette_weapon, odette_artifacts),
++            yae_build(yae_c, yae_weapon, yae_artifacts),
++            nicole_build(nicole_c, nicole_weapon, nicole_artifacts),
++        ],
++        enemy=enemy(),
++        buffs=TEAM_BUFFS,
++        rotation=ROTATION,
++        config=Config(),
++    )
++
++
++BASE_NAME = "C1R5 Ризли, C0R5 Одетта, C1R5 Яэ, C0R5 Николь"
++
++
++def all_teams() -> Dict[str, Team]:
++    return {BASE_NAME: make_team(BASE_NAME)}
+diff --git a/gi_damage/teams/wriothesley_odette_yae_nicole/rosters.py b/gi_damage/teams/wriothesley_odette_yae_nicole/rosters.py
+new file mode 100644
+index 0000000..cdbdae6
+--- /dev/null
++++ b/gi_damage/teams/wriothesley_odette_yae_nicole/rosters.py
+@@ -0,0 +1,51 @@
++#!/usr/bin/env python3
++"""
++Запуск:  python -m gi_damage.teams.wriothesley_odette_yae_nicole.rosters
++         python -m gi_damage.teams.wriothesley_odette_yae_nicole.rosters --details
++"""
++
++from __future__ import annotations
++
++import sys
++from pathlib import Path
++
++sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
++
++from gi_damage.core.report import hit_details, source_breakdown, team_summary
++from gi_damage.core.roster import Roster, Variation
++from gi_damage.data.weapons import *
++from gi_damage.data.artifacts import *
++from gi_damage.teams.wriothesley_odette_yae_nicole.builds import (
++    BASE_NAME, all_teams, make_team, odette_build)
++from gi_damage.visual.rosters import RosterBook
++
++
++def main(argv: list[str]) -> int:
++    details = "--details" in argv
++    book = RosterBook()
++
++    for team in all_teams().values():
++        result = team.compute()
++        print(team_summary(result))
++        if details:
++            print(source_breakdown(result))
++            print()
++            print(hit_details(result))
++            print()
++
++    base = make_team(BASE_NAME)
++
++    book.add(Roster(base, [Variation(slot="Ризли", constellations=[1, 2, 6])]),
++             "Созвездия Ризли", ascending=True)
++    book.add(Roster(base, [Variation(slot="Яэ Мико", constellations=[1, 2, 6])]),
++             "Созвездия Яэ", ascending=True)
++    book.add(Roster(base, [Variation(slot="Одетта", builds=[
++        odette_build(constellation=c) for c in (0, 1, 2, 4, 6)])]),
++             "Созвездия Одетты", ascending=True)
++
++    book.save("rosters.html")
++    return 0
++
++
++if __name__ == "__main__":
++    raise SystemExit(main(sys.argv[1:]))

@@ -43,6 +43,7 @@ A1_STRIKES = 3                # доп. молний A1 (по одной на к
 
 #: Стаки «полярности» для звёздного проводника Яэ (как у Одетты вне поля)
 YAE_POLAR_STACKS = 8
+YAE_POLAR_STACKS_WRIO = 5
 
 
 YAE_KIT = Character(
@@ -107,7 +108,7 @@ YAE_KIT = Character(
 _YAE_TAGS = (OFF, NOBLE,ELEGY)
 
 YAE_COMBO_DICT = {
-    "sc_eee": with_rotation(
+    "yae_sc_long_combo": with_rotation(
         YAE_KIT,
         sources=(
             elemental("Сесшо Сакура — молния", "atk", SAKURA_MV[SAKURA_LEVEL_C0],
@@ -126,6 +127,27 @@ YAE_COMBO_DICT = {
                             A1_SC_ATK, "electro",
                             [occ(A1_STRIKES, ON, NOBLE)], kind="skill",
                             polar_stacks=YAE_POLAR_STACKS),
+        ),
+    ),
+    "yae_sc_wrio_combo": with_rotation(
+        YAE_KIT,
+        sources=(
+            elemental("Сесшо Сакура — молния", "atk", SAKURA_MV[SAKURA_LEVEL_C0],
+                      "electro", "skill", [occ(NORMAL_HITS, *_YAE_TAGS)],
+                      extra_tags=(SESSHOU_SAKURA,)),
+            elemental("Сесшо Сакура — усиленная молния", "atk",
+                      SAKURA_MV[SAKURA_LEVEL_C0] + ENHANCED_ATK,
+                      "electro", "skill", [occ(ENHANCED_HITS, *_YAE_TAGS)],
+                      extra_tags=(SESSHOU_SAKURA,)),
+            stellar_conduct("Усиленная молния — звёздный проводник", "atk",
+                            ENHANCED_SC_ATK, "electro",
+                            [occ(ENHANCED_HITS-3, *_YAE_TAGS),
+                             occ(1, OFF)], kind="skill",
+                            polar_stacks=YAE_POLAR_STACKS_WRIO),
+            stellar_conduct("A1: доп. молния — звёздный проводник", "atk",
+                            A1_SC_ATK, "electro",
+                            [occ(A1_STRIKES, ON, NOBLE)], kind="skill",
+                            polar_stacks=YAE_POLAR_STACKS_WRIO),
         ),
     ),
 }

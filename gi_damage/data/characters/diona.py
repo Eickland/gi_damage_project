@@ -25,7 +25,10 @@ DIONA_KIT = Character(
     buffs = (temp(S.BASE_EM, 200, requires=(ON,CATS_TAIL), target=TEAM,
                      source="С6 Диона, +200 МС активному персонажу"),
              temp(S.SSW_BONUS, 0.4, requires=(ON,CATS_TAIL), target=TEAM,
+                    source="С6 Диона, +40% урона к звездным реакциям активному"),
+             temp(S.SC_BONUS, 0.4, requires=(ON,CATS_TAIL), target=TEAM,
                     source="С6 Диона, +40% урона к звездным реакциям активному")),
+
     sources=(),
     note="",
 )

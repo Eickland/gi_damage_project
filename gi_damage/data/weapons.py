@@ -43,6 +43,22 @@ WANDERER_SONG_ELECTRO = Weapon(
     note="Усредненный бонус за 6 ротаций, элементальный бонус — электро",
 )
 
+#: «Песнь странника» с крио элементальным бонусом (для Ризли).
+WANDERER_SONG_CRYO = Weapon(
+    name="Песнь странника",
+    base_atk=510.0,
+    stats={S.CRIT_VALUE: 0.551},
+    refinement=5,
+    stats_by_refinement={
+        5: {
+            S.ATK_PCT: 0.20,
+            S.BASE_EM: 80.0,
+            "dmg_bonus.cryo": 0.16,
+        },
+    },
+    note="Усредненный бонус за 6 ротаций, элементальный бонус — крио",
+)
+
 WINTER = Weapon(
     name="Застывшее сердце зимы",
     base_atk=510.0,
@@ -524,6 +540,20 @@ FLOWER = Weapon(
     note="",
 )
 
+ATONEMENT = Weapon(
+    name="Клинок искупления",
+    base_atk=565.0,
+    refinement=5,
+    stats={S.ATK_PCT: 0.276},
+    stats_by_refinement={
+        5: {
+            S.ATK_PCT: 0.32,
+            S.BASE_EM: 128
+        },
+    },
+    note="",
+)
+
 TEASPOON = Weapon(
     name="Чайная ложка",
     base_atk=674.0,
@@ -580,6 +610,9 @@ BREEZEBORNE_BOW = Weapon(
     },
     buffs_by_refinement={
         r: (temp(S.SSW_BONUS, BREEZEBORNE_BONUS[r], BREEZEBORNE, target=TEAM,
+                 source=f"Напевы ветра R{r}: +{BREEZEBORNE_BONUS[r]:.0%} "
+                        f"урона звёздных реакций отряду"),
+            temp(S.SC_BONUS, BREEZEBORNE_BONUS[r], BREEZEBORNE, target=TEAM,
                  source=f"Напевы ветра R{r}: +{BREEZEBORNE_BONUS[r]:.0%} "
                         f"урона звёздных реакций отряду"),)
         for r in BREEZEBORNE_BONUS

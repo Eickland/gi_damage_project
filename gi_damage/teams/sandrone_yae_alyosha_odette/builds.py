@@ -78,7 +78,7 @@ def yae_build(constellation: int = 1, weapon=ECHOES.at(5), artifacts=(DISENCHANT
               main_stats={S.ATK_PCT: 0.466 * 2, S.CRIT_VALUE: 0.622},
               extra_buffs: Sequence[Buff] = ()) -> Build:
     return Build(
-        character=YAE_COMBO_DICT["sc_eee"],
+        character=YAE_COMBO_DICT["yae_sc_long_combo"],
         constellation=constellation,
         weapon=weapon,
         artifacts=artifacts,

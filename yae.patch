@@ -185,7 +185,7 @@ index 0000000..e1500bb
 +_YAE_TAGS = (OFF, NOBLE)
 +
 +YAE_COMBO_DICT = {
-+    "sc_eee": with_rotation(
++    "yae_sc_long_combo": with_rotation(
 +        YAE_KIT,
 +        sources=(
 +            elemental("Сесшо Сакура — молния", "atk", SAKURA_MV[SAKURA_LEVEL_C0],
@@ -343,7 +343,7 @@ index 0000000..8190448
 +              artifacts=(DISENCHANTMENT,), main_stats=YAE_MAIN,
 +              extra_buffs: Sequence[Buff] = ()) -> Build:
 +    return Build(
-+        character=YAE_COMBO_DICT["sc_eee"],
++        character=YAE_COMBO_DICT["yae_sc_long_combo"],
 +        constellation=constellation,
 +        weapon=weapon,
 +        artifacts=artifacts,

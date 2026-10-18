@@ -53,7 +53,7 @@ def cyno_build(constellation: int = 1, weapon=DEATHMATCH, artifacts=(DISENCHANTM
         constellation=constellation,
         weapon=weapon,
         artifacts=artifacts,
-        extra_stats=merge_dicts(main_stats, STANDART_SUBSTAT_PRESET),
+        extra_stats=merge_dicts(main_stats, HIGH_SUBSTAT_PRESET),
         extra_buffs=tuple(extra_buffs),
         time=TIMES["Сайно"],
     )
@@ -84,7 +84,7 @@ def yae_build(constellation: int = 1, weapon=ECHOES.at(5),
               artifacts=(DISENCHANTMENT,), main_stats=YAE_MAIN,
               extra_buffs: Sequence[Buff] = ()) -> Build:
     return Build(
-        character=YAE_COMBO_DICT["sc_eee"],
+        character=YAE_COMBO_DICT["yae_sc_long_combo"],
         constellation=constellation,
         weapon=weapon,
         artifacts=artifacts,
@@ -112,7 +112,7 @@ def alyosha_build(constellation: int = 6, weapon=FAV_LANCE, artifacts=(NOBLESSE,
 def make_team(name: str, cyno_c: int = 2, cyno_weapon=SCARLET_SANDS.at(2),
               odette_c: int = 0, odette_weapon=SILVER_LIGHT,
               yae_c: int = 2, yae_weapon=KAGURA,
-              alyosha_c: int = 6, alyosha_weapon=FAV_LANCE,
+              alyosha_c: int = 6, alyosha_weapon=ELEGY_BOW,
               cyno_artifacts=(DISENCHANTMENT,), odette_artifacts=(HEART_OF_FORGE,),
               yae_artifacts=(DISENCHANTMENT,), alyosha_artifacts=(NOBLESSE,),
               cyno_main_stats=CYNO_MAIN, yae_main_stats=YAE_MAIN) -> Team:
@@ -131,7 +131,7 @@ def make_team(name: str, cyno_c: int = 2, cyno_weapon=SCARLET_SANDS.at(2),
     )
 
 
-BASE_NAME = "C2R2 Сайно, C0R0 Одетта, C2R1 Яэ, С6R0 Алеша"
+BASE_NAME = "C1R0 Сайно, C0R0 Одетта, C1R0 Яэ, С6R0 Алеша"
 
 
 def all_teams() -> Dict[str, Team]:

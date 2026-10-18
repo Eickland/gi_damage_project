@@ -78,7 +78,7 @@ def yae_build(constellation: int = 1, weapon=ECHOES.at(5), artifacts=(DISENCHANT
               main_stats={S.ATK_PCT: 0.466 * 2, S.CRIT_VALUE: 0.622},
               extra_buffs: Sequence[Buff] = ()) -> Build:
     return Build(
-        character=YAE_COMBO_DICT["sc_eee"],
+        character=YAE_COMBO_DICT["yae_sc_long_combo"],
         constellation=constellation,
         weapon=weapon,
         artifacts=artifacts,
@@ -105,15 +105,15 @@ def mitya_build(constellation: int = 0, weapon=TTDS_FULL_CATALYSATOR, artifacts=
 def make_team(name: str, sandrone_c: int = 0, sandrone_weapon=TIDAL_SHADOW,
               odette_c: int = 0, odette_weapon=SILVER_LIGHT,
               yae_c: int = 1, yae_weapon=ECHOES.at(5),
-              alyosha_c: int = 0, alyosha_weapon=TTDS_FULL_CATALYSATOR,
+              mitya_c: int = 0, mitya_weapon=TTDS_FULL_CATALYSATOR,
               sandrone_artifacts=(DISENCHANTMENT,), odette_artifacts=(HEART_OF_FORGE,),
-              yae_artifacts=(DISENCHANTMENT,), alyosha_artifacts=(MILLELITH,)) -> Team:
+              yae_artifacts=(DISENCHANTMENT,), mitya_artifacts=(MILLELITH,)) -> Team:
     return Team(
         name=name,
         builds=[
             sandrone_build(sandrone_c, sandrone_weapon, sandrone_artifacts),
             yae_build(yae_c, yae_weapon, yae_artifacts),
-            mitya_build(alyosha_c, alyosha_weapon, alyosha_artifacts),
+            mitya_build(mitya_c, mitya_weapon, mitya_artifacts),
             odette_build(odette_c, odette_weapon, odette_artifacts),
         ],
         enemy=enemy(),

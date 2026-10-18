@@ -34,10 +34,8 @@ ROTATION = "Одетта EE/Яэ EEE/Диона EQ/Сайно QE (N2 CA N4 E)×3
 #: Главные статы: пески/кубок/корона
 MAIN_ATK = {S.ATK_PCT: 0.466 * 2, S.CRIT_VALUE: 0.622}                    # АТК/АТК/крит
 MAIN_EM = {S.BASE_EM: 187.0*2, S.CRIT_VALUE: 0.622}       # МС/АТК/крит
-MAIN_ELECTRO = {S.ATK_PCT: 0.466, "dmg_bonus.electro": 0.466,
-                S.CRIT_VALUE: 0.622}                                      # АТК/электро/крит
 
-CYNO_MAIN = MAIN_EM
+CYNO_MAIN = MAIN_ATK
 YAE_MAIN = MAIN_ATK
 
 
@@ -84,7 +82,7 @@ def yae_build(constellation: int = 1, weapon=ECHOES.at(5),
               artifacts=(DISENCHANTMENT,), main_stats=YAE_MAIN,
               extra_buffs: Sequence[Buff] = ()) -> Build:
     return Build(
-        character=YAE_COMBO_DICT["sc_eee"],
+        character=YAE_COMBO_DICT["yae_sc_long_combo"],
         constellation=constellation,
         weapon=weapon,
         artifacts=artifacts,
@@ -109,12 +107,12 @@ def diona_build(constellation: int = 6, weapon=FAV_BOW.at(5), artifacts=(NOBLESS
     )
 
 
-def make_team(name: str, cyno_c: int = 2, cyno_weapon=SCARLET_SANDS.at(2),
+def make_team(name: str, cyno_c: int = 1, cyno_weapon=DEATHMATCH.at(1),
               odette_c: int = 0, odette_weapon=SILVER_LIGHT,
-              yae_c: int = 2, yae_weapon=KAGURA,
-              alyosha_c: int = 6, alyosha_weapon=ELEGY_BOW,
+              yae_c: int = 1, yae_weapon=WINTER.at(1),
+              diona_c: int = 6, diona_weapon=FAV_BOW,
               cyno_artifacts=(DISENCHANTMENT,), odette_artifacts=(HEART_OF_FORGE,),
-              yae_artifacts=(DISENCHANTMENT,), alyosha_artifacts=(NOBLESSE,),
+              yae_artifacts=(DISENCHANTMENT,), diona_artifacts=(NOBLESSE,),
               cyno_main_stats=CYNO_MAIN, yae_main_stats=YAE_MAIN) -> Team:
     return Team(
         name=name,
@@ -122,7 +120,7 @@ def make_team(name: str, cyno_c: int = 2, cyno_weapon=SCARLET_SANDS.at(2),
             cyno_build(cyno_c, cyno_weapon, cyno_artifacts, cyno_main_stats),
             odette_build(odette_c, odette_weapon, odette_artifacts),
             yae_build(yae_c, yae_weapon, yae_artifacts, yae_main_stats),
-            diona_build(alyosha_c, alyosha_weapon, alyosha_artifacts),
+            diona_build(diona_c, diona_weapon, diona_artifacts),
         ],
         enemy=enemy(),
         buffs=TEAM_BUFFS,
@@ -131,7 +129,7 @@ def make_team(name: str, cyno_c: int = 2, cyno_weapon=SCARLET_SANDS.at(2),
     )
 
 
-BASE_NAME = "C2R2 Сайно, C0R0 Одетта, C2R1 Яэ, С6R0 Диона"
+BASE_NAME = "C1R1 Сайно, C0R0 Одетта, C2R0 Яэ, С6R0 Диона"
 
 
 def all_teams() -> Dict[str, Team]:
