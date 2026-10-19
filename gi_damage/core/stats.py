@@ -67,7 +67,10 @@ class S:
 
     # Прочее
     ELEVATION = "elevation"    # «Возвышение», итоговый множитель = 1 + elevation
-    FLAT_BASE_DMG = "flat_base_dmg"  # «Дополнительный базовый урон»
+    FLAT_BASE_DMG = "flat_base_dmg"  # «Дополнительный базовый урон» (звёздные модели)
+    FLAT_DMG = "flat_dmg"            # плоская прибавка к базе ЭЛЕМЕНТАЛЬНОГО урона
+                                     # (до бонуса урона, защиты и т.д.), можно точечно:
+                                     # "flat_dmg.cryo"
 
     # Пробитие/снижение сопротивления цели (учитывается в Enemy)
     RES_REDUCTION = "res_reduction"  # можно "res_reduction.cryo"
@@ -187,6 +190,11 @@ class Stats:
         тег), а не во все источники персонажа сразу.
         """
         return self._tagged_sum(S.FLAT_BASE_DMG, tags)
+
+    def flat_dmg(self, *tags: str) -> float:
+        """Плоская прибавка к базе элементального урона (точечные ключи
+        "flat_dmg.<тег>"). Например Lead Vocal Водяницы: +N к крио урону."""
+        return self._tagged_sum(S.FLAT_DMG, tags)
 
     def crit_rate(self, *tags: str) -> float:
         """Шанс крита с учётом точечных ключей вида "crit_rate.anemo"."""

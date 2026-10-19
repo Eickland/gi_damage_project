@@ -4,13 +4,23 @@ from dataclasses import replace  # noqa: F401 — для patches= в файла�
 from ...core.buffs import OTHERS, SELF, TEAM, Buff, temp
 from ...core.entities import Character, Constellation, with_rotation
 from ...core.stats import S
-from ..tags import DREAM, INST, OFF, ON, MIZUKI_C1, VODYA_CHORUS,VODYA_LEAD
+from ..tags import DREAM, INST, OFF, ON, MIZUKI_C1, VODYA_CHORUS,VODYA_LEAD, VODYA_LEAD_ELEM
 from ...core.sources import elemental, occ, stellar_swirl
 
 def vodyanitsa_stack_bonus(max_hp: float) -> float:
     """+260 доп. базового урона за каждую 1000 Max HP Водяницы свыше 40000,
     максимум 6500 (A4 «Dirge of the Fandyr»)."""
     return min(260.0 * max(0.0, max_hp - 40000.0) / 1000.0, 6500.0)
+
+def vodyanitsa_elem_bonus(max_hp: float) -> float:
+    """+140 к гидро/крио урону за каждую 1000 Max HP Водяницы свыше 40000,
+    максимум 3500 (та же пассивка, режим без Wandering Vortex)."""
+    return min(140.0 * max(0.0, max_hp - 40000.0) / 1000.0, 3500.0)
+
+
+def _vodya_hp(ctx) -> float:
+    return ctx.stat("Водяница", "hp", frozenset({OFF}))
+
 
 def vodyanitsa_c1_bonus(max_hp: float) -> float:
     return 0.008*max_hp
@@ -103,10 +113,67 @@ VODYANITSA_KIT = Character(
 )
 
 
+# --------------------------------------------------------------------------- #
+#  Режим БЕЗ Wandering Vortex (любые отряды без звёздного рассеивания)          #
+# --------------------------------------------------------------------------- #
+#  Без вихря на поле те же эффекты работают на ГИДРО и КРИО урон, а не на
+#  урон звёздного рассеивания. Эти баффы добавляются только в комбо
+#  "sc_off_field", поэтому отряды звёздного рассеивания ("off_field") не меняются.
+#  В отрядах звёздного проводника Водяница — опциональный слот: элементального
+#  урона там мало, основная польза — от C2/C6.
+#
+#  Lead Vocal: удар активного персонажа, помеченный VODYA_LEAD_ELEM, получает
+#      +140 за каждую 1000 HP Водяницы свыше 40000 (макс. 3500) — плоская
+#      прибавка к базе ТОЛЬКО ЭЛЕМЕНТАЛЬНОГО урона ("flat_dmg"). На урон
+#      звёздного проводника не действует.
+#  C2 «Two Voices in Black and White»: +50% КУ гидро и крио урона активного
+#      персонажа — ко ВСЕМУ гидро/крио урону, включая звёздный проводник
+#      (теги удара: стихия + тип + модель, ключ "crit_value.cryo" ловит все).
+#  C6: «Two Voices» — всему отряду (и вне поля), +60% гидро и крио урона.
+
+SC_MODE_BUFFS = tuple(
+    Buff(key, lambda ctx: vodyanitsa_elem_bonus(_vodya_hp(ctx)),
+         target=TEAM, requires=(ON, VODYA_LEAD_ELEM),
+         source=f"Водяница: Lead Vocal (+140 за 1000 HP сверх 40000, макс. 3500) — {label}")
+    for key, label in (
+        ("flat_dmg.hydro", "гидро урон"),
+        ("flat_dmg.cryo", "крио урон"),
+    )
+)
+
+SC_MODE_CONSTELLATION_BUFFS = {
+    2: tuple(
+        Buff(f"crit_value.{el}", 0.50, target=TEAM, requires=(ON,),
+             source=f"C2: Two Voices in Black and White, +50% КУ {name} урона активному")
+        for el, name in (("hydro", "гидро"), ("cryo", "крио"))
+    ),
+    6: tuple(
+        Buff(f"crit_value.{el}", 0.50, target=TEAM, requires=(OFF,),
+             source=f"C6: Two Voices in Black and White всему отряду, +50% КУ {name} урона")
+        for el, name in (("hydro", "гидро"), ("cryo", "крио"))
+    ) + tuple(
+        Buff(f"dmg_bonus.{el}", 0.60, target=TEAM,
+             source=f"C6: Song of Ages Past, +60% {name} урона")
+        for el, name in (("hydro", "гидро"), ("cryo", "крио"))
+    ),
+}
+
+_VODYA_SOURCES = (
+    elemental("Использование навыка", "hp", 0.589, "hydro", "skill", [occ(1, ON,)]),
+    elemental("Навык, Horn of Spring", "hp", 0.589, "hydro", "skill", [occ(5, OFF,),]),
+)
+
 VODYA_COMBO_DICT = {
     "off_field" : with_rotation(VODYANITSA_KIT,    
             sources=(elemental("Использование навыка", "hp", 0.589, "hydro", "skill",
                   [occ(1, ON,)]),
         elemental("Навык, Horn of Spring", "hp", 0.589, "hydro", "skill",
-                  [occ(5, OFF,),]),),)
+                  [occ(5, OFF,),]),),),
+    # Отряды без вихря (в т.ч. звёздного проводника): те же удары + баффы режима без вихря
+    "sc_off_field": with_rotation(
+        VODYANITSA_KIT,
+        sources=_VODYA_SOURCES,
+        extra_buffs=SC_MODE_BUFFS,
+        constellation_extra_buffs=SC_MODE_CONSTELLATION_BUFFS,
+    ),
 }

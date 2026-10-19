@@ -367,7 +367,7 @@ class Team:
                              / defense_multiplier(lvl, elvl))
             value = elemental_damage(
                 stat_value * mv, stats, tags, def_mult, res, crit, elevation,
-                flat_base=src.flat_base)
+                flat_base=src.flat_base + stats.flat_dmg(*tags))
 
         for m in src.multipliers:
             value *= multipliers[m](stats)

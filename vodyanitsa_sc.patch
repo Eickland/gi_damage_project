@@ -1,0 +1,162 @@
+diff --git a/gi_damage/core/engine.py b/gi_damage/core/engine.py
+index 75c73d3..987a807 100644
+--- a/gi_damage/core/engine.py
++++ b/gi_damage/core/engine.py
+@@ -367,7 +367,7 @@ class Team:
+                              / defense_multiplier(lvl, elvl))
+             value = elemental_damage(
+                 stat_value * mv, stats, tags, def_mult, res, crit, elevation,
+-                flat_base=src.flat_base)
++                flat_base=src.flat_base + stats.flat_dmg(*tags))
+ 
+         for m in src.multipliers:
+             value *= multipliers[m](stats)
+diff --git a/gi_damage/core/stats.py b/gi_damage/core/stats.py
+index a4a7eee..0e6e8ad 100644
+--- a/gi_damage/core/stats.py
++++ b/gi_damage/core/stats.py
+@@ -67,7 +67,10 @@ class S:
+ 
+     # Прочее
+     ELEVATION = "elevation"    # «Возвышение», итоговый множитель = 1 + elevation
+-    FLAT_BASE_DMG = "flat_base_dmg"  # «Дополнительный базовый урон»
++    FLAT_BASE_DMG = "flat_base_dmg"  # «Дополнительный базовый урон» (звёздные модели)
++    FLAT_DMG = "flat_dmg"            # плоская прибавка к базе ЭЛЕМЕНТАЛЬНОГО урона
++                                     # (до бонуса урона, защиты и т.д.), можно точечно:
++                                     # "flat_dmg.cryo"
+ 
+     # Пробитие/снижение сопротивления цели (учитывается в Enemy)
+     RES_REDUCTION = "res_reduction"  # можно "res_reduction.cryo"
+@@ -188,6 +191,11 @@ class Stats:
+         """
+         return self._tagged_sum(S.FLAT_BASE_DMG, tags)
+ 
++    def flat_dmg(self, *tags: str) -> float:
++        """Плоская прибавка к базе элементального урона (точечные ключи
++        "flat_dmg.<тег>"). Например Lead Vocal Водяницы: +N к крио урону."""
++        return self._tagged_sum(S.FLAT_DMG, tags)
++
+     def crit_rate(self, *tags: str) -> float:
+         """Шанс крита с учётом точечных ключей вида "crit_rate.anemo"."""
+         return self._tagged_sum(S.CRIT_RATE, tags)
+diff --git a/gi_damage/data/characters/vodyanitsa.py b/gi_damage/data/characters/vodyanitsa.py
+index 7617ce8..cfca1e4 100644
+--- a/gi_damage/data/characters/vodyanitsa.py
++++ b/gi_damage/data/characters/vodyanitsa.py
+@@ -4,7 +4,7 @@ from dataclasses import replace  # noqa: F401 — для patches= в файла
+ from ...core.buffs import OTHERS, SELF, TEAM, Buff, temp
+ from ...core.entities import Character, Constellation, with_rotation
+ from ...core.stats import S
+-from ..tags import DREAM, INST, OFF, ON, MIZUKI_C1, VODYA_CHORUS,VODYA_LEAD
++from ..tags import DREAM, INST, OFF, ON, MIZUKI_C1, VODYA_CHORUS,VODYA_LEAD, VODYA_LEAD_ELEM
+ from ...core.sources import elemental, occ, stellar_swirl
+ 
+ def vodyanitsa_stack_bonus(max_hp: float) -> float:
+@@ -12,6 +12,16 @@ def vodyanitsa_stack_bonus(max_hp: float) -> float:
+     максимум 6500 (A4 «Dirge of the Fandyr»)."""
+     return min(260.0 * max(0.0, max_hp - 40000.0) / 1000.0, 6500.0)
+ 
++def vodyanitsa_elem_bonus(max_hp: float) -> float:
++    """+140 к гидро/крио урону за каждую 1000 Max HP Водяницы свыше 40000,
++    максимум 3500 (та же пассивка, режим без Wandering Vortex)."""
++    return min(140.0 * max(0.0, max_hp - 40000.0) / 1000.0, 3500.0)
++
++
++def _vodya_hp(ctx) -> float:
++    return ctx.stat("Водяница", "hp", frozenset({OFF}))
++
++
+ def vodyanitsa_c1_bonus(max_hp: float) -> float:
+     return 0.008*max_hp
+ 
+@@ -103,10 +113,67 @@ VODYANITSA_KIT = Character(
+ )
+ 
+ 
++# --------------------------------------------------------------------------- #
++#  Режим БЕЗ Wandering Vortex (любые отряды без звёздного рассеивания)          #
++# --------------------------------------------------------------------------- #
++#  Без вихря на поле те же эффекты работают на ГИДРО и КРИО урон, а не на
++#  урон звёздного рассеивания. Эти баффы добавляются только в комбо
++#  "sc_off_field", поэтому отряды звёздного рассеивания ("off_field") не меняются.
++#  В отрядах звёздного проводника Водяница — опциональный слот: элементального
++#  урона там мало, основная польза — от C2/C6.
++#
++#  Lead Vocal: удар активного персонажа, помеченный VODYA_LEAD_ELEM, получает
++#      +140 за каждую 1000 HP Водяницы свыше 40000 (макс. 3500) — плоская
++#      прибавка к базе ТОЛЬКО ЭЛЕМЕНТАЛЬНОГО урона ("flat_dmg"). На урон
++#      звёздного проводника не действует.
++#  C2 «Two Voices in Black and White»: +50% КУ гидро и крио урона активного
++#      персонажа — ко ВСЕМУ гидро/крио урону, включая звёздный проводник
++#      (теги удара: стихия + тип + модель, ключ "crit_value.cryo" ловит все).
++#  C6: «Two Voices» — всему отряду (и вне поля), +60% гидро и крио урона.
++
++SC_MODE_BUFFS = tuple(
++    Buff(key, lambda ctx: vodyanitsa_elem_bonus(_vodya_hp(ctx)),
++         target=TEAM, requires=(ON, VODYA_LEAD_ELEM),
++         source=f"Водяница: Lead Vocal (+140 за 1000 HP сверх 40000, макс. 3500) — {label}")
++    for key, label in (
++        ("flat_dmg.hydro", "гидро урон"),
++        ("flat_dmg.cryo", "крио урон"),
++    )
++)
++
++SC_MODE_CONSTELLATION_BUFFS = {
++    2: tuple(
++        Buff(f"crit_value.{el}", 0.50, target=TEAM, requires=(ON,),
++             source=f"C2: Two Voices in Black and White, +50% КУ {name} урона активному")
++        for el, name in (("hydro", "гидро"), ("cryo", "крио"))
++    ),
++    6: tuple(
++        Buff(f"crit_value.{el}", 0.50, target=TEAM, requires=(OFF,),
++             source=f"C6: Two Voices in Black and White всему отряду, +50% КУ {name} урона")
++        for el, name in (("hydro", "гидро"), ("cryo", "крио"))
++    ) + tuple(
++        Buff(f"dmg_bonus.{el}", 0.60, target=TEAM,
++             source=f"C6: Song of Ages Past, +60% {name} урона")
++        for el, name in (("hydro", "гидро"), ("cryo", "крио"))
++    ),
++}
++
++_VODYA_SOURCES = (
++    elemental("Использование навыка", "hp", 0.589, "hydro", "skill", [occ(1, ON,)]),
++    elemental("Навык, Horn of Spring", "hp", 0.589, "hydro", "skill", [occ(5, OFF,),]),
++)
++
+ VODYA_COMBO_DICT = {
+     "off_field" : with_rotation(VODYANITSA_KIT,    
+             sources=(elemental("Использование навыка", "hp", 0.589, "hydro", "skill",
+                   [occ(1, ON,)]),
+         elemental("Навык, Horn of Spring", "hp", 0.589, "hydro", "skill",
+-                  [occ(5, OFF,),]),),)
+-}
+\ No newline at end of file
++                  [occ(5, OFF,),]),),),
++    # Отряды без вихря (в т.ч. звёздного проводника): те же удары + баффы режима без вихря
++    "sc_off_field": with_rotation(
++        VODYANITSA_KIT,
++        sources=_VODYA_SOURCES,
++        extra_buffs=SC_MODE_BUFFS,
++        constellation_extra_buffs=SC_MODE_CONSTELLATION_BUFFS,
++    ),
++}
+diff --git a/gi_damage/data/tags.py b/gi_damage/data/tags.py
+index 6a08eaa..77b0aec 100644
+--- a/gi_damage/data/tags.py
++++ b/gi_damage/data/tags.py
+@@ -37,6 +37,9 @@ DA6 = "da6"
+ # --- Водяница ------------------------------------ #
+ VODYA_LEAD  = "vodya_lead"     # 1-й потраченный стак Lead Vocal
+ VODYA_CHORUS = "vodya_chorus"  # 1-й потраченный стак Chorus
++#: Удар активного персонажа, тратящий стак Lead Vocal на элементальный
++#: ГИДРО/КРИО урон (режим без Wandering Vortex)
++VODYA_LEAD_ELEM = "vodya_lead_elem"
+ 
+ # --- Мидзуки ------------------------------------ #
+ MIZUKI_C1 = "mizuki_c1" # увеличение урона звездного рассеивания от с1
+@@ -102,4 +105,4 @@ ELEGY = "ELEGY"
+ __all__ = ["ON", "OFF", "INST", "DREAM", "FROSTGLOW", "BREEZEBORNE",
+            "ARMED", "DA1", "DA2", "DA3", "DA4", "DA5", "DA6","VODYA_LEAD","VODYA_CHORUS","TTDS_HALF","VV_CRYO","VV_PYRO"
+            ,"VV_HYDRO","VV_ELECTRO","CATS_TAIL","SEVEN_SACRED","MIZUKI_C1","DECODING","TTDS_FULL","SANDRONE_CA_STACKS_1","SANDRONE_CA_STACKS_2","SANDRONE_CA_STACKS_3",
+-           "NOBLE","PACTSWORN","TOGETHER_WE_RISE","SESSHOU_SAKURA","STARSAME","ELEGY","OFFENSIVE_DIRECTIVE","WRIO_C1","THEOSIS"]
++           "NOBLE","PACTSWORN","TOGETHER_WE_RISE","SESSHOU_SAKURA","STARSAME","ELEGY","OFFENSIVE_DIRECTIVE","WRIO_C1","THEOSIS","VODYA_LEAD_ELEM"]
