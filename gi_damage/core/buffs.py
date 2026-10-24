@@ -94,6 +94,20 @@ class BuffContext:
         return min(n, cap)    
     
 
+    # -- состав отряда -------------------------------------------------------- #
+    def elements(self) -> dict:
+        """Стихии отряда: {имя персонажа: стихия}."""
+        return {name: b.element for name, b in self._resolver.builds.items()}
+
+    def recipient_element(self) -> str:
+        """Стихия получателя баффа (для «всем гео и гидро персонажам …»)."""
+        return self.elements()[self.recipient]
+
+    def count_element(self, element: str, others_only: bool = True) -> int:
+        """Сколько персонажей стихии `element` в отряде (по умолчанию без владельца)."""
+        return sum(1 for name, el in self.elements().items()
+                   if el == element and not (others_only and name == self.owner))
+
     # -- работа с состояниями ------------------------------------------------ #
     def mirror(self, *base_tags: str, keep: Iterable[str] = ()) -> State:
         """Состояние из `base_tags` + те теги получателя, что перечислены в `keep`.

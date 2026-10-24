@@ -1,0 +1,1354 @@
+diff --git a/gi_damage/core/buffs.py b/gi_damage/core/buffs.py
+index 527bdc3..29057b4 100644
+--- a/gi_damage/core/buffs.py
++++ b/gi_damage/core/buffs.py
+@@ -94,6 +94,20 @@ class BuffContext:
+         return min(n, cap)    
+     
+ 
++    # -- состав отряда -------------------------------------------------------- #
++    def elements(self) -> dict:
++        """Стихии отряда: {имя персонажа: стихия}."""
++        return {name: b.element for name, b in self._resolver.builds.items()}
++
++    def recipient_element(self) -> str:
++        """Стихия получателя баффа (для «всем гео и гидро персонажам …»)."""
++        return self.elements()[self.recipient]
++
++    def count_element(self, element: str, others_only: bool = True) -> int:
++        """Сколько персонажей стихии `element` в отряде (по умолчанию без владельца)."""
++        return sum(1 for name, el in self.elements().items()
++                   if el == element and not (others_only and name == self.owner))
++
+     # -- работа с состояниями ------------------------------------------------ #
+     def mirror(self, *base_tags: str, keep: Iterable[str] = ()) -> State:
+         """Состояние из `base_tags` + те теги получателя, что перечислены в `keep`.
+diff --git a/gi_damage/core/engine.py b/gi_damage/core/engine.py
+index 987a807..284b835 100644
+--- a/gi_damage/core/engine.py
++++ b/gi_damage/core/engine.py
+@@ -21,10 +21,10 @@ from typing import Dict, Iterable, List, Optional, Sequence, Tuple
+ 
+ from .buffs import Buff, BuffContext, State, state
+ from .entities import Build, Enemy
+-from .formulas import (defense_multiplier, elemental_damage, stellar_swirl_direct,
++from .formulas import (defense_multiplier, elemental_damage, lunar_direct, lunar_reaction, stellar_swirl_direct,
+                        stellar_swirl_reaction,stellar_conduct_direct)
+ from .reactions import ReactionEvent, distribute, pick_primary
+-from .sources import ELEMENTAL, STELLAR_SWIRL,STELLAR_CONDUCT, DamageSource
++from .sources import ELEMENTAL, STELLAR_SWIRL,STELLAR_CONDUCT, LUNAR_CRYSTALLIZE, LUNAR, DamageSource
+ from .stats import S, Stats, crit_multiplier
+ from .cycle import Phase
+ 
+@@ -284,7 +284,7 @@ class Team:
+             per_char: Dict[str, float] = {}
+             for b in self.builds:
+                 st = frozenset(
+-                    {b.effective_field()}
++                    {event.field_override.get(b.name, b.effective_field())}
+                     | set(event.tags)
+                     | (set(event.trigger_tags) if b.name == event.trigger else set())
+                     | set(event.char_tags.get(b.name, ()))
+@@ -356,6 +356,10 @@ class Team:
+                 stat_value, mv, stats, tags, res, crit, elevation,
+                 flat_base=src.flat_base + stats.flat_base_dmg(*tags),
+                 polar_stacks=src.polar_stacks)
++        elif src.model == LUNAR_CRYSTALLIZE:
++            value = lunar_direct(
++                stat_value, mv, stats, tags, res, crit, elevation,
++                flat_base=src.flat_base + stats.flat_base_dmg(*tags))
+         else:
+             def_mult = self.enemy.def_mult if src.applies_def else 1.0
+             ignore = stats.def_ignore(*tags)
+@@ -388,10 +392,17 @@ class Team:
+         return self.enemy.res_multiplier(element, stats.res_reduction(element))
+ 
+     def _reaction_damage(self, event: ReactionEvent, stats: Stats, b: Build) -> float:
+-        tags = (event.element, "stellar_swirl", "reaction")
++        if event.model == LUNAR_CRYSTALLIZE:
++            tags = (event.element, LUNAR_CRYSTALLIZE, LUNAR, "reaction")
++        else:
++            tags = (event.element, "stellar_swirl", "reaction")
+         crit = crit_multiplier(stats, b.effective_crit_mode(), *tags)
+         res = self._res(event.element, stats, event.res_override)
+         elevation = self.enemy.elevation + stats.elevation(*tags)
++        if event.model == LUNAR_CRYSTALLIZE:
++            return lunar_reaction(
++                event.multiplier, stats, tags, res, crit, elevation,
++                base_dmg=event.base_dmg, flat_base=stats.flat_base_dmg(*tags))
+         return stellar_swirl_reaction(
+             event.multiplier, stats, tags, res, crit, elevation,
+             base_dmg=event.base_dmg, flat_base=stats.flat_base_dmg(*tags),
+diff --git a/gi_damage/core/formulas.py b/gi_damage/core/formulas.py
+index 497b71f..da9dc89 100644
+--- a/gi_damage/core/formulas.py
++++ b/gi_damage/core/formulas.py
+@@ -65,6 +65,43 @@ def stellar_conduct_multiplier(polar_stacks:int = 1):
+     else:
+         return 1.5 + (polar_stacks-2)*0.05
+ 
++# --------------------------------------------------------------------------- #
++#  Лунные реакции                                                              #
++# --------------------------------------------------------------------------- #
++#: Множитель прямого урона лунной реакции (Direct Lunar-…), по типу реакции
++LUNAR_DIRECT_FACTOR = {"lunar_crystallize": 1.6}
++#: Базовый множитель урона лунной реакции (Reaction Lunar-…):
++#: урон = 1446.85 × множитель × …  (1.6 — именно у лунной кристаллизации)
++LUNAR_REACTION_MULTIPLIER = {"lunar_crystallize": 1.6}
++
++
++def lunar_multiplier(stats: Stats, *tags: str) -> float:
++    """(1 + 6·МС/(МС+2000) + лунный бонус урона)."""
++    return 1.0 + em_swirl_term(stats.em) + stats.lunar_bonus(*tags)
++
++
++def lunar_direct(stat_value: float, mv: float, stats: Stats, tags,
++                 res_mult: float, crit: float, elevation: float,
++                 flat_base: float = 0.0,
++                 reaction: str = "lunar_crystallize") -> float:
++    """Прямой урон лунной реакции (Direct Lunar-…)."""
++    base = (LUNAR_DIRECT_FACTOR[reaction] * stat_value * mv
++            * (1.0 + stats.lunar_base_inc(*tags))
++            * lunar_multiplier(stats, *tags))
++    return max(0.0, (base + flat_base) * res_mult * crit * (1.0 + elevation))
++
++
++def lunar_reaction(multiplier: float, stats: Stats, tags,
++                   res_mult: float, crit: float, elevation: float,
++                   base_dmg: float = STELLAR_SWIRL_BASE_DMG,
++                   flat_base: float = 0.0) -> float:
++    """Урон лунной реакции (Reaction Lunar-…): 1446.85 × базовый множитель × …"""
++    base = (base_dmg * multiplier
++            * (1.0 + stats.lunar_base_inc(*tags))
++            * lunar_multiplier(stats, *tags))
++    return max(0.0, (base + flat_base) * res_mult * crit * (1.0 + elevation))
++
++
+ def elemental_damage(base: float, stats: Stats, tags, def_mult: float,
+                      res_mult: float, crit: float, elevation: float,
+                      flat_base: float = 0.0) -> float:
+diff --git a/gi_damage/core/reactions.py b/gi_damage/core/reactions.py
+index 8fcf63f..92d49d9 100644
+--- a/gi_damage/core/reactions.py
++++ b/gi_damage/core/reactions.py
+@@ -20,11 +20,15 @@ from typing import Dict, List, Optional, Sequence, Tuple, Mapping
+ 
+ from .buffs import State, state
+ from .formulas import (SSW_ANEMO_MULTIPLIER, SSW_VORTEX_MULTIPLIER,
+-                       STELLAR_SWIRL_BASE_DMG)
++                       STELLAR_SWIRL_BASE_DMG, LUNAR_REACTION_MULTIPLIER)
+ 
+ #: Доли распределения урона реакции по персонажам отряда
+ DEFAULT_WEIGHTS: Tuple[float, ...] = (3 / 5, 3 / 10, 1 / 20, 1 / 20)
+ 
++#: Модели реакций
++REACTION_SSW = "stellar_swirl"
++REACTION_LUNAR_CRYSTALLIZE = "lunar_crystallize"
++
+ 
+ @dataclass
+ class ReactionEvent:
+@@ -57,6 +61,11 @@ class ReactionEvent:
+     base_dmg: float = STELLAR_SWIRL_BASE_DMG
+     res_override: Optional[float] = None
+     weights: Tuple[float, ...] = DEFAULT_WEIGHTS
++    #: формула: "stellar_swirl" (по умолчанию) или "lunar_crystallize"
++    model: str = REACTION_SSW
++    #: на поле/вне поля для отдельных персонажей в момент реакции:
++    #: {"Цзы Бай": "off_field"} — реакция происходит, пока она вне поля
++    field_override: Mapping[str, str] = field(default_factory=dict)
+     note: str = ""
+ 
+ 
+@@ -93,6 +102,31 @@ def ssw_vortex(stacks: int, count: float, *tags: str,
+     )
+ 
+ 
++# --------------------------------------------------------------------------- #
++#  Лунная кристаллизация                                                       #
++# --------------------------------------------------------------------------- #
++def lunar_crystallize_reaction(count: float, *tags: str, **kwargs) -> ReactionEvent:
++    """Урон реакции лунной кристаллизации (Moondrift Harmony — удары Лунных клеток).
++
++    Каждая реакция создаёт 3 клетки; за каждые 3 реакции каждая из 3 клеток
++    бьёт один раз — то есть ударов клеток столько же, сколько реакций.
++    count — число ударов клеток за ротацию.
++
++    Урон считается для каждого персонажа и распределяется 60/30/5/5 по
++    убыванию (главный — сильнейший, а не триггер).
++    """
++    return ReactionEvent(
++        name=kwargs.pop("name", "Лунная кристаллизация (клетки)"),
++        element=kwargs.pop("element", "geo"),
++        multiplier=LUNAR_REACTION_MULTIPLIER["lunar_crystallize"],
++        tags=tuple(tags),
++        count=count,
++        weights=(0.60, 0.30, 0.05, 0.05),
++        model=REACTION_LUNAR_CRYSTALLIZE,
++        **kwargs,
++    )
++
++
+ # --------------------------------------------------------------------------- #
+ def distribute(per_character: Dict[str, float], primary: str,
+                weights: Sequence[float] = DEFAULT_WEIGHTS) -> Dict[str, float]:
+diff --git a/gi_damage/core/sources.py b/gi_damage/core/sources.py
+index 38a804a..d80a64b 100644
+--- a/gi_damage/core/sources.py
++++ b/gi_damage/core/sources.py
+@@ -35,6 +35,10 @@ from .buffs import State, state
+ ELEMENTAL = "elemental"
+ STELLAR_SWIRL = "stellar_swirl"
+ STELLAR_CONDUCT = "stellar_conduct"
++#: Прямой урон лунной кристаллизации (Direct Lunar-Crystallize)
++LUNAR_CRYSTALLIZE = "lunar_crystallize"
++#: Общий тег всех лунных реакций (для "elevation.lunar", "lunar_bonus" и т.п.)
++LUNAR = "lunar"
+ 
+ MotionValue = Union[float, Callable[["object"], float]]
+ 
+@@ -125,3 +129,24 @@ def stellar_conduct(name: str, scaling: str, mv: MotionValue, element: str,
+     return DamageSource(name=name, scaling=scaling, mv=mv, element=element,
+                         kind=kind, model=STELLAR_CONDUCT,
+                         occurrences=list(occurrences), **kwargs)
++
++
++def lunar_crystallize(name: str, scaling: str, mv: MotionValue,
++                      occurrences: Sequence[Occurrence], kind: str = "skill",
++                      element: str = "geo", **kwargs) -> DamageSource:
++    """Прямой урон лунной кристаллизации (гео урон, считающийся уроном реакции).
++
++        База = 1.6 × Стат × Множитель × (1 + Base Increase)
++               × (1 + 6·МС/(МС+2000) + лунный бонус урона)
++        Итог = (База + Доп. базовый урон) × Сопр. × Крит × Возвышение
++
++    Защита цели не учитывается. Теги удара: стихия, тип, "lunar_crystallize",
++    "lunar" — поэтому работают ключи "lunar_bonus", "lunar_bonus.lunar_crystallize",
++    "elevation.lunar", "flat_base_dmg.lunar_crystallize" и т.д.
++    """
++    kwargs.setdefault("applies_def", False)
++    extra = tuple(kwargs.pop("extra_tags", ()))
++    return DamageSource(name=name, scaling=scaling, mv=mv, element=element,
++                        kind=kind, model=LUNAR_CRYSTALLIZE,
++                        occurrences=list(occurrences),
++                        extra_tags=(LUNAR,) + extra, **kwargs)
+diff --git a/gi_damage/core/stats.py b/gi_damage/core/stats.py
+index 0e6e8ad..f6d57cd 100644
+--- a/gi_damage/core/stats.py
++++ b/gi_damage/core/stats.py
+@@ -65,6 +65,11 @@ class S:
+     SC_BONUS = "sc_bonus"
+     SC_BASE_INC = "sc_base_inc"
+ 
++    # Лунные реакции (Lunar): общий бонус "lunar_bonus" и точечные,
++    # например "lunar_bonus.lunar_crystallize"
++    LUNAR_BONUS = "lunar_bonus"        # «Lunar-… DMG Bonus%» — внутрь скобки с МС
++    LUNAR_BASE_INC = "lunar_base_inc"  # «Base DMG Increase%» лунных реакций — (1 + x)
++
+     # Прочее
+     ELEVATION = "elevation"    # «Возвышение», итоговый множитель = 1 + elevation
+     FLAT_BASE_DMG = "flat_base_dmg"  # «Дополнительный базовый урон» (звёздные модели)
+@@ -175,6 +180,12 @@ class Stats:
+     def sc_bonus(self, *tags: str) -> float:
+         return self._tagged_sum(S.SC_BONUS, tags)
+ 
++    def lunar_bonus(self, *tags: str) -> float:
++        return self._tagged_sum(S.LUNAR_BONUS, tags)
++
++    def lunar_base_inc(self, *tags: str) -> float:
++        return self._tagged_sum(S.LUNAR_BASE_INC, tags)
++
+     def ssw_base_inc(self, *tags: str) -> float:
+         return self._tagged_sum(S.SSW_BASE_INC, tags)
+     
+diff --git a/gi_damage/data/artifacts.py b/gi_damage/data/artifacts.py
+index 8b5d457..c93094d 100644
+--- a/gi_damage/data/artifacts.py
++++ b/gi_damage/data/artifacts.py
+@@ -139,8 +139,11 @@ AUBADE = ArtifactSet(
+     pieces=4,
+     stats_by_pieces={
+         2: {S.BASE_EM: 80},
+-        4: {},
+-    },    
++    },
++    buffs_by_pieces={
++        4: (Buff(S.LUNAR_BONUS, 0.60, target=SELF, requires=(OFF,),
++                 source="Рассветная песнь 4ч: +60% урона лунных реакций вне поля"),),
++    },
+ )
+ 
+ NIGHT_SKY = ArtifactSet(
+@@ -148,8 +151,24 @@ NIGHT_SKY = ArtifactSet(
+     pieces=4,
+     stats_by_pieces={
+         2: {S.BASE_EM: 80},
+-        4: {},
+-    },    
++    },
++    buffs_by_pieces={
++        4: (Buff(S.CRIT_VALUE, 0.30 * 2, target=SELF,
++                 source="Ночь неба 4ч: +30% крит. шанса"),
++            Buff(S.LUNAR_BONUS, 0.10, target=TEAM,
++                 source="Ночь неба 4ч: +10% урона лунных реакций отряду"),),
++    },
++)
++
++SERENADE = ArtifactSet(
++    name = "Серенада шёлковой луны",
++    pieces=4,
++    buffs_by_pieces={
++        4: (Buff(S.BASE_EM, 120.0, target=TEAM,
++                 source="Серенада 4ч: +120 МС отряду"),
++            Buff(S.LUNAR_BONUS, 0.10, target=TEAM,
++                 source="Серенада 4ч: +10% урона лунных реакций отряду"),),
++    },
+ )
+ 
+ GILDED = ArtifactSet(
+diff --git a/gi_damage/data/characters/columbina.py b/gi_damage/data/characters/columbina.py
+new file mode 100644
+index 0000000..b533495
+--- /dev/null
++++ b/gi_damage/data/characters/columbina.py
+@@ -0,0 +1,181 @@
++"""
++Колумбина — гидро, катализатор. Саппорт лунных реакций (Moonsign).
++Масштабируется от HP. Навык работает из кармана. Ротация: E Q, 3.1 с.
++
++Комбо (за ротацию отряда):
++    E                      — 1 удар навыка (гидро)
++    Gravity Ripple         — 10 ударов (гидро, вне поля)
++    Gravity Interference   — 3 удара лунной кристаллизации (вне поля, раз в 6 с)
++        C1: +1 удар сразу при E (с поля);  C2: ещё +2 удара (вне поля)
++    Q                      — 1 удар взрыва (гидро)
++
++Баффы (постоянные):
++    Q   Lunar Domain: +40% урона лунных реакций отряду (C5: 49%)
++    A1  Lunacy: +15% КШ (3 стака)
++    A4  Law of the New Moon: каждый Moondrift с шансом 33% наносит доп. атаку —
++        в среднем ×1.33 к числу ударов лунных клеток (MOONDRIFT_EXTRA, считается
++        в отряде)
++    Moonsign Benediction: +0.2% базового урона лунных реакций за 1000 HP (макс. 7%)
++    C1, C3, C4, C5: +1.5% возвышения лунных реакций отряду каждое
++    C2, C6: +7% возвышения лунных реакций отряду каждое
++    C2  Lunar Brilliance: +40% HP; активному персонажу +ЗЩ = 1% HP Колумбины
++    C4  Gravity Interference от C1: +12.5% HP (доп. базовый урон)
++    C6  +80% КУ гео и гидро урона отряду (лунная кристаллизация = гео + гидро)
++
++Gravity Interference — урон лунной кристаллизации; стихия — гео (как у всей
++лунной кристаллизации).
++"""
++
++from __future__ import annotations
++from dataclasses import replace  # noqa: F401 — для patches= в файлах отрядов
++
++from ...core.buffs import OTHERS, SELF, TEAM, Buff, temp
++from ...core.entities import Character, Constellation, with_rotation
++from ...core.stats import S
++from ...core.sources import elemental, occ, lunar_crystallize
++from ..tags import *
++
++COLUMBINA_NAME = "Колумбина"
++
++# --------------------------------------------------------------------------- #
++#  Множители (в долях Max HP)                                                  #
++# --------------------------------------------------------------------------- #
++SKILL_MV, SKILL_MV_C3 = 0.301, 0.3553
++RIPPLE_MV, RIPPLE_MV_C3 = 0.1685, 0.1989
++INTERFERENCE_MV, INTERFERENCE_MV_C3 = 0.1588, 0.1875
++BURST_MV, BURST_MV_C5 = 0.5803, 0.6851
++DOMAIN_LUNAR_BONUS, DOMAIN_LUNAR_BONUS_C5 = 0.40, 0.49
++
++RIPPLE_HITS = 10
++INTERFERENCE_HITS = 3          # C0, раз в 6 с
++C2_EXTRA_INTERFERENCE = 2
++
++A1_CRIT_RATE = 0.05 * 3        # Lunacy: +5% КШ × 3
++MOONDRIFT_EXTRA = 0.33         # A4: шанс доп. атаки каждого Moondrift
++MOONSIGN_PER_1000_HP = 0.002   # +0.2% базового урона за 1000 HP
++MOONSIGN_CAP = 0.07
++SMALL_ELEVATION = 0.015        # C1/C3/C4/C5
++BIG_ELEVATION = 0.07           # C2/C6
++C2_HP = 0.40
++C2_DEF_PER_HP = 0.01
++C4_FLAT_HP = 0.125
++C6_CRIT_DMG = 0.80
++
++COLUMBINA_TIME = 3.1
++
++#: Тег источника: Gravity Interference от C1 (C4 добавляет ему доп. урон)
++INTERFERENCE_C1 = "columbina_gi_c1"
++
++
++def _columbina_hp(ctx) -> float:
++    return ctx.stat(COLUMBINA_NAME, "hp", frozenset({OFF}))
++
++
++COLUMBINA_KIT = Character(
++    name=COLUMBINA_NAME,
++    element="hydro",
++    weapon_type="catalyst",
++    default_field=OFF,
++    crit_mode="balance",
++    stats={
++        S.BASE_HP: 14695.0,
++        S.CRIT_VALUE: 0.988,
++    },
++    buffs=(
++        Buff(S.LUNAR_BONUS, DOMAIN_LUNAR_BONUS, target=TEAM,
++             source="Lunar Domain: +40% урона лунных реакций отряду"),
++        Buff(S.CRIT_VALUE, A1_CRIT_RATE * 2, target=SELF,
++             source="Lunacy's Lure: +15% КШ (3 стака)"),
++        Buff(S.LUNAR_BASE_INC,
++             lambda ctx: min(MOONSIGN_CAP, MOONSIGN_PER_1000_HP * _columbina_hp(ctx) / 1000.0),
++             target=TEAM,
++             source="Moonsign Benediction: +0.2% базового урона лунных реакций за 1000 HP (макс. 7%)"),
++    ),
++    sources=(),
++    constellations={
++        1: Constellation(
++            number=1, name="C1",
++            buffs=(Buff("elevation.lunar", SMALL_ELEVATION, target=TEAM,
++                        source="C1 Колумбины: +1.5% возвышения лунных реакций"),),
++        ),
++        2: Constellation(
++            number=2, name="C2",
++            buffs=(
++                Buff(S.HP_PCT, C2_HP, target=SELF,
++                     source="C2 Колумбины: Lunar Brilliance, +40% HP"),
++                Buff(S.FLAT_DEF, lambda ctx: C2_DEF_PER_HP * _columbina_hp(ctx),
++                     target=TEAM, requires=(ON,),
++                     source="C2 Колумбины: активному +ЗЩ = 1% HP Колумбины"),
++                Buff("elevation.lunar", BIG_ELEVATION, target=TEAM,
++                     source="C2 Колумбины: +7% возвышения лунных реакций"),
++            ),
++        ),
++        3: Constellation(
++            number=3, name="C3",
++            buffs=(Buff("elevation.lunar", SMALL_ELEVATION, target=TEAM,
++                        source="C3 Колумбины: +1.5% возвышения лунных реакций"),),
++            patches={
++                "Навык": lambda s: replace(s, mv=SKILL_MV_C3),
++                "Gravity Ripple": lambda s: replace(s, mv=RIPPLE_MV_C3),
++                "Gravity Interference (LC)": lambda s: replace(s, mv=INTERFERENCE_MV_C3),
++                "C1: Gravity Interference при E (LC)": lambda s: replace(s, mv=INTERFERENCE_MV_C3),
++                "C2: доп. Gravity Interference (LC)": lambda s: replace(s, mv=INTERFERENCE_MV_C3),
++            },
++        ),
++        4: Constellation(
++            number=4, name="C4",
++            buffs=(
++                Buff(f"{S.FLAT_BASE_DMG}.{INTERFERENCE_C1}",
++                     lambda ctx: C4_FLAT_HP * ctx.own("hp"), target=SELF,
++                     source="C4 Колумбины: Gravity Interference от C1 +12.5% HP"),
++                Buff("elevation.lunar", SMALL_ELEVATION, target=TEAM,
++                     source="C4 Колумбины: +1.5% возвышения лунных реакций"),
++            ),
++        ),
++        5: Constellation(
++            number=5, name="C5",
++            buffs=(
++                Buff(S.LUNAR_BONUS, DOMAIN_LUNAR_BONUS_C5 - DOMAIN_LUNAR_BONUS, target=TEAM,
++                     source="C5 Колумбины: Lunar Domain до 49%"),
++                Buff("elevation.lunar", SMALL_ELEVATION, target=TEAM,
++                     source="C5 Колумбины: +1.5% возвышения лунных реакций"),
++            ),
++            patches={"Взрыв стихии": lambda s: replace(s, mv=BURST_MV_C5)},
++        ),
++        6: Constellation(
++            number=6, name="C6",
++            buffs=(
++                Buff("crit_value.geo", C6_CRIT_DMG, target=TEAM,
++                     source="C6 Колумбины: +80% КУ гео урона"),
++                Buff("crit_value.hydro", C6_CRIT_DMG, target=TEAM,
++                     source="C6 Колумбины: +80% КУ гидро урона"),
++                Buff("elevation.lunar", BIG_ELEVATION, target=TEAM,
++                     source="C6 Колумбины: +7% возвышения лунных реакций"),
++            ),
++        ),
++    },
++    note="Саппорт лунных реакций (Moonsign).",
++)
++
++#: Окна отряда. 3 обычных Gravity Interference тратят Field Catalog Линеи (C1),
++#: удар от C1 (с поля) — Nightingale's Song Иллуги.
++COLUMBINA_COMBO_DICT = {
++    "lc_support": with_rotation(
++        COLUMBINA_KIT,
++        sources=(
++            elemental("Навык", "hp", SKILL_MV, "hydro", "skill", [occ(1, ON)]),
++            elemental("Gravity Ripple", "hp", RIPPLE_MV, "hydro", "skill",
++                      [occ(RIPPLE_HITS, OFF)]),
++            lunar_crystallize("Gravity Interference (LC)", "hp", INTERFERENCE_MV,
++                              [occ(INTERFERENCE_HITS, OFF, FIELD_CATALOG)], kind="skill"),
++            elemental("Взрыв стихии", "hp", BURST_MV, "hydro", "burst", [occ(1, ON)]),
++        ),
++        constellation_sources={
++            1: (lunar_crystallize("C1: Gravity Interference при E (LC)", "hp", INTERFERENCE_MV,
++                                  [occ(1, ON, NIGHTINGALE)], kind="skill",
++                                  extra_tags=(INTERFERENCE_C1,)),),
++            2: (lunar_crystallize("C2: доп. Gravity Interference (LC)", "hp", INTERFERENCE_MV,
++                                  [occ(C2_EXTRA_INTERFERENCE, OFF)], kind="skill"),),
++        },
++    ),
++}
+diff --git a/gi_damage/data/characters/illuga.py b/gi_damage/data/characters/illuga.py
+new file mode 100644
+index 0000000..f9b22db
+--- /dev/null
++++ b/gi_damage/data/characters/illuga.py
+@@ -0,0 +1,133 @@
++"""
++Иллуги — гео, копьё. Саппорт лунной кристаллизации (Moonsign).
++Масштабируется от МС и ЗЩ. Ротация: E Q, 2.4 с. C6 — базовая линия.
++
++Nightingale's Song (взрыв, 36 стаков): удар АКТИВНОГО персонажа, помеченный
++окном NIGHTINGALE, получает плоскую прибавку от МС Иллуги:
++    гео урон (элементальный)           — 60.48% МС + A4 (24% МС)  → "flat_dmg.geo"
++    урон лунной кристаллизации         — 406.66% МС + A4 (160% МС) → доп. базовый урон
++A4 Demonhunter's Dusk: 1/2/3 гидро или гео персонажа в отряде → 7/14/24% МС
++(лунная кристаллизация: 48/96/160% МС). Считается по составу отряда.
++
++A1 Lightkeeper's Oath (остальным членам отряда): гео урону +5% КШ / +10% КУ,
++Ascendant Gleam +50 МС. C6 заменяет: +10% КШ / +30% КУ, +80 МС.
++C2: 5 призывов Aedon из кармана (400% МС + 200% ЗЩ, взрыв).
++C4: активному персонажу +200 ЗЩ.
++"""
++
++from __future__ import annotations
++from dataclasses import replace  # noqa: F401 — для patches= в файлах отрядов
++
++from ...core.buffs import OTHERS, SELF, TEAM, Buff, temp
++from ...core.entities import Character, Constellation, with_rotation
++from ...core.stats import S
++from ...core.sources import elemental, occ
++from ..tags import *
++
++ILLUGA_NAME = "Иллуги"
++
++# --------------------------------------------------------------------------- #
++#  Множители                                                                   #
++# --------------------------------------------------------------------------- #
++SKILL_EM, SKILL_DEF = 10.8576, 5.4288                 # навык (удержание)
++BURST_EM, BURST_DEF = 14.8896, 7.4448
++BURST_EM_C3, BURST_DEF_C3 = 17.578, 8.789
++SONG_GEO, SONG_GEO_C3 = 0.6048, 0.714                 # Nightingale's Song: гео урон, доли МС
++SONG_LC, SONG_LC_C3 = 4.0666, 4.8008                  # … урон лунной кристаллизации
++A4_GEO = {0: 0.0, 1: 0.07, 2: 0.14, 3: 0.24}          # по числу гидро/гео в отряде
++A4_LC = {0: 0.0, 1: 0.48, 2: 0.96, 3: 1.60}
++AEDON_EM, AEDON_DEF = 4.0, 2.0                        # C2
++AEDON_HITS = 5
++
++A1_CR, A1_CD, A1_EM = 0.05, 0.10, 50.0
++C6_CR, C6_CD, C6_EM = 0.10, 0.30, 80.0
++C4_DEF = 200.0
++
++ILLUGA_TIME = 2.4
++
++
++def _illuga_em(ctx) -> float:
++    return ctx.stat(ILLUGA_NAME, "em", frozenset({OFF}))
++
++
++def _hydro_geo_tier(ctx) -> int:
++    n = ctx.count_element("geo", others_only=False) + ctx.count_element("hydro", others_only=False)
++    return min(n, 3)
++
++
++ILLUGA_KIT = Character(
++    name=ILLUGA_NAME,
++    element="geo",
++    weapon_type="polearm",
++    default_field=OFF,
++    crit_mode="balance",
++    stats={
++        S.BASE_DEF: 814.0,
++        S.BASE_EM: 96.0,
++        S.CRIT_VALUE: 0.6,
++    },
++    buffs=(
++        Buff("flat_dmg.geo",
++             lambda ctx: (SONG_GEO + A4_GEO[_hydro_geo_tier(ctx)]) * _illuga_em(ctx),
++             target=TEAM, requires=(ON, NIGHTINGALE),
++             source="Nightingale's Song: гео урону +60.48% МС Иллуги (+A4)"),
++        Buff(f"{S.FLAT_BASE_DMG}.lunar_crystallize",
++             lambda ctx: (SONG_LC + A4_LC[_hydro_geo_tier(ctx)]) * _illuga_em(ctx),
++             target=TEAM, requires=(ON, NIGHTINGALE),
++             source="Nightingale's Song: лунной кристаллизации +406.66% МС Иллуги (+A4)"),
++        Buff("crit_value.geo", A1_CR * 2 + A1_CD, target=OTHERS,
++             source="Lightkeeper's Oath: гео урону +5% КШ / +10% КУ"),
++        Buff(S.BASE_EM, A1_EM, target=OTHERS,
++             source="Lightkeeper's Oath (Ascendant Gleam): +50 МС"),
++    ),
++    sources=(),
++    constellations={
++        2: Constellation(number=2, name="C2"),
++        3: Constellation(
++            number=3, name="C3",
++            buffs=(
++                Buff("flat_dmg.geo", lambda ctx: (SONG_GEO_C3 - SONG_GEO) * _illuga_em(ctx),
++                     target=TEAM, requires=(ON, NIGHTINGALE),
++                     source="C3 Иллуги: Nightingale's Song, гео урону до 71.4% МС"),
++                Buff(f"{S.FLAT_BASE_DMG}.lunar_crystallize",
++                     lambda ctx: (SONG_LC_C3 - SONG_LC) * _illuga_em(ctx),
++                     target=TEAM, requires=(ON, NIGHTINGALE),
++                     source="C3 Иллуги: Nightingale's Song, лунной кристаллизации до 480.08% МС"),
++            ),
++            patches={"Взрыв стихии": lambda s: replace(
++                s, mv=BURST_EM_C3, extra_scaling=(("def", BURST_DEF_C3),))},
++        ),
++        4: Constellation(
++            number=4, name="C4",
++            buffs=(Buff(S.FLAT_DEF, C4_DEF, target=TEAM, requires=(ON,),
++                        source="C4 Иллуги: активному +200 ЗЩ"),),
++        ),
++        6: Constellation(
++            number=6, name="C6",
++            # C6 заменяет A1: добавляем разницу
++            buffs=(
++                Buff("crit_value.geo", (C6_CR - A1_CR) * 2 + (C6_CD - A1_CD), target=OTHERS,
++                     source="C6 Иллуги: Lightkeeper's Oath до +10% КШ / +30% КУ"),
++                Buff(S.BASE_EM, C6_EM - A1_EM, target=OTHERS,
++                     source="C6 Иллуги: Lightkeeper's Oath до +80 МС"),
++            ),
++        ),
++    },
++    note="Саппорт лунной кристаллизации (Moonsign).",
++)
++
++ILLUGA_COMBO_DICT = {
++    "eq": with_rotation(
++        ILLUGA_KIT,
++        sources=(
++            elemental("Навык (удержание)", "em", SKILL_EM, "geo", "skill", [occ(1, ON)],
++                      extra_scaling=(("def", SKILL_DEF),)),
++            elemental("Взрыв стихии", "em", BURST_EM, "geo", "burst", [occ(1, ON)],
++                      extra_scaling=(("def", BURST_DEF),)),
++        ),
++        constellation_sources={
++            2: (elemental("C2: Aedon", "em", AEDON_EM, "geo", "burst",
++                          [occ(AEDON_HITS, OFF)], extra_scaling=(("def", AEDON_DEF),)),),
++        },
++    ),
++}
+diff --git a/gi_damage/data/characters/linnea.py b/gi_damage/data/characters/linnea.py
+new file mode 100644
+index 0000000..425d1a0
+--- /dev/null
++++ b/gi_damage/data/characters/linnea.py
+@@ -0,0 +1,144 @@
++"""
++Линея — гео, лук. Саппорт лунной кристаллизации (Moonsign). Масштабируется
++от ЗАЩИТЫ. Навык работает из кармана. Ротация: E, 1.2 с.
++
++Комбо — только обычная форма (Super Power Form) Люми:
++    16 × Pound-Pound Pummeler   (гео, 172.8% ЗЩ)
++     4 × Heavy Overdrive Hammer (прямая лунная кристаллизация, 180% ЗЩ)
++
++Баффы (постоянные; Ascendant Gleam считается активным — все в отряде Moonsign):
++    A1  Field Observation Notes: −15% гео сопротивления, Ascendant Gleam ещё −15%
++    A4  Universal Naturalist Archive: активному Moonsign-персонажу +МС = 5% ЗЩ Линеи
++    Moonsign: +0.7% базового урона лунной кристаллизации за 100 ЗЩ (макс. 14%)
++    C1  Field Catalog: удар лунной кристаллизации (окно FIELD_CATALOG) получает
++        доп. базовый урон = 75% ЗЩ Линеи (18 стаков)
++    C2  +40% КУ гео и гидро персонажам отряда; Ascendant Gleam: каждый
++        Heavy Overdrive Hammer вызывает Moondrift Harmony (реакции — в отряде)
++    C3  новые множители
++    C4  +25% ЗЩ Линее и активному персонажу
++    C6  Field Catalog: ×1.5 (112.5% ЗЩ), +25% возвышения лунной кристаллизации отряду
++
++Million Ton Crush (Ultimate Power Form) пока не используется — константы есть.
++"""
++
++from __future__ import annotations
++from dataclasses import replace  # noqa: F401 — для patches= в файлах отрядов
++
++from ...core.buffs import OTHERS, SELF, TEAM, Buff, temp
++from ...core.entities import Character, Constellation, with_rotation
++from ...core.stats import S
++from ...core.sources import elemental, occ, lunar_crystallize
++from ..tags import *
++
++LINNEA_NAME = "Линея"
++
++# --------------------------------------------------------------------------- #
++#  Множители (в долях ЗЩ)                                                      #
++# --------------------------------------------------------------------------- #
++PUMMELER_MV, PUMMELER_MV_C3 = 1.728, 2.04
++HAMMER_MV, HAMMER_MV_C3 = 1.80, 2.125
++CRUSH_MV, CRUSH_MV_C3 = 7.20, 8.50        # Million Ton Crush (пока не в комбо)
++
++PUMMELER_HITS = 16
++HAMMER_HITS = 4
++
++A1_GEO_RES = 0.15 + 0.15       # −15% и ещё −15% (Ascendant Gleam)
++A4_EM_PER_DEF = 0.05           # +МС активному = 5% ЗЩ Линеи
++MOONSIGN_PER_100_DEF = 0.007
++MOONSIGN_CAP = 0.14
++C1_CATALOG_DEF = 0.75          # Field Catalog: +75% ЗЩ за стак
++C6_CATALOG_MULT = 1.5          # C6: ×1.5
++C2_CRIT_DMG = 0.40
++C4_DEF = 0.25
++C6_LC_ELEVATION = 0.25
++
++LINNEA_TIME = 1.2
++
++
++def _linnea_def(ctx) -> float:
++    return ctx.stat(LINNEA_NAME, "def", frozenset({OFF}))
++
++
++LINNEA_KIT = Character(
++    name=LINNEA_NAME,
++    element="geo",
++    weapon_type="bow",
++    default_field=OFF,
++    crit_mode="balance",
++    stats={
++        S.BASE_DEF: 907.0,
++        S.CRIT_VALUE: 0.988,
++    },
++    buffs=(
++        Buff("res_reduction.geo", A1_GEO_RES, target=TEAM,
++             source="Field Observation Notes: −30% гео сопротивления (с Ascendant Gleam)"),
++        Buff(S.FLAT_EM, lambda ctx: A4_EM_PER_DEF * _linnea_def(ctx),
++             target=OTHERS, requires=(ON,),
++             source="Universal Naturalist Archive: активному Moonsign +МС = 5% ЗЩ Линеи"),
++        Buff(f"{S.LUNAR_BASE_INC}.lunar_crystallize",
++             lambda ctx: min(MOONSIGN_CAP, MOONSIGN_PER_100_DEF * _linnea_def(ctx) / 100.0),
++             target=TEAM,
++             source="Habitat Survey: +0.7% базового урона LC за 100 ЗЩ (макс. 14%)"),
++    ),
++    sources=(),
++    constellations={
++        1: Constellation(
++            number=1, name="C1",
++            buffs=(
++                Buff(f"{S.FLAT_BASE_DMG}.lunar_crystallize",
++                     lambda ctx: C1_CATALOG_DEF * _linnea_def(ctx),
++                     target=TEAM, requires=(FIELD_CATALOG,),
++                     source="C1 Линеи: Field Catalog, +75% ЗЩ Линеи к удару LC"),
++            ),
++        ),
++        2: Constellation(
++            number=2, name="C2",
++            buffs=(
++                Buff(S.CRIT_VALUE,
++                     lambda ctx: C2_CRIT_DMG if ctx.recipient_element() in ("geo", "hydro") else 0.0,
++                     target=TEAM,
++                     source="C2 Линеи: +40% КУ гео и гидро персонажам"),
++            ),
++        ),
++        3: Constellation(
++            number=3, name="C3",
++            patches={
++                "Люми: Pound-Pound Pummeler": lambda s: replace(s, mv=PUMMELER_MV_C3),
++                "Люми: Heavy Overdrive Hammer (LC)": lambda s: replace(s, mv=HAMMER_MV_C3),
++            },
++        ),
++        4: Constellation(
++            number=4, name="C4",
++            buffs=(
++                Buff(S.DEF_PCT, C4_DEF, target=SELF, source="C4 Линеи: +25% ЗЩ"),
++                Buff(S.DEF_PCT, C4_DEF, target=OTHERS, requires=(ON,),
++                     source="C4 Линеи: +25% ЗЩ активному персонажу"),
++            ),
++        ),
++        6: Constellation(
++            number=6, name="C6",
++            buffs=(
++                # Field Catalog ×1.5: добавляем недостающие +50% от исходного
++                Buff(f"{S.FLAT_BASE_DMG}.lunar_crystallize",
++                     lambda ctx: C1_CATALOG_DEF * (C6_CATALOG_MULT - 1.0) * _linnea_def(ctx),
++                     target=TEAM, requires=(FIELD_CATALOG,),
++                     source="C6 Линеи: Field Catalog ×1.5"),
++                Buff("elevation.lunar_crystallize", C6_LC_ELEVATION, target=TEAM,
++                     source="C6 Линеи: +25% возвышения лунной кристаллизации"),
++            ),
++        ),
++    },
++    note="Саппорт лунной кристаллизации (Moonsign).",
++)
++
++LINNEA_COMBO_DICT = {
++    "super_power": with_rotation(
++        LINNEA_KIT,
++        sources=(
++            elemental("Люми: Pound-Pound Pummeler", "def", PUMMELER_MV, "geo", "skill",
++                      [occ(PUMMELER_HITS, OFF)]),
++            lunar_crystallize("Люми: Heavy Overdrive Hammer (LC)", "def", HAMMER_MV,
++                              [occ(HAMMER_HITS, OFF, FIELD_CATALOG)], kind="skill"),
++        ),
++    ),
++}
+diff --git a/gi_damage/data/characters/zibai.py b/gi_damage/data/characters/zibai.py
+new file mode 100644
+index 0000000..3fad0e7
+--- /dev/null
++++ b/gi_damage/data/characters/zibai.py
+@@ -0,0 +1,209 @@
++"""
++Цзы Бай — гео, ДД отрядов лунной кристаллизации. Масштабируется от ЗАЩИТЫ.
++
++Базовое комбо: E N4 sE N4 sE Q N4 sE N4 sE, 14.8 с
++    C1: E sE N4 sE N4 sE Q N4 sE N4 sE — +1 sE в самом начале (его и усиливает
++    C1), +0.3 с анимации (ZIBAI_C1_EXTRA_TIME); все 4 серии N4 идут после sE.
++    E   — Heaven and Earth Made Manifest (вход в Lunar Phase Shift, без урона)
++    N4  — 4 обычные атаки (гео); 4-й удар даёт доп. удар — прямая лунная
++          кристаллизация (53.02% ЗЩ)
++    sE  — Spirit Steed's Stride: 1-й удар гео, 2-й — прямая лунная кристаллизация
++    Q   — Tri-Sphere Eminence: 1-й удар гео, 2-й — прямая лунная кристаллизация
++
++Баффы (постоянные):
++    A1  Selenic Descent: 2-й удар sE + 60% ЗЩ (доп. базовый урон); C2: ещё +550%
++    A4  Layered Peaks: +15% ЗЩ за каждого ДРУГОГО гео, +60 МС за каждого гидро
++        (считается по составу отряда автоматически)
++    Moonsign: +0.7% базового урона лунной кристаллизации за 100 ЗЩ (макс. 14%) отряду
++    C1  доп. sE в начале комбо: его 2-й удар +220% (лунный бонус урона)
++    C2  +30% урона лунной кристаллизации отряду
++    C4  доп. удар 4-й атаки после sE — 250% урона (C0: 3 из 4, с C1: все 4)
++    C6  всегда полный: Radiance максимум (PHASE_RADIANCE_MAX) → +1.6% возвышения
++        за очко сверх 70 для sE и всей лунной кристаллизации Цзы Бай
++
++Окна отряда: NIGHTINGALE (Nightingale's Song Иллуги) — на всех ударах,
++FIELD_CATALOG (C1 Линеи) — на ударах лунной кристаллизации.
++
++Допущения: A1 (Selenic Descent) действует на все sE; максимум Phase Shift
++Radiance для C6 — 100.
++"""
++
++from __future__ import annotations
++from dataclasses import replace  # noqa: F401 — для patches= в файлах отрядов
++
++from ...core.buffs import OTHERS, SELF, TEAM, Buff, temp
++from ...core.entities import Character, Constellation, with_rotation
++from ...core.stats import S
++from ...core.sources import elemental, occ, lunar_crystallize
++from ..tags import *
++
++ZIBAI_NAME = "Цзы Бай"
++
++# --------------------------------------------------------------------------- #
++#  Множители (в долях ЗЩ)                                                      #
++# --------------------------------------------------------------------------- #
++NA_MV = {1: 1.0184, 2: 0.9378, 3: 0.6222, 4: 1.5692}          # 3-й удар — 2 инстанса
++NA_MV_C3 = {1: 1.2023, 2: 1.1071, 3: 0.7346, 4: 1.8525}
++NA4_EXTRA_MV, NA4_EXTRA_MV_C3 = 0.5302, 0.6259                 # доп. удар 4-й атаки (LC)
++STRIDE_MV = {1: 3.1055, 2: 2.5374}                             # Spirit Steed's Stride
++STRIDE_MV_C3 = {1: 3.6662, 2: 2.9956}
++BURST_MV = {1: 2.2853, 2: 3.1994}                              # Tri-Sphere Eminence
++BURST_MV_C5 = {1: 2.6979, 2: 3.7771}
++
++A1_DEF = 0.60                  # Selenic Descent: +60% ЗЩ ко 2-му удару sE
++C2_A1_DEF = 5.50               # C2: ещё +550% ЗЩ
++A4_DEF_PER_GEO = 0.15          # +15% ЗЩ за другого гео
++A4_EM_PER_HYDRO = 60.0         # +60 МС за гидро
++MOONSIGN_PER_100_DEF = 0.007   # +0.7% базового урона LC за 100 ЗЩ
++MOONSIGN_CAP = 0.14
++C1_BONUS = 2.20                # C1: +220%
++C2_LC_BONUS = 0.30             # C2: +30% урона лунной кристаллизации отряду
++C4_EXTRA_MULT = 2.50           # C4: доп. удар 4-й атаки — 250% исходного урона
++PHASE_RADIANCE_MAX = 100       # C6: тратится вся Radiance (считаем полной)
++C6_ELEVATION = 0.016 * (PHASE_RADIANCE_MAX - 70)   # 0.48
++
++#: Теги источников
++STRIDE_1 = "zibai_stride"      # 1-й удар sE (гео)
++STRIDE_2 = "zibai_stride2"     # 2-й удар sE (лунная кристаллизация)
++
++LOOPS_NA = 4                   # N4 × 4
++LOOPS_STRIDE = 4               # sE × 4 (C1: 5)
++ZIBAI_TIME = 14.8              # длительность комбо, с
++ZIBAI_C1_EXTRA_TIME = 0.3      # C1: анимация доп. sE
++
++
++def _zibai_def(ctx) -> float:
++    return ctx.stat(ZIBAI_NAME, "def", frozenset({ON}))
++
++
++ZIBAI_KIT = Character(
++    name=ZIBAI_NAME,
++    element="geo",
++    weapon_type="sword",
++    default_field=ON,
++    crit_mode="balance",
++    stats={
++        S.BASE_DEF: 957.0,
++        S.CRIT_VALUE: 0.988,
++    },
++    buffs=(
++        Buff(f"{S.FLAT_BASE_DMG}.{STRIDE_2}", lambda ctx: A1_DEF * ctx.own("def"),
++             target=SELF, source="Selenic Descent: 2-й удар sE +60% ЗЩ"),
++        Buff(S.DEF_PCT, lambda ctx: A4_DEF_PER_GEO * ctx.count_element("geo"),
++             target=SELF, source="Layered Peaks: +15% ЗЩ за каждого другого гео"),
++        Buff(S.BASE_EM, lambda ctx: A4_EM_PER_HYDRO * ctx.count_element("hydro"),
++             target=SELF, source="Layered Peaks: +60 МС за каждого гидро"),
++        Buff(f"{S.LUNAR_BASE_INC}.lunar_crystallize",
++             lambda ctx: min(MOONSIGN_CAP, MOONSIGN_PER_100_DEF * _zibai_def(ctx) / 100.0),
++             target=TEAM,
++             source="Moonsign Benediction: +0.7% базового урона LC за 100 ЗЩ (макс. 14%)"),
++    ),
++    sources=(),
++    constellations={
++        1: Constellation(
++            number=1, name="C1",
++            buffs=(
++                Buff(S.LUNAR_BONUS, C1_BONUS, target=SELF, requires=(ZIBAI_C1,),
++                     source="C1: первый sE после входа в режим, 2-й удар +220%"),
++            ),
++        ),
++        2: Constellation(
++            number=2, name="C2",
++            buffs=(
++                Buff(f"{S.LUNAR_BONUS}.lunar_crystallize", C2_LC_BONUS, target=TEAM,
++                     source="C2: +30% урона лунной кристаллизации отряду"),
++                Buff(f"{S.FLAT_BASE_DMG}.{STRIDE_2}", lambda ctx: C2_A1_DEF * ctx.own("def"),
++                     target=SELF, source="C2: 2-й удар sE ещё +550% ЗЩ"),
++            ),
++        ),
++        3: Constellation(
++            number=3, name="C3",
++            patches={
++                "1-й удар": lambda s: replace(s, mv=NA_MV_C3[1]),
++                "2-й удар": lambda s: replace(s, mv=NA_MV_C3[2]),
++                "3-й удар (2 инстанса)": lambda s: replace(s, mv=NA_MV_C3[3]),
++                "4-й удар": lambda s: replace(s, mv=NA_MV_C3[4]),
++                "4-й удар — доп. (LC)": lambda s: replace(s, mv=NA4_EXTRA_MV_C3),
++                "4-й удар — доп. после sE (LC)": lambda s: replace(s, mv=NA4_EXTRA_MV_C3),
++                "Spirit Steed's Stride — 1-й удар": lambda s: replace(s, mv=STRIDE_MV_C3[1]),
++                "Spirit Steed's Stride — 2-й удар (LC)": lambda s: replace(s, mv=STRIDE_MV_C3[2]),
++            },
++        ),
++        4: Constellation(
++            number=4, name="C4",
++            # применяется после C3 — умножаем текущий множитель
++            patches={
++                "4-й удар — доп. после sE (LC)": lambda s: replace(s, mv=s.mv * C4_EXTRA_MULT),
++            },
++        ),
++        5: Constellation(
++            number=5, name="C5",
++            patches={
++                "Tri-Sphere Eminence — 1-й удар": lambda s: replace(s, mv=BURST_MV_C5[1]),
++                "Tri-Sphere Eminence — 2-й удар (LC)": lambda s: replace(s, mv=BURST_MV_C5[2]),
++            },
++        ),
++        6: Constellation(
++            number=6, name="C6",
++            buffs=(
++                Buff(f"elevation.{STRIDE_1}", C6_ELEVATION, target=SELF,
++                     source="C6: возвышение 1-го удара sE +48%"),
++                Buff("elevation.lunar_crystallize", C6_ELEVATION, target=SELF,
++                     source="C6: возвышение лунной кристаллизации Цзы Бай +48%"),
++            ),
++        ),
++    },
++    note="ДД лунной кристаллизации, масштабирование от ЗЩ.",
++)
++
++#: Окна отряда: все удары под Nightingale's Song Иллуги,
++#: удары лунной кристаллизации ещё и тратят Field Catalog Линеи.
++_TAGS = (ON, NIGHTINGALE)
++_LC_TAGS = (ON, NIGHTINGALE, FIELD_CATALOG)
++
++ZIBAI_COMBO_DICT = {
++    # E N4 sE N4 sE Q N4 sE N4 sE — 14.8 с (C1: +sE в начале, +0.3 с)
++    "lc_combo": with_rotation(
++        ZIBAI_KIT,
++        sources=(
++            elemental("1-й удар", "def", NA_MV[1], "geo", "normal", [occ(LOOPS_NA, *_TAGS)]),
++            elemental("2-й удар", "def", NA_MV[2], "geo", "normal", [occ(LOOPS_NA, *_TAGS)]),
++            elemental("3-й удар (2 инстанса)", "def", NA_MV[3], "geo", "normal",
++                      [occ(LOOPS_NA * 2, *_TAGS)]),
++            elemental("4-й удар", "def", NA_MV[4], "geo", "normal", [occ(LOOPS_NA, *_TAGS)]),
++            # C0: первая N4 идёт сразу после E — без C4; остальные три — после sE
++            lunar_crystallize("4-й удар — доп. (LC)", "def", NA4_EXTRA_MV,
++                              [occ(1, *_LC_TAGS)], kind="normal"),
++            lunar_crystallize("4-й удар — доп. после sE (LC)", "def", NA4_EXTRA_MV,
++                              [occ(LOOPS_NA - 1, *_LC_TAGS)], kind="normal"),
++            elemental("Spirit Steed's Stride — 1-й удар", "def", STRIDE_MV[1], "geo", "skill",
++                      [occ(LOOPS_STRIDE, *_TAGS)], extra_tags=(STRIDE_1,)),
++            lunar_crystallize("Spirit Steed's Stride — 2-й удар (LC)", "def", STRIDE_MV[2],
++                              [occ(LOOPS_STRIDE, *_LC_TAGS)],
++                              kind="skill", extra_tags=(STRIDE_2,)),
++            elemental("Tri-Sphere Eminence — 1-й удар", "def", BURST_MV[1], "geo", "burst",
++                      [occ(1, *_TAGS)]),
++            lunar_crystallize("Tri-Sphere Eminence — 2-й удар (LC)", "def", BURST_MV[2],
++                              [occ(1, *_LC_TAGS)], kind="burst"),
++        ),
++        constellation_patches={
++            1: {
++                # +1 sE в начале: он и получает +220% (окно ZIBAI_C1)
++                "Spirit Steed's Stride — 1-й удар": lambda s: replace(
++                    s, occurrences=[occ(LOOPS_STRIDE + 1, *_TAGS)]),
++                "Spirit Steed's Stride — 2-й удар (LC)": lambda s: replace(
++                    s, occurrences=[occ(1, *_LC_TAGS, ZIBAI_C1),
++                                    occ(LOOPS_STRIDE, *_LC_TAGS)]),
++                # теперь все 4 серии N4 идут после sE
++                "4-й удар — доп. (LC)": lambda s: replace(s, occurrences=[]),
++                "4-й удар — доп. после sE (LC)": lambda s: replace(
++                    s, occurrences=[occ(LOOPS_NA, *_LC_TAGS)]),
++            },
++        },
++    ),
++}
++
++
++def zibai_time(constellation: int) -> float:
++    """Длительность комбо с учётом доп. sE на C1+."""
++    return ZIBAI_TIME + (ZIBAI_C1_EXTRA_TIME if constellation >= 1 else 0.0)
+diff --git a/gi_damage/data/tags.py b/gi_damage/data/tags.py
+index 77b0aec..c9e32ca 100644
+--- a/gi_damage/data/tags.py
++++ b/gi_damage/data/tags.py
+@@ -99,10 +99,22 @@ WRIO_C1 = "wriothesley_c1"
+ #: Guidance of Theosis (Methexis): активный персонаж провёл на поле 3 с → +300 АТК
+ THEOSIS = "guidance_of_theosis"
+ 
++# --- Цзы Бай ------------------------------------ #
++#: Первый Spirit Steed's Stride после входа в Lunar Phase Shift (C1: +220%)
++ZIBAI_C1 = "zibai_c1"
++
++# --- Линея ------------------------------------ #
++#: Удар лунной кристаллизации, тратящий стак Field Catalog (C1 Линеи)
++FIELD_CATALOG = "field_catalog"
++
++# --- Иллуги ------------------------------------ #
++#: Удар активного персонажа, тратящий стак Nightingale's Song (взрыв Иллуги)
++NIGHTINGALE = "nightingale_song"
++
+ #Элегия
+ ELEGY = "ELEGY"
+ 
+ __all__ = ["ON", "OFF", "INST", "DREAM", "FROSTGLOW", "BREEZEBORNE",
+            "ARMED", "DA1", "DA2", "DA3", "DA4", "DA5", "DA6","VODYA_LEAD","VODYA_CHORUS","TTDS_HALF","VV_CRYO","VV_PYRO"
+            ,"VV_HYDRO","VV_ELECTRO","CATS_TAIL","SEVEN_SACRED","MIZUKI_C1","DECODING","TTDS_FULL","SANDRONE_CA_STACKS_1","SANDRONE_CA_STACKS_2","SANDRONE_CA_STACKS_3",
+-           "NOBLE","PACTSWORN","TOGETHER_WE_RISE","SESSHOU_SAKURA","STARSAME","ELEGY","OFFENSIVE_DIRECTIVE","WRIO_C1","THEOSIS","VODYA_LEAD_ELEM"]
++           "NOBLE","PACTSWORN","TOGETHER_WE_RISE","SESSHOU_SAKURA","STARSAME","ELEGY","OFFENSIVE_DIRECTIVE","WRIO_C1","THEOSIS","VODYA_LEAD_ELEM","ZIBAI_C1","FIELD_CATALOG","NIGHTINGALE"]
+diff --git a/gi_damage/data/weapons.py b/gi_damage/data/weapons.py
+index cf21012..27159ce 100644
+--- a/gi_damage/data/weapons.py
++++ b/gi_damage/data/weapons.py
+@@ -708,5 +708,43 @@ KAGURA = Weapon(
+     note="",
+ )
+ 
++# --------------------------------------------------------------------------- #
++#  Оружие отрядов лунной кристаллизации (значения R5)                          #
++# --------------------------------------------------------------------------- #
++FLUTE_OF_EZPITZAL = Weapon(
++    name="Флейта Эзпитцаля",
++    base_atk=454.0,
++    refinement=5,
++    stats={S.DEF_PCT: 0.69},
++    stats_by_refinement={5: {S.DEF_PCT: 0.32}},
++    note="Одноручный меч. Пассивка R5: +32% ЗЩ.",
++)
++
++COVENANT_FROST_SNOW = Weapon(
++    name="Завет мороза и снега",
++    base_atk=510.0,
++    refinement=5,
++    stats={S.DEF_PCT: 0.517},
++    stats_by_refinement={5: {S.BASE_EM: 200.0}},
++    note="Лук. Пассивка R5: +200 МС.",
++)
++
++DRAGONS_BANE = Weapon(
++    name="Погибель драконов",
++    base_atk=454.0,
++    refinement=5,
++    stats={S.BASE_EM: 221.0},
++    stats_by_refinement={5: {S.DMG_BONUS: 0.36}},
++    note="Копьё. Пассивка R5: +36% урона.",
++)
++
++PROTOTYPE_AMBER = Weapon(
++    name="Прототип: Янтарь",
++    base_atk=510.0,
++    refinement=5,
++    stats={S.HP_PCT: 0.413},
++    note="Катализатор. Пассивка не учитывается.",
++)
++
+ ALL = {w.name: w for w in (WANDERER_SONG, SUNNY_MORNING_SLEEP_IN, EXAIPHANES,
+                            SILVER_LIGHT, SACFRAG,FAV_BOW)}
+diff --git a/gi_damage/teams/mizuki_diona_cmc_faruzan/rosters.py b/gi_damage/teams/mizuki_diona_cmc_faruzan/rosters.py
+index c6be48a..0c2de4e 100644
+--- a/gi_damage/teams/mizuki_diona_cmc_faruzan/rosters.py
++++ b/gi_damage/teams/mizuki_diona_cmc_faruzan/rosters.py
+@@ -143,7 +143,7 @@ def main(argv: list[str]) -> int:
+     print(roster_report(roster4.run(), title="созвездия Одетта", ascending=True))
+     
+     roster5 = Roster(base, [
+-        Variation(slot="Мидзуки", artifact_sets=[(VIRIDESCENT,), (AUBADE,NIGHT_SKY), (SCARLET_PROOF,)]),
++        Variation(slot="Мидзуки", artifact_sets=[(VIRIDESCENT,), (AUBADE.at(2),NIGHT_SKY.at(2)), (SCARLET_PROOF,)]),
+     ], tweak=keep_viridescent)
+     print("========================")
+     print("=== Ростер: наборы артефактов Мидзуки ===")
+diff --git a/gi_damage/teams/mizuki_faruzan_cmc_odette/rosters.py b/gi_damage/teams/mizuki_faruzan_cmc_odette/rosters.py
+index 5ffa95d..2a4dee2 100644
+--- a/gi_damage/teams/mizuki_faruzan_cmc_odette/rosters.py
++++ b/gi_damage/teams/mizuki_faruzan_cmc_odette/rosters.py
+@@ -147,7 +147,7 @@ def main(argv: list[str]) -> int:
+     print(roster_report(roster4.run(), title="созвездия Одетта", ascending=True))
+     
+     roster5 = Roster(base, [
+-        Variation(slot="Мидзуки", artifact_sets=[(VIRIDESCENT,), (AUBADE,NIGHT_SKY), (SCARLET_PROOF,)]),
++        Variation(slot="Мидзуки", artifact_sets=[(VIRIDESCENT,), (AUBADE.at(2),NIGHT_SKY.at(2)), (SCARLET_PROOF,)]),
+     ], tweak=keep_viridescent)
+     print("========================")
+     print("=== Ростер: наборы артефактов Мидзуки ===")
+diff --git a/gi_damage/teams/mizuki_faruzan_diona_odette/rosters.py b/gi_damage/teams/mizuki_faruzan_diona_odette/rosters.py
+index c6be48a..0c2de4e 100644
+--- a/gi_damage/teams/mizuki_faruzan_diona_odette/rosters.py
++++ b/gi_damage/teams/mizuki_faruzan_diona_odette/rosters.py
+@@ -143,7 +143,7 @@ def main(argv: list[str]) -> int:
+     print(roster_report(roster4.run(), title="созвездия Одетта", ascending=True))
+     
+     roster5 = Roster(base, [
+-        Variation(slot="Мидзуки", artifact_sets=[(VIRIDESCENT,), (AUBADE,NIGHT_SKY), (SCARLET_PROOF,)]),
++        Variation(slot="Мидзуки", artifact_sets=[(VIRIDESCENT,), (AUBADE.at(2),NIGHT_SKY.at(2)), (SCARLET_PROOF,)]),
+     ], tweak=keep_viridescent)
+     print("========================")
+     print("=== Ростер: наборы артефактов Мидзуки ===")
+diff --git a/gi_damage/teams/mizuki_faruzan_qiqi_odette/rosters.py b/gi_damage/teams/mizuki_faruzan_qiqi_odette/rosters.py
+index c6be48a..0c2de4e 100644
+--- a/gi_damage/teams/mizuki_faruzan_qiqi_odette/rosters.py
++++ b/gi_damage/teams/mizuki_faruzan_qiqi_odette/rosters.py
+@@ -143,7 +143,7 @@ def main(argv: list[str]) -> int:
+     print(roster_report(roster4.run(), title="созвездия Одетта", ascending=True))
+     
+     roster5 = Roster(base, [
+-        Variation(slot="Мидзуки", artifact_sets=[(VIRIDESCENT,), (AUBADE,NIGHT_SKY), (SCARLET_PROOF,)]),
++        Variation(slot="Мидзуки", artifact_sets=[(VIRIDESCENT,), (AUBADE.at(2),NIGHT_SKY.at(2)), (SCARLET_PROOF,)]),
+     ], tweak=keep_viridescent)
+     print("========================")
+     print("=== Ростер: наборы артефактов Мидзуки ===")
+diff --git a/gi_damage/teams/mizuki_qiqi_cmc_faruzan/rosters.py b/gi_damage/teams/mizuki_qiqi_cmc_faruzan/rosters.py
+index c6be48a..0c2de4e 100644
+--- a/gi_damage/teams/mizuki_qiqi_cmc_faruzan/rosters.py
++++ b/gi_damage/teams/mizuki_qiqi_cmc_faruzan/rosters.py
+@@ -143,7 +143,7 @@ def main(argv: list[str]) -> int:
+     print(roster_report(roster4.run(), title="созвездия Одетта", ascending=True))
+     
+     roster5 = Roster(base, [
+-        Variation(slot="Мидзуки", artifact_sets=[(VIRIDESCENT,), (AUBADE,NIGHT_SKY), (SCARLET_PROOF,)]),
++        Variation(slot="Мидзуки", artifact_sets=[(VIRIDESCENT,), (AUBADE.at(2),NIGHT_SKY.at(2)), (SCARLET_PROOF,)]),
+     ], tweak=keep_viridescent)
+     print("========================")
+     print("=== Ростер: наборы артефактов Мидзуки ===")
+diff --git a/gi_damage/teams/zibai_linnea_columbina_illuga/builds.py b/gi_damage/teams/zibai_linnea_columbina_illuga/builds.py
+new file mode 100644
+index 0000000..b7ae78e
+--- /dev/null
++++ b/gi_damage/teams/zibai_linnea_columbina_illuga/builds.py
+@@ -0,0 +1,150 @@
++"""
++Отряд лунной кристаллизации: Цзы Бай / Линея / Колумбина / Иллуги.
++
++Все четверо — Moonsign, поэтому эффекты Ascendant Gleam активны.
++
++Реакции лунной кристаллизации (Moondrift Harmony — удары лунных клеток):
++    18 — пока Цзы Бай на поле, 6 — в остальное время;
++    C2 Линеи: ещё 12 (6 + 6) от Heavy Overdrive Hammer.
++    A4 Колумбины (Law of the New Moon): в среднем ×1.33 к числу ударов.
++
++Окна баффов:
++    NIGHTINGALE (взрыв Иллуги) — все удары Цзы Бай и удар Колумбины от C1;
++    FIELD_CATALOG (C1 Линеи)   — удары LC Линеи (4), Цзы Бай (9, с C1 — 10),
++                                 Колумбины (3).
++"""
++
++from __future__ import annotations
++
++from typing import Dict, Sequence
++
++from ...core.buffs import OTHERS, SELF, TEAM, Buff, temp
++from ...core.engine import Config, Team
++from ...core.entities import Build, Enemy, ArtifactSet
++from ...core.reactions import lunar_crystallize_reaction
++from ...core.stats import S
++from ...core.utilits import merge_dicts
++from ...data.artifacts import *
++from ...data.artifacts_presets import *
++from ...data.tags import *
++from ...data.characters.zibai import ZIBAI_COMBO_DICT, ZIBAI_NAME, zibai_time
++from ...data.characters.linnea import LINNEA_COMBO_DICT, LINNEA_NAME, LINNEA_TIME
++from ...data.characters.columbina import (COLUMBINA_COMBO_DICT, COLUMBINA_NAME,
++                                          COLUMBINA_TIME, MOONDRIFT_EXTRA)
++from ...data.characters.illuga import ILLUGA_COMBO_DICT, ILLUGA_NAME, ILLUGA_TIME
++from ...data.weapons import *
++
++TEAM_BUFFS: tuple = ()
++
++ROTATION = "Линея E/Колумбина EQ/Иллуги EQ/Цзы Бай E N4sE N4sE Q N4sE N4sE"
++
++#: Реакции за ротацию (до множителя A4 Колумбины)
++LC_ON_ZIBAI = 18
++LC_OFF_ZIBAI = 6
++LC_LINNEA_C2_ON, LC_LINNEA_C2_OFF = 6, 6
++
++
++def enemy() -> Enemy:
++    return Enemy(res={"geo": 0.10, "hydro": 0.10}, def_mult=0.4875, elevation=0.0)
++
++
++def reactions(linnea_c: int, with_columbina: bool = True):
++    """Удары лунных клеток за ротацию."""
++    k = 1.0 + (MOONDRIFT_EXTRA if with_columbina else 0.0)
++    on = LC_ON_ZIBAI + (LC_LINNEA_C2_ON if linnea_c >= 2 else 0)
++    off = LC_OFF_ZIBAI + (LC_LINNEA_C2_OFF if linnea_c >= 2 else 0)
++    return (
++        lunar_crystallize_reaction(on * k, name="Лунная кристаллизация (Цзы Бай на поле)"),
++        lunar_crystallize_reaction(off * k, name="Лунная кристаллизация (Цзы Бай вне поля)",
++                                   field_override={ZIBAI_NAME: OFF}),
++    )
++
++
++def zibai_build(constellation: int = 0, weapon=FLUTE_OF_EZPITZAL, artifacts=(NIGHT_SKY,),
++                main_stats={S.DEF_PCT: 0.583 * 2, S.CRIT_VALUE: 0.622},
++                extra_buffs: Sequence[Buff] = ()) -> Build:
++    return Build(
++        character=ZIBAI_COMBO_DICT["lc_combo"],
++        constellation=constellation,
++        weapon=weapon,
++        artifacts=artifacts,
++        extra_stats=merge_dicts(main_stats, STANDART_SUBSTAT_PRESET),
++        extra_buffs=tuple(extra_buffs),
++        time=zibai_time(constellation),
++    )
++
++
++def linnea_build(constellation: int = 0, weapon=COVENANT_FROST_SNOW, artifacts=(AUBADE,),
++                 main_stats={S.DEF_PCT: 0.583 * 2, S.CRIT_VALUE: 0.622},
++                 extra_buffs: Sequence[Buff] = ()) -> Build:
++    return Build(
++        character=LINNEA_COMBO_DICT["super_power"],
++        constellation=constellation,
++        weapon=weapon,
++        artifacts=artifacts,
++        extra_stats=merge_dicts(main_stats, STANDART_SUBSTAT_PRESET),
++        extra_buffs=tuple(extra_buffs),
++        time=LINNEA_TIME,
++    )
++
++
++def columbina_build(constellation: int = 0, weapon=PROTOTYPE_AMBER, artifacts=(AUBADE,),
++                    main_stats={S.HP_PCT: 0.466 * 2, S.CRIT_VALUE: 0.622},
++                    extra_buffs: Sequence[Buff] = ()) -> Build:
++    return Build(
++        character=COLUMBINA_COMBO_DICT["lc_support"],
++        constellation=constellation,
++        weapon=weapon,
++        artifacts=artifacts,
++        extra_stats=merge_dicts(main_stats, STANDART_SUBSTAT_PRESET),
++        extra_buffs=tuple(extra_buffs),
++        time=COLUMBINA_TIME,
++    )
++
++
++def illuga_build(constellation: int = 6, weapon=DRAGONS_BANE, artifacts=(SERENADE,),
++                 main_stats={S.BASE_EM: 187.0 * 3},
++                 extra_buffs: Sequence[Buff] = ()) -> Build:
++    return Build(
++        character=ILLUGA_COMBO_DICT["eq"],
++        constellation=constellation,
++        weapon=weapon,
++        artifacts=artifacts,
++        extra_stats=merge_dicts(main_stats, STANDART_SUBSTAT_PRESET),
++        extra_buffs=tuple(extra_buffs),
++        time=ILLUGA_TIME,
++    )
++
++
++def make_team(name: str, zibai_c: int = 0, linnea_c: int = 0,
++              columbina_c: int = 0, illuga_c: int = 6,
++              zibai_weapon=FLUTE_OF_EZPITZAL, linnea_weapon=COVENANT_FROST_SNOW,
++              columbina_weapon=PROTOTYPE_AMBER, illuga_weapon=DRAGONS_BANE,
++              zibai_artifacts=(NIGHT_SKY,), linnea_artifacts=(AUBADE,),
++              columbina_artifacts=(AUBADE,), illuga_artifacts=(SERENADE,)) -> Team:
++    return Team(
++        name=name,
++        builds=[
++            zibai_build(zibai_c, zibai_weapon, zibai_artifacts),
++            linnea_build(linnea_c, linnea_weapon, linnea_artifacts),
++            columbina_build(columbina_c, columbina_weapon, columbina_artifacts),
++            illuga_build(illuga_c, illuga_weapon, illuga_artifacts),
++        ],
++        enemy=enemy(),
++        reactions=reactions(linnea_c),
++        buffs=TEAM_BUFFS,
++        rotation=ROTATION,
++        config=Config(),
++    )
++
++
++def team_name(zibai_c=0, linnea_c=0, columbina_c=0, illuga_c=6) -> str:
++    return (f"C{zibai_c}R5 Цзы Бай, C{linnea_c}R5 Линея, "
++            f"C{columbina_c}R5 Колумбина, C{illuga_c}R5 Иллуги")
++
++
++BASE_NAME = team_name()
++
++
++def all_teams() -> Dict[str, Team]:
++    return {BASE_NAME: make_team(BASE_NAME)}
+diff --git a/gi_damage/teams/zibai_linnea_columbina_illuga/rosters.py b/gi_damage/teams/zibai_linnea_columbina_illuga/rosters.py
+new file mode 100644
+index 0000000..5e4b257
+--- /dev/null
++++ b/gi_damage/teams/zibai_linnea_columbina_illuga/rosters.py
+@@ -0,0 +1,52 @@
++#!/usr/bin/env python3
++"""
++Запуск:  python -m gi_damage.teams.zibai_linnea_columbina_illuga.rosters
++         python -m gi_damage.teams.zibai_linnea_columbina_illuga.rosters --details
++
++Созвездия сравниваются через make_team: у Цзы Бай от созвездия зависит время
++ротации, у Линеи — число реакций (C2).
++"""
++
++from __future__ import annotations
++
++import sys
++from pathlib import Path
++
++sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
++
++from gi_damage.core.report import compare, hit_details, source_breakdown, team_summary
++from gi_damage.teams.zibai_linnea_columbina_illuga.builds import (
++    BASE_NAME, all_teams, make_team, team_name)
++
++
++def _section(title: str, teams) -> None:
++    print(f"=== {title} ===")
++    print(compare([t.compute() for t in teams]))
++    print()
++
++
++def main(argv: list[str]) -> int:
++    details = "--details" in argv
++
++    for team in all_teams().values():
++        result = team.compute()
++        print(team_summary(result))
++        if details:
++            print(source_breakdown(result))
++            print()
++            print(hit_details(result))
++            print()
++
++    _section("Созвездия Цзы Бай", [make_team(team_name(zibai_c=c), zibai_c=c)
++                                   for c in (0, 1, 2, 3, 4, 6)])
++    _section("Созвездия Линеи", [make_team(team_name(linnea_c=c), linnea_c=c)
++                                 for c in (0, 1, 2, 4, 6)])
++    _section("Созвездия Колумбины", [make_team(team_name(columbina_c=c), columbina_c=c)
++                                     for c in (0, 1, 2, 4, 6)])
++    _section("Созвездия Иллуги", [make_team(team_name(illuga_c=c), illuga_c=c)
++                                  for c in (0, 2, 3, 4, 6)])
++    return 0
++
++
++if __name__ == "__main__":
++    raise SystemExit(main(sys.argv[1:]))

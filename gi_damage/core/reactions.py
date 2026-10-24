@@ -20,10 +20,14 @@ from typing import Dict, List, Optional, Sequence, Tuple, Mapping
 
 from .buffs import State, state
 from .formulas import (SSW_ANEMO_MULTIPLIER, SSW_VORTEX_MULTIPLIER,
-                       STELLAR_SWIRL_BASE_DMG)
+                       STELLAR_SWIRL_BASE_DMG, LUNAR_REACTION_MULTIPLIER)
 
 #: Доли распределения урона реакции по персонажам отряда
 DEFAULT_WEIGHTS: Tuple[float, ...] = (3 / 5, 3 / 10, 1 / 20, 1 / 20)
+
+#: Модели реакций
+REACTION_SSW = "stellar_swirl"
+REACTION_LUNAR_CRYSTALLIZE = "lunar_crystallize"
 
 
 @dataclass
@@ -57,6 +61,11 @@ class ReactionEvent:
     base_dmg: float = STELLAR_SWIRL_BASE_DMG
     res_override: Optional[float] = None
     weights: Tuple[float, ...] = DEFAULT_WEIGHTS
+    #: формула: "stellar_swirl" (по умолчанию) или "lunar_crystallize"
+    model: str = REACTION_SSW
+    #: на поле/вне поля для отдельных персонажей в момент реакции:
+    #: {"Цзы Бай": "off_field"} — реакция происходит, пока она вне поля
+    field_override: Mapping[str, str] = field(default_factory=dict)
     note: str = ""
 
 
@@ -89,6 +98,31 @@ def ssw_vortex(stacks: int, count: float, *tags: str,
         primary_from=primary_from,
         tags=tuple(tags),
         count=count,
+        **kwargs,
+    )
+
+
+# --------------------------------------------------------------------------- #
+#  Лунная кристаллизация                                                       #
+# --------------------------------------------------------------------------- #
+def lunar_crystallize_reaction(count: float, *tags: str, **kwargs) -> ReactionEvent:
+    """Урон реакции лунной кристаллизации (Moondrift Harmony — удары Лунных клеток).
+
+    Каждая реакция создаёт 3 клетки; за каждые 3 реакции каждая из 3 клеток
+    бьёт один раз — то есть ударов клеток столько же, сколько реакций.
+    count — число ударов клеток за ротацию.
+
+    Урон считается для каждого персонажа и распределяется 60/30/5/5 по
+    убыванию (главный — сильнейший, а не триггер).
+    """
+    return ReactionEvent(
+        name=kwargs.pop("name", "Лунная кристаллизация (клетки)"),
+        element=kwargs.pop("element", "geo"),
+        multiplier=LUNAR_REACTION_MULTIPLIER["lunar_crystallize"],
+        tags=tuple(tags),
+        count=count,
+        weights=(0.60, 0.30, 0.05, 0.05),
+        model=REACTION_LUNAR_CRYSTALLIZE,
         **kwargs,
     )
 

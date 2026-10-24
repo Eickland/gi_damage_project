@@ -65,6 +65,43 @@ def stellar_conduct_multiplier(polar_stacks:int = 1):
     else:
         return 1.5 + (polar_stacks-2)*0.05
 
+# --------------------------------------------------------------------------- #
+#  Лунные реакции                                                              #
+# --------------------------------------------------------------------------- #
+#: Множитель прямого урона лунной реакции (Direct Lunar-…), по типу реакции
+LUNAR_DIRECT_FACTOR = {"lunar_crystallize": 1.6}
+#: Базовый множитель урона лунной реакции (Reaction Lunar-…):
+#: урон = 1446.85 × множитель × …  (1.6 — именно у лунной кристаллизации)
+LUNAR_REACTION_MULTIPLIER = {"lunar_crystallize": 1.6}
+
+
+def lunar_multiplier(stats: Stats, *tags: str) -> float:
+    """(1 + 6·МС/(МС+2000) + лунный бонус урона)."""
+    return 1.0 + em_swirl_term(stats.em) + stats.lunar_bonus(*tags)
+
+
+def lunar_direct(stat_value: float, mv: float, stats: Stats, tags,
+                 res_mult: float, crit: float, elevation: float,
+                 flat_base: float = 0.0,
+                 reaction: str = "lunar_crystallize") -> float:
+    """Прямой урон лунной реакции (Direct Lunar-…)."""
+    base = (LUNAR_DIRECT_FACTOR[reaction] * stat_value * mv
+            * (1.0 + stats.lunar_base_inc(*tags))
+            * lunar_multiplier(stats, *tags))
+    return max(0.0, (base + flat_base) * res_mult * crit * (1.0 + elevation))
+
+
+def lunar_reaction(multiplier: float, stats: Stats, tags,
+                   res_mult: float, crit: float, elevation: float,
+                   base_dmg: float = STELLAR_SWIRL_BASE_DMG,
+                   flat_base: float = 0.0) -> float:
+    """Урон лунной реакции (Reaction Lunar-…): 1446.85 × базовый множитель × …"""
+    base = (base_dmg * multiplier
+            * (1.0 + stats.lunar_base_inc(*tags))
+            * lunar_multiplier(stats, *tags))
+    return max(0.0, (base + flat_base) * res_mult * crit * (1.0 + elevation))
+
+
 def elemental_damage(base: float, stats: Stats, tags, def_mult: float,
                      res_mult: float, crit: float, elevation: float,
                      flat_base: float = 0.0) -> float:

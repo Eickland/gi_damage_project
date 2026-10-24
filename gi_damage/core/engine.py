@@ -21,10 +21,10 @@ from typing import Dict, Iterable, List, Optional, Sequence, Tuple
 
 from .buffs import Buff, BuffContext, State, state
 from .entities import Build, Enemy
-from .formulas import (defense_multiplier, elemental_damage, stellar_swirl_direct,
+from .formulas import (defense_multiplier, elemental_damage, lunar_direct, lunar_reaction, stellar_swirl_direct,
                        stellar_swirl_reaction,stellar_conduct_direct)
 from .reactions import ReactionEvent, distribute, pick_primary
-from .sources import ELEMENTAL, STELLAR_SWIRL,STELLAR_CONDUCT, DamageSource
+from .sources import ELEMENTAL, STELLAR_SWIRL,STELLAR_CONDUCT, LUNAR_CRYSTALLIZE, LUNAR, DamageSource
 from .stats import S, Stats, crit_multiplier
 from .cycle import Phase
 
@@ -284,7 +284,7 @@ class Team:
             per_char: Dict[str, float] = {}
             for b in self.builds:
                 st = frozenset(
-                    {b.effective_field()}
+                    {event.field_override.get(b.name, b.effective_field())}
                     | set(event.tags)
                     | (set(event.trigger_tags) if b.name == event.trigger else set())
                     | set(event.char_tags.get(b.name, ()))
@@ -356,6 +356,10 @@ class Team:
                 stat_value, mv, stats, tags, res, crit, elevation,
                 flat_base=src.flat_base + stats.flat_base_dmg(*tags),
                 polar_stacks=src.polar_stacks)
+        elif src.model == LUNAR_CRYSTALLIZE:
+            value = lunar_direct(
+                stat_value, mv, stats, tags, res, crit, elevation,
+                flat_base=src.flat_base + stats.flat_base_dmg(*tags))
         else:
             def_mult = self.enemy.def_mult if src.applies_def else 1.0
             ignore = stats.def_ignore(*tags)
@@ -388,10 +392,17 @@ class Team:
         return self.enemy.res_multiplier(element, stats.res_reduction(element))
 
     def _reaction_damage(self, event: ReactionEvent, stats: Stats, b: Build) -> float:
-        tags = (event.element, "stellar_swirl", "reaction")
+        if event.model == LUNAR_CRYSTALLIZE:
+            tags = (event.element, LUNAR_CRYSTALLIZE, LUNAR, "reaction")
+        else:
+            tags = (event.element, "stellar_swirl", "reaction")
         crit = crit_multiplier(stats, b.effective_crit_mode(), *tags)
         res = self._res(event.element, stats, event.res_override)
         elevation = self.enemy.elevation + stats.elevation(*tags)
+        if event.model == LUNAR_CRYSTALLIZE:
+            return lunar_reaction(
+                event.multiplier, stats, tags, res, crit, elevation,
+                base_dmg=event.base_dmg, flat_base=stats.flat_base_dmg(*tags))
         return stellar_swirl_reaction(
             event.multiplier, stats, tags, res, crit, elevation,
             base_dmg=event.base_dmg, flat_base=stats.flat_base_dmg(*tags),

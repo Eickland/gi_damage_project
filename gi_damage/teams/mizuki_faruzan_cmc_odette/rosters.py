@@ -147,7 +147,7 @@ def main(argv: list[str]) -> int:
     print(roster_report(roster4.run(), title="созвездия Одетта", ascending=True))
     
     roster5 = Roster(base, [
-        Variation(slot="Мидзуки", artifact_sets=[(VIRIDESCENT,), (AUBADE,NIGHT_SKY), (SCARLET_PROOF,)]),
+        Variation(slot="Мидзуки", artifact_sets=[(VIRIDESCENT,), (AUBADE.at(2),NIGHT_SKY.at(2)), (SCARLET_PROOF,)]),
     ], tweak=keep_viridescent)
     print("========================")
     print("=== Ростер: наборы артефактов Мидзуки ===")

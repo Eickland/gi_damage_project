@@ -35,6 +35,10 @@ from .buffs import State, state
 ELEMENTAL = "elemental"
 STELLAR_SWIRL = "stellar_swirl"
 STELLAR_CONDUCT = "stellar_conduct"
+#: Прямой урон лунной кристаллизации (Direct Lunar-Crystallize)
+LUNAR_CRYSTALLIZE = "lunar_crystallize"
+#: Общий тег всех лунных реакций (для "elevation.lunar", "lunar_bonus" и т.п.)
+LUNAR = "lunar"
 
 MotionValue = Union[float, Callable[["object"], float]]
 
@@ -125,3 +129,24 @@ def stellar_conduct(name: str, scaling: str, mv: MotionValue, element: str,
     return DamageSource(name=name, scaling=scaling, mv=mv, element=element,
                         kind=kind, model=STELLAR_CONDUCT,
                         occurrences=list(occurrences), **kwargs)
+
+
+def lunar_crystallize(name: str, scaling: str, mv: MotionValue,
+                      occurrences: Sequence[Occurrence], kind: str = "skill",
+                      element: str = "geo", **kwargs) -> DamageSource:
+    """Прямой урон лунной кристаллизации (гео урон, считающийся уроном реакции).
+
+        База = 1.6 × Стат × Множитель × (1 + Base Increase)
+               × (1 + 6·МС/(МС+2000) + лунный бонус урона)
+        Итог = (База + Доп. базовый урон) × Сопр. × Крит × Возвышение
+
+    Защита цели не учитывается. Теги удара: стихия, тип, "lunar_crystallize",
+    "lunar" — поэтому работают ключи "lunar_bonus", "lunar_bonus.lunar_crystallize",
+    "elevation.lunar", "flat_base_dmg.lunar_crystallize" и т.д.
+    """
+    kwargs.setdefault("applies_def", False)
+    extra = tuple(kwargs.pop("extra_tags", ()))
+    return DamageSource(name=name, scaling=scaling, mv=mv, element=element,
+                        kind=kind, model=LUNAR_CRYSTALLIZE,
+                        occurrences=list(occurrences),
+                        extra_tags=(LUNAR,) + extra, **kwargs)

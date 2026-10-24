@@ -65,6 +65,11 @@ class S:
     SC_BONUS = "sc_bonus"
     SC_BASE_INC = "sc_base_inc"
 
+    # Лунные реакции (Lunar): общий бонус "lunar_bonus" и точечные,
+    # например "lunar_bonus.lunar_crystallize"
+    LUNAR_BONUS = "lunar_bonus"        # «Lunar-… DMG Bonus%» — внутрь скобки с МС
+    LUNAR_BASE_INC = "lunar_base_inc"  # «Base DMG Increase%» лунных реакций — (1 + x)
+
     # Прочее
     ELEVATION = "elevation"    # «Возвышение», итоговый множитель = 1 + elevation
     FLAT_BASE_DMG = "flat_base_dmg"  # «Дополнительный базовый урон» (звёздные модели)
@@ -174,6 +179,12 @@ class Stats:
     
     def sc_bonus(self, *tags: str) -> float:
         return self._tagged_sum(S.SC_BONUS, tags)
+
+    def lunar_bonus(self, *tags: str) -> float:
+        return self._tagged_sum(S.LUNAR_BONUS, tags)
+
+    def lunar_base_inc(self, *tags: str) -> float:
+        return self._tagged_sum(S.LUNAR_BASE_INC, tags)
 
     def ssw_base_inc(self, *tags: str) -> float:
         return self._tagged_sum(S.SSW_BASE_INC, tags)

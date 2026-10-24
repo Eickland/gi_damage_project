@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from ..core.buffs import SELF, Buff, TEAM, temp
+from ..core.buffs import SELF, Buff, TEAM, temp, OTHERS
 from ..core.entities import Weapon
 from ..core.stats import S
 from .tags import BREEZEBORNE, TTDS_HALF, ON,TTDS_FULL, ELEGY
@@ -705,6 +705,103 @@ KAGURA = Weapon(
         5:{"dmg_bonus.skill":0.24*6,S.SC_BONUS:0.24*3},
         },
     
+    note="",
+)
+
+# --------------------------------------------------------------------------- #
+#  Оружие отрядов лунной кристаллизации (значения R5)                          #
+# --------------------------------------------------------------------------- #
+FLUTE_OF_EZPITZAL = Weapon(
+    name="Флейта",
+    base_atk=454.0,
+    refinement=5,
+    stats={S.DEF_PCT: 0.69},
+    stats_by_refinement={5: {S.DEF_PCT: 0.32}},
+
+    note="Одноручный меч. Пассивка R5: +32% ЗЩ.",
+)
+
+COVENANT_FROST_SNOW = Weapon(
+    name="Завет мороза",
+    base_atk=510.0,
+    refinement=5,
+    stats={S.DEF_PCT: 0.517},
+    stats_by_refinement={5: {S.BASE_EM: 200.0}},
+    note="Лук. Пассивка R5: +200 МС.",
+)
+
+salutation_returned_bonus = {r: 0.4 + 0.1*(r-1) for r in range(1,6)}
+
+GOLDEN_OATH = Weapon(
+    name="Золотая клятва",
+    base_atk=542.0,
+    refinement=1,
+    stats={S.CRIT_VALUE: 0.882},
+    stats_by_refinement={1: {S.DEF_PCT: 0.16},
+                         2: {S.DEF_PCT: 0.16*1.25},
+                        3: {S.DEF_PCT: 0.16*1.5},
+                        4: {S.DEF_PCT: 0.16*1.75},
+                        5: {S.DEF_PCT: 0.16*2},},
+    buffs_by_refinement={r: (Buff("dmg_bonus.geo",salutation_returned_bonus[r],target=SELF),
+                             Buff("lunar_bonus.lunar_crystallize",salutation_returned_bonus[r],target=SELF),
+                             Buff("dmg_bonus.geo",salutation_returned_bonus[r]/2,target=OTHERS),
+                             Buff("lunar_bonus.lunar_crystallize",salutation_returned_bonus[r]/2,target=OTHERS),)
+                         for r in salutation_returned_bonus},
+    note="",
+)
+
+DRAGONS_BANE = Weapon(
+    name="Погибель драконов",
+    base_atk=454.0,
+    refinement=5,
+    stats={S.BASE_EM: 221.0},
+    stats_by_refinement={5: {S.DMG_BONUS: 0.36}},
+    note="Копьё. Пассивка R5: +36% урона.",
+)
+
+PROTOTYPE_AMBER = Weapon(
+    name="Янтарь",
+    base_atk=510.0,
+    refinement=5,
+    stats={S.HP_PCT: 0.413},
+    note="Катализатор. Пассивка не учитывается.",
+)
+
+nocturne_bonus = {r: 0.4 + 0.1*(r-1) for r in range(1,6)}
+
+NOCTURNE = Weapon(
+    name="Ноктюрн",
+    base_atk=542.0,
+    refinement=1,
+    stats={S.CRIT_VALUE: 0.882},
+    stats_by_refinement={1: {S.HP_PCT: 0.24,
+                             "crit_value.lunar_crystallize":0.6},
+                         2: {S.HP_PCT: 0.28,
+                              "crit_value.lunar_crystallize":0.8},
+                        3: {S.HP_PCT: 0.32,
+                             "crit_value.lunar_crystallize":1},
+                        4: {S.HP_PCT: 0.36,
+                             "crit_value.lunar_crystallize":1.2},
+                        5: {S.HP_PCT: 0.4,
+                             "crit_value.lunar_crystallize":1.4},},
+    note="",
+)
+
+MOONSHARD = Weapon(
+    name="Осколок луны",
+    base_atk=542.0,
+    refinement=1,
+    stats={S.CRIT_VALUE: 0.882},
+    stats_by_refinement={1: {S.DEF_PCT: 0.2,
+                             "lunar_bonus.lunar_crystallize":0.64},
+                         2: {S.DEF_PCT: 0.25,
+                              "lunar_bonus.lunar_crystallize":0.8},
+                        3: {S.DEF_PCT: 0.3,
+                             "lunar_bonus.lunar_crystallize":96},
+                        4: {S.DEF_PCT: 0.35,
+                             "lunar_bonus.lunar_crystallize":1.12},
+                        5: {S.DEF_PCT: 0.4,
+                             "lunar_bonus.lunar_crystallize":1.28},},
     note="",
 )
 

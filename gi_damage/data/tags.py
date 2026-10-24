@@ -99,10 +99,22 @@ WRIO_C1 = "wriothesley_c1"
 #: Guidance of Theosis (Methexis): активный персонаж провёл на поле 3 с → +300 АТК
 THEOSIS = "guidance_of_theosis"
 
+# --- Цзы Бай ------------------------------------ #
+#: Первый Spirit Steed's Stride после входа в Lunar Phase Shift (C1: +220%)
+ZIBAI_C1 = "zibai_c1"
+
+# --- Линея ------------------------------------ #
+#: Удар лунной кристаллизации, тратящий стак Field Catalog (C1 Линеи)
+FIELD_CATALOG = "field_catalog"
+
+# --- Иллуги ------------------------------------ #
+#: Удар активного персонажа, тратящий стак Nightingale's Song (взрыв Иллуги)
+NIGHTINGALE = "nightingale_song"
+
 #Элегия
 ELEGY = "ELEGY"
 
 __all__ = ["ON", "OFF", "INST", "DREAM", "FROSTGLOW", "BREEZEBORNE",
            "ARMED", "DA1", "DA2", "DA3", "DA4", "DA5", "DA6","VODYA_LEAD","VODYA_CHORUS","TTDS_HALF","VV_CRYO","VV_PYRO"
            ,"VV_HYDRO","VV_ELECTRO","CATS_TAIL","SEVEN_SACRED","MIZUKI_C1","DECODING","TTDS_FULL","SANDRONE_CA_STACKS_1","SANDRONE_CA_STACKS_2","SANDRONE_CA_STACKS_3",
-           "NOBLE","PACTSWORN","TOGETHER_WE_RISE","SESSHOU_SAKURA","STARSAME","ELEGY","OFFENSIVE_DIRECTIVE","WRIO_C1","THEOSIS","VODYA_LEAD_ELEM"]
+           "NOBLE","PACTSWORN","TOGETHER_WE_RISE","SESSHOU_SAKURA","STARSAME","ELEGY","OFFENSIVE_DIRECTIVE","WRIO_C1","THEOSIS","VODYA_LEAD_ELEM","ZIBAI_C1","FIELD_CATALOG","NIGHTINGALE"]

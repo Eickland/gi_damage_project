@@ -139,8 +139,11 @@ AUBADE = ArtifactSet(
     pieces=4,
     stats_by_pieces={
         2: {S.BASE_EM: 80},
-        4: {},
-    },    
+    },
+    buffs_by_pieces={
+        4: (Buff(S.LUNAR_BONUS, 0.60, target=SELF, requires=(OFF,),
+                 source="Рассветная песнь 4ч: +60% урона лунных реакций вне поля"),),
+    },
 )
 
 NIGHT_SKY = ArtifactSet(
@@ -148,8 +151,24 @@ NIGHT_SKY = ArtifactSet(
     pieces=4,
     stats_by_pieces={
         2: {S.BASE_EM: 80},
-        4: {},
-    },    
+    },
+    buffs_by_pieces={
+        4: (Buff(S.CRIT_VALUE, 0.30 * 2, target=SELF,
+                 source="Ночь неба 4ч: +30% крит. шанса"),
+            Buff(S.LUNAR_BONUS, 0.10, target=TEAM,
+                 source="Ночь неба 4ч: +10% урона лунных реакций отряду"),),
+    },
+)
+
+SERENADE = ArtifactSet(
+    name = "Серенада",
+    pieces=4,
+    buffs_by_pieces={
+        4: (Buff(S.BASE_EM, 120.0, target=TEAM,
+                 source="Серенада 4ч: +120 МС отряду"),
+            Buff(S.LUNAR_BONUS, 0.10, target=TEAM,
+                 source="Серенада 4ч: +10% урона лунных реакций отряду"),),
+    },
 )
 
 GILDED = ArtifactSet(

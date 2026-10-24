@@ -44,7 +44,11 @@ ALIASES: Dict[str, Dict[str, str]] = {
         "Митя" : "mitya",
         "Валера" : "valera",
         "Ризли" : "wrio",
+        "Линея" : "linnea",
         "Николь" : "nicole",
+        "Колумбина" : "columbina",
+        "Цзы Бай" : "zibai",
+        "Иллуги" : "illuga",
     },
     "weapons": {
         "Песнь странника": "wanderers_song",
@@ -81,7 +85,14 @@ ALIASES: Dict[str, Dict[str, str]] = {
         "Истина кагура":"kagura",
         "Посох алых песков":"staff",
         "Элегия":"elegy",
-        "Atonement":"Клинок искупления",
+        "Флейта":"flute",
+        "Завет мороза":"covenant",
+        "Погибель драконов":"dragons_bane",
+        "Янтарь":"amber",
+        "Клинок искупления":"atonement",
+        "Золотая клятва":"golden_oath",
+        "Ноктюрн":"nocturne",
+        "Осколок луны":"moonshard",
     },
     "artifacts": {
         "Инструктор": "instructor",
@@ -95,6 +106,7 @@ ALIASES: Dict[str, Dict[str, str]] = {
         "Позолоченные сны":"gilded",
         "Разочарование":"disenchantment",
         "Знать":"noble",
+        "Серенада":"serenade",
     },
 }
 
