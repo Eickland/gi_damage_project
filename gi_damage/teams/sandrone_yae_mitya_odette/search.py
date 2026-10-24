@@ -5,7 +5,7 @@
   1. Замены слота «Крио ГГ»: сам Крио ГГ, Ци Ци, Диона.
   2. Порядок инвестиций: что докупать по косту (созвездия, Крио ГГ, сигны).
 
-Запуск:  python -m gi_damage.teams.mizuki_faruzan_cmc_odette.search
+Запуск:  python -m gi_damage.teams.sandrone_yae_mitya_odette.search
 Результат: текст в консоли + search.html (карточки с иконками).
 """
 
@@ -21,13 +21,13 @@ from gi_damage.core.search import (Candidate, Investable, SignatureWeapon,
                                    find_alternatives, plan_investments)
 from gi_damage.data.artifacts import *
 from gi_damage.data.weapons import *
-from gi_damage.teams.sandrone_yae_mitya_odette.builds import (
-    sandrone_build, make_team, yae_build, odette_build,mitya_build)
+from gi_damage.teams.sandrone_odette_mitya_alyosha.builds import (
+    sandrone_build, make_team, odette_build,mitya_build)
 from gi_damage.teams.mizuki_faruzan_cmc_odette.rosters import c6_mizuki_main_stats
 from gi_damage.teams.mizuki_faruzan_diona_odette.builds import diona_build
 from gi_damage.teams.mizuki_faruzan_qiqi_odette.builds import qiqi_build
 from gi_damage.teams.sandrone_odette_mitya_alyosha.builds import alyosha_build
-from gi_damage.teams.mizuki_vodya_odette_cmc.builds import vodya_build
+from gi_damage.teams.sandrone_odette_sucrose_alyosha.builds import sucrose_build
 from gi_damage.visual import SearchBook
 
 
@@ -62,40 +62,32 @@ def alternatives(book: SearchBook) -> None:
 # --------------------------------------------------------------------------- #
 def investments(book: SearchBook, budget: int = 40) -> None:
     # База: всё доступное. В слоте Крио ГГ пока стоит бесплатная Ци Ци.
-    baseline = make_team("База", 0, ATONEMENT, 0, SILVER_LIGHT,1,
-                         ECHOES,0,TTDS_FULL_CATALYSATOR,(DISENCHANTMENT,),(DISENCHANTMENT,), 
-                         (HEART_OF_FORGE,),(MILLELITH,))
+    baseline = make_team("База", 0, THOUSAND_SUNS, 0, SILVER_LIGHT,0,
+                         TTDS_FULL_CATALYSATOR,6,FAV_LANCE,(DISENCHANTMENT,),(DISENCHANTMENT,), 
+                         (MILLELITH,),(HEART_OF_FORGE,))
 
     baseline = replace(baseline, builds=[
-        alyosha_build(6,FAV_LANCE,(HEART_OF_FORGE,)) if b.name == "Яэ Мико" else b
+        sucrose_build((VIRIDESCENT,),TTDS_FULL_CATALYSATOR) if b.name == "Митя" else b
         for b in baseline.builds])
     baseline = replace(baseline, builds=[
-        diona_build(6,NOBLESSE) if b.name == "Одетта" else b
-        for b in baseline.builds])
-    baseline = replace(baseline, builds=[
-        qiqi_build(6,MILLELITH) if b.name == "Митя" else b
+        qiqi_build(6,MILLELITH) if b.name == "Одетта" else b
         for b in baseline.builds])
  
     investables = [
         Investable("Сандроне", "Сандроне",
-                   lambda c: sandrone_build(c, ATONEMENT,(DISENCHANTMENT,)),
+                   lambda c: sandrone_build(c, THOUSAND_SUNS,(DISENCHANTMENT,)),
                    max_constellation=6, owned=True),
         # C0 уже есть, платные только созвездия
-        Investable("Одетта", "Диона",
+        Investable("Одетта", "Ци Ци",
                    lambda c: odette_build(c, SILVER_LIGHT,(DISENCHANTMENT,)),
                    max_constellation=6, owned=False),
-        # C0 тоже стоит кост; пока не куплен — в слоте «Ци Ци»
-        Investable("Яэ Мико", "Алеша",
-                   lambda c: yae_build(c,ECHOES, (HEART_OF_FORGE,)),
-                   max_constellation=6, owned=False),
-        Investable("Митя", "Ци Ци",
+        Investable("Митя", "Сахароза",
                    lambda c: mitya_build(c,TTDS_FULL_CATALYSATOR, (MILLELITH,)),
                    max_constellation=6, owned=False),
     ]
     weapons = [
         SignatureWeapon("Одетта", FROSTFEATHER, 5, character="Одетта"),
         SignatureWeapon("Сандроне", TEASPOON, 5, character="Сандроне"),
-        SignatureWeapon("Яэ Мико", KAGURA, 5, character="Яэ Мико"),
     ]
     plan = plan_investments(baseline, investables, weapons, budget=budget,)
     book.add_plan(plan, f"Порядок инвестиций (до {budget} костов)",

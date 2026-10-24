@@ -176,6 +176,22 @@ STARSEALED = Weapon(
             S.BASE_EM: 48+72,
             S.CRIT_VALUE: 0.24
         },
+        2: {
+            S.BASE_EM: (48+72)*1.25,
+            S.CRIT_VALUE: 0.24*1.25
+        },
+        3: {
+            S.BASE_EM: (48+72)*1.5,
+            S.CRIT_VALUE: 0.24*1.5
+        },
+        4: {
+            S.BASE_EM: (48+72)*1.75,
+            S.CRIT_VALUE: 0.24*1.75
+        },
+        5: {
+            S.BASE_EM: (48+72)*2,
+            S.CRIT_VALUE: 0.24*2
+        },
     },
     note="",
 )

@@ -103,9 +103,9 @@ def alyosha_build(constellation: int = 6, weapon=FAV_LANCE, artifacts=(HEART_OF_
     )
 
 
-def make_team(name: str, sandrone_c: int = 0, sandrone_weapon=THOUSAND_SUNS,
-              odette_c: int = 2, odette_weapon=FROSTFEATHER,
-              mitya_c: int = 0, mitya_weapon=TTDS_FULL_CATALYSATOR,
+def make_team(name: str, sandrone_c: int = 0, sandrone_weapon=ATONEMENT,
+              odette_c: int = 0, odette_weapon=SILVER_LIGHT,
+              mitya_c: int = 1, mitya_weapon=TTDS_FULL_CATALYSATOR,
               alyosha_c: int = 6, alyosha_weapon=FAV_LANCE,
               sandrone_artifacts=(DISENCHANTMENT,), odette_artifacts=(DISENCHANTMENT,),
               mitya_artifacts=(MILLELITH,), alyosha_artifacts=(HEART_OF_FORGE,)) -> Team:

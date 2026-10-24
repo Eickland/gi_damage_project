@@ -42,13 +42,11 @@ CRYO_MC_KIT = Character(
         3: Constellation(
             number=3,
             name="C3",
-            # mv зависит от ротации только у "Взрыв — SSW" по имени -
-            # если в вашем отряде источник называется так же, патч сработает.
             patches={
                 "Взрыв — SSW": lambda s: replace(s, mv=(1.1715 + 8 * 0.0586)),
             },
         ),
-        4: Constellation(number=4, name="C4"),  # patches — per-team, если нужны
+        4: Constellation(number=4, name="C4"),
         5: Constellation(
             number=5,
             name="C5",
@@ -61,9 +59,12 @@ CRYO_MC_KIT = Character(
             number=6,
             name="C6",
             buffs=(
-                temp(S.SSW_BONUS, 0.4, FROSTGLOW, target=TEAM,
+                temp(S.SSW_BONUS, 0.4, FROSTGLOW, target=OTHERS,
+                     source="+40% к урону звездных реакций на 15с после применения взрыва стихий"),
+                temp(S.SC_BONUS, 0.4, FROSTGLOW, target=OTHERS,
                      source="+40% к урону звездных реакций на 15с после применения взрыва стихий"),
             ),
+
         ),
     },
     note="",
@@ -78,11 +79,11 @@ CMC_COMBO_DICT = {
         elemental("Навык (АТК)", "atk", 0.3851, "cryo", "skill",
                   [occ(5, OFF, DREAM,VV_CRYO), occ(3, OFF,VV_CRYO)]),
         stellar_swirl("Заряженная атака — SSW, 1", "atk", (1.105) + 1.40,
-                      "cryo", [occ(1, ON, INST,BREEZEBORNE,FROSTGLOW,VODYA_LEAD,VV_CRYO,SEVEN_SACRED,CATS_TAIL)], kind="charged"),
+                      "cryo", [occ(1, ON, INST,BREEZEBORNE,VODYA_LEAD,VV_CRYO,SEVEN_SACRED,CATS_TAIL)], kind="charged"),
         stellar_swirl("Заряженная атака — SSW, 2", "atk", (1.428) + 1.40,
-                      "cryo", [occ(1, ON, INST,BREEZEBORNE,FROSTGLOW,VODYA_LEAD,VV_CRYO,SEVEN_SACRED,CATS_TAIL)], kind="charged"),
+                      "cryo", [occ(1, ON, INST,BREEZEBORNE,VODYA_LEAD,VV_CRYO,SEVEN_SACRED,CATS_TAIL)], kind="charged"),
         stellar_swirl("Взрыв — SSW", "atk", (0.9924 + 8 * 0.0496), "cryo",
-                      [occ(5, ON, INST,BREEZEBORNE,FROSTGLOW,VODYA_LEAD,VV_CRYO,SEVEN_SACRED,CATS_TAIL)], kind="burst"),
+                      [occ(5, ON, INST,BREEZEBORNE,VODYA_LEAD,VV_CRYO,SEVEN_SACRED,CATS_TAIL)], kind="burst"),
     ),
     constellation_patches={
         4: {
@@ -98,11 +99,11 @@ CMC_COMBO_DICT = {
         elemental("Навык (АТК)", "atk", 0.3851, "cryo", "skill",
                   [occ(5, OFF,VV_CRYO), occ(3, OFF,VV_CRYO)]),
         stellar_swirl("Заряженная атака — SSW, 1", "atk", (1.105) + 1.40,
-                      "cryo", [occ(1, ON, INST,FROSTGLOW,VV_CRYO)], kind="charged"),
+                      "cryo", [occ(1, ON, INST,VV_CRYO)], kind="charged"),
         stellar_swirl("Заряженная атака — SSW, 2", "atk", (1.428) + 1.40,
-                      "cryo", [occ(1, ON, INST,FROSTGLOW,VV_CRYO)], kind="charged"),
+                      "cryo", [occ(1, ON, INST,VV_CRYO)], kind="charged"),
         stellar_swirl("Взрыв — SSW", "atk", (0.9924 + 8 * 0.0496), "cryo",
-                      [occ(5, ON, INST,FROSTGLOW,VV_CRYO)], kind="burst"),
+                      [occ(5, ON, INST,VV_CRYO)], kind="burst"),
     ),
     constellation_patches={
         4: {

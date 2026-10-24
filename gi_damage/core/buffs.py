@@ -81,6 +81,18 @@ class BuffContext:
         """
         return self._resolver.base(character).stat(name)
     
+    def elements(self) -> dict:
+        """Стихии отряда: {имя персонажа: стихия}."""
+        return {name: b.element for name, b in self._resolver.builds.items()}
+
+    def count_allies(self, same_element: bool, cap: int = 3) -> int:
+        """Сколько ДРУГИХ членов отряда с той же (или иной) стихией, что у владельца."""
+        els = self.elements()
+        own = els[self.owner]
+        n = sum(1 for name, el in els.items()
+                if name != self.owner and (el == own) == same_element)
+        return min(n, cap)    
+    
 
     # -- работа с состояниями ------------------------------------------------ #
     def mirror(self, *base_tags: str, keep: Iterable[str] = ()) -> State:

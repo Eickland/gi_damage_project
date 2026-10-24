@@ -153,12 +153,19 @@ NIGHT_SKY = ArtifactSet(
 )
 
 GILDED = ArtifactSet(
-    name = "Позолоченные сны",
+    name="Позолоченные сны",
     pieces=4,
-    stats_by_pieces={
-        2: {S.BASE_EM: 80},
-        4: {S.BASE_EM: 150},
-    },    
+    stats_by_pieces={2: {S.BASE_EM: 80}},
+    buffs_by_pieces={
+        4: (
+            Buff(S.ATK_PCT, lambda ctx: 0.14 * ctx.count_allies(same_element=True),
+                 target=SELF,
+                 source="Позолоченные сны 4ч: +14% АТК за союзника той же стихии (до 3)"),
+            Buff(S.BASE_EM, lambda ctx: 50.0 * ctx.count_allies(same_element=False),
+                 target=SELF,
+                 source="Позолоченные сны 4ч: +50 МС за союзника иной стихии (до 3)"),
+        ),
+    },
 )
 
 ALL = {a.name: a for a in (INSTRUCTOR, VIRIDESCENT, MILLELITH, HEART_OF_FORGE)}
