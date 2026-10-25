@@ -48,7 +48,7 @@ DOMAIN_LUNAR_BONUS, DOMAIN_LUNAR_BONUS_C5 = 0.40, 0.49
 
 RIPPLE_HITS = 10
 INTERFERENCE_HITS = 3          # C0, раз в 6 с
-C2_EXTRA_INTERFERENCE = 2
+C2_EXTRA_INTERFERENCE = 1
 
 A1_CRIT_RATE = 0.05 * 3        # Lunacy: +5% КШ × 3
 MOONDRIFT_EXTRA = 0.33         # A4: шанс доп. атаки каждого Moondrift
