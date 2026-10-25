@@ -848,6 +848,25 @@ RELIQUARY_OF_TRUTH_LUNAR = Weapon(
     note="Сигна Нефер; Secret of Lies + Moon of Truth одновременно.",
 )
 
+NIGHTWEAVER_PASSIVE = {r: ((60 + 15 * (r - 1))*2)
+                     for r in range(1, 6)}
+
+Millennial_Hymn_bonus = {r: 0.4 + 0.1*(r-1) for r in range(1,6)}
+
+NIGHTWEAVER_LUNAR = Weapon(
+    name="Nightweaver",
+    base_atk=542.0,
+    stats={S.BASE_EM: 0.265},
+    refinement=1,
+    stats_by_refinement={
+        r: {S.BASE_EM: NIGHTWEAVER_PASSIVE[r]}
+        for r in NIGHTWEAVER_PASSIVE
+    },
+    buffs_by_refinement = {r:(Buff("lunar_bonus.lunar_bloom",Millennial_Hymn_bonus[r],target=TEAM),)
+                           for r in Millennial_Hymn_bonus},
+    note="Сигна Лаумы",
+)
+
 SPINDLELUTE = Weapon(
     name="Spindlelute",
     base_atk=510.0,

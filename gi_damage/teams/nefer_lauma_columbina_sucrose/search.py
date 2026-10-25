@@ -39,6 +39,7 @@ def investments(book: SearchBook, budget: int = 40) -> None:
     weapons = [
         SignatureWeapon("Нефер", RELIQUARY_OF_TRUTH_LUNAR, 5, character="Нефер"),
         SignatureWeapon("Колумбина", NOCTURNE, 5, character="Колумбина"),
+        SignatureWeapon("Лаума", NIGHTWEAVER_LUNAR, 5, character="Лаума"),
     ]
     plan = plan_investments(baseline, investables, weapons, budget=budget)
     book.add_plan(plan, f"Порядок инвестиций (до {budget} костов)",

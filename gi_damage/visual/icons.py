@@ -96,6 +96,7 @@ ALIASES: Dict[str, Dict[str, str]] = {
         "Ноктюрн":"nocturne",
         "Осколок луны":"moonshard",
         "Spindlelute":"spindlelute",
+        "Nightweaver":"nightweaver",
         "Blackmarrow":"blackmarrow",
     },
     "artifacts": {

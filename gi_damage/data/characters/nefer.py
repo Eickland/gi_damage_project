@@ -8,14 +8,14 @@
            тени — 3 удара прямых лунных бутонов (только МС).
 
 Баффы (постоянные; Ascendant Gleam активен):
-    A1  Veil of Falsehood — всегда VEIL_STACKS = 3 стака: урон Phantasm
-        Performance ×(1 + 8% × стаки) — множитель "veil" на всех её ударах
-        (поэтому усиливает и доп. урон от C1, как в описании);
+    A1  Veil of Falsehood — всегда VEIL_STACKS = 3 стака (C2: 5): урон Phantasm
+        Performance ×(1 + 8% × стаки) — множитель "veil" на всех её ударах;
         при 3 стаках +100 МС
     Moonsign Benediction: +0.0175% базового урона лунных бутонов за 1 МС (макс. 14%) отряду
-    C1  тени (лунные бутоны Phantasm Performance): доп. базовый урон +60% МС
-    C2  при 5 стаках Veil: урон до 140% и +200 МС вместо +100 — при VEIL_STACKS = 3
-        не срабатывает (поменяйте VEIL_STACKS, если нужно)
+    C1  лунные бутоны Phantasm Performance: +60% МС к множителю удара
+        (складывается с множителем навыка: тень 172.8% → 232.8% МС; дальше
+        умножается на Base DMG Increase, скобку с МС и Veil)
+    C2  всегда 5 стаков Veil: урон Phantasm Performance ×1.40, +200 МС вместо +100
     C3  новые множители
     C4  −20% дендро сопротивления
     C6  2-й удар Нефер → лунные бутоны 85% МС; в конце Phantasm Performance ещё
@@ -46,6 +46,7 @@ C6_SECOND_EM = 0.85                      # C6: 2-й удар Нефер → лу
 C6_FINAL_EM = 1.20                       # C6: завершающий удар
 
 VEIL_STACKS = 3                          # стаков Veil of Falsehood (всегда 3)
+VEIL_STACKS_C2 = 5                       # с C2 — всегда 5
 VEIL_PER_STACK = 0.08
 A1_EM, C2_EM = 100.0, 200.0
 MOONSIGN_PER_EM, MOONSIGN_CAP = 0.000175, 0.14
@@ -67,6 +68,11 @@ def _nefer_em(ctx) -> float:
 
 def veil_multiplier(stacks: int = VEIL_STACKS) -> float:
     return 1.0 + VEIL_PER_STACK * stacks
+
+
+def _c1_bonus(src):
+    """C1: +60% МС к множителю удара лунных бутонов Phantasm Performance."""
+    return replace(src, mv=src.mv + C1_EM)
 
 
 NEFER_KIT = Character(
@@ -93,17 +99,14 @@ NEFER_KIT = Character(
     constellations={
         1: Constellation(
             number=1, name="C1",
-            buffs=(Buff(f"{S.FLAT_BASE_DMG}.lunar_bloom.{PHANTASM}",
-                        lambda ctx: C1_EM * ctx.own("em"), target=SELF,
-                        source="C1 Нефер: лунные бутоны Phantasm Performance +60% МС"),),
+            # +60% МС к множителю теней (см. _c1_bonus); C6-удары создаются уже с ним
+            patches={f"Phantasm — тень, {n}-й удар (LB)": _c1_bonus for n in (1, 2, 3)},
         ),
         2: Constellation(
             number=2, name="C2",
-            # Действует только при 5 стаках Veil (при VEIL_STACKS = 3 — ничего)
-            buffs=((Buff(S.BASE_EM, C2_EM - A1_EM, target=SELF,
-                         source="C2 Нефер: 5 стаков Veil, +200 МС вместо +100"),)
-                   if VEIL_STACKS >= 5 else ()),
-            multipliers=({"veil": lambda stats: veil_multiplier(5)} if VEIL_STACKS >= 5 else {}),
+            buffs=(Buff(S.BASE_EM, C2_EM - A1_EM, target=SELF,
+                        source="C2 Нефер: 5 стаков Veil, +200 МС вместо +100"),),
+            multipliers={"veil": lambda stats: veil_multiplier(VEIL_STACKS_C2)},
         ),
         3: Constellation(
             number=3, name="C3",
@@ -113,9 +116,10 @@ NEFER_KIT = Character(
                     s, mv=PP_NEFER_C3[1][0], extra_scaling=(("em", PP_NEFER_C3[1][1]),)),
                 "Phantasm — 2-й удар Нефер": lambda s: replace(
                     s, mv=PP_NEFER_C3[2][0], extra_scaling=(("em", PP_NEFER_C3[2][1]),)),
-                "Phantasm — тень, 1-й удар (LB)": lambda s: replace(s, mv=PP_SHADES_C3[1]),
-                "Phantasm — тень, 2-й удар (LB)": lambda s: replace(s, mv=PP_SHADES_C3[2]),
-                "Phantasm — тень, 3-й удар (LB)": lambda s: replace(s, mv=PP_SHADES_C3[3]),
+                # меняем только базу навыка — бонус C1 сохраняется
+                **{f"Phantasm — тень, {n}-й удар (LB)":
+                   (lambda s, n=n: replace(s, mv=s.mv - PP_SHADES[n] + PP_SHADES_C3[n])) # type: ignore
+                   for n in (1, 2, 3)},
             },
         ),
         4: Constellation(
@@ -163,12 +167,14 @@ NEFER_COMBO_DICT = {
             6: {"Phantasm — 2-й удар Нефер": lambda s: replace(s, occurrences=[])},
         },
         constellation_sources={
-            # Pale Hymn на эти удары не тратится (18 стаков уже ушли на тени)
+            # Pale Hymn на эти удары не тратится (18 стаков уже ушли на тени).
+            # Это тоже лунные бутоны Phantasm Performance — C6 включает C1, поэтому
+            # множитель сразу с +60% МС.
             6: (
-                lunar_bloom("C6: 2-й удар Нефер (LB)", "em", C6_SECOND_EM,
+                lunar_bloom("C6: 2-й удар Нефер (LB)", "em", C6_SECOND_EM + C1_EM,
                             [occ(PHANTASMS, *_TAGS)], kind="charged",
                             extra_tags=(PHANTASM,), multipliers=("veil",)),
-                lunar_bloom("C6: завершающий удар (LB)", "em", C6_FINAL_EM,
+                lunar_bloom("C6: завершающий удар (LB)", "em", C6_FINAL_EM + C1_EM,
                             [occ(PHANTASMS, *_TAGS)], kind="charged",
                             extra_tags=(PHANTASM,), multipliers=("veil",)),
             ),

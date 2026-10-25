@@ -104,7 +104,7 @@ def sucrose_build(constellation: int = 6, weapon=SACFRAG, artifacts=(INSTRUCTOR,
     )
 
 
-def make_team(name: str, nefer_c: int = 2, lauma_c: int = 0, columbina_c: int = 0,
+def make_team(name: str, nefer_c: int = 0, lauma_c: int = 2, columbina_c: int = 2,
               nefer_weapon=BLACKMARROW, lauma_weapon=SPINDLELUTE,
               columbina_weapon=PROTOTYPE_AMBER, sucrose_weapon=SACFRAG,
               nefer_artifacts=(NIGHT_SKY,), lauma_artifacts=(DEEPWOOD,),
