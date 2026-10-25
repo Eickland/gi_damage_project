@@ -13,7 +13,9 @@
     C1  Field Catalog: удар лунной кристаллизации (окно FIELD_CATALOG) получает
         доп. базовый урон = 75% ЗЩ Линеи (18 стаков)
     C2  +40% КУ гео и гидро персонажам отряда; Ascendant Gleam: каждый
-        Heavy Overdrive Hammer вызывает Moondrift Harmony (реакции — в отряде)
+        Heavy Overdrive Hammer вызывает Moondrift Harmony, в которой все гидро
+        и гео персонажи — участники: доля каждого 0.6 (LINNEA_C2_WEIGHTS;
+        реакции — в отряде)
     C3  новые множители
     C4  +25% ЗЩ Линее и активному персонажу
     C6  Field Catalog: ×1.5 (112.5% ЗЩ), +25% возвышения лунной кристаллизации отряду
@@ -53,6 +55,10 @@ C4_DEF = 0.25
 C6_LC_ELEVATION = 0.25
 
 LINNEA_TIME = 1.2
+
+#: C2 (Ascendant Gleam): в Moondrift Harmony от Heavy Overdrive Hammer все гидро
+#: и гео персонажи считаются участниками — каждый вносит долю 0.6 (а не 60/30/5/5)
+LINNEA_C2_WEIGHTS = (0.6, 0.3, 0.05, 0.05)
 
 
 def _linnea_def(ctx) -> float:

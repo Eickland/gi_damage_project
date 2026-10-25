@@ -384,6 +384,14 @@ HARBINGER = Weapon(
     note="Хп больше 90%",
 )
 
+SLINGSHOT = Weapon(
+    name="Рогатка",
+    base_atk=401.0,
+    refinement=5,
+    stats={S.CRIT_VALUE: 0.312*2},
+    note="Хп больше 90%",
+)
+
 BOUGH = Weapon(
     name="Новая ветвь",
     base_atk=510.0,
@@ -797,7 +805,7 @@ MOONSHARD = Weapon(
                          2: {S.DEF_PCT: 0.25,
                               "lunar_bonus.lunar_crystallize":0.8},
                         3: {S.DEF_PCT: 0.3,
-                             "lunar_bonus.lunar_crystallize":96},
+                             "lunar_bonus.lunar_crystallize":0.96},
                         4: {S.DEF_PCT: 0.35,
                              "lunar_bonus.lunar_crystallize":1.12},
                         5: {S.DEF_PCT: 0.4,

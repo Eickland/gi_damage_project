@@ -121,7 +121,7 @@ def lunar_crystallize_reaction(count: float, *tags: str, **kwargs) -> ReactionEv
         multiplier=LUNAR_REACTION_MULTIPLIER["lunar_crystallize"],
         tags=tuple(tags),
         count=count,
-        weights=(0.60, 0.30, 0.05, 0.05),
+        weights=kwargs.pop("weights", (0.60, 0.30, 0.05, 0.05)),
         model=REACTION_LUNAR_CRYSTALLIZE,
         **kwargs,
     )

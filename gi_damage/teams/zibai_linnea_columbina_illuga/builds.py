@@ -5,7 +5,8 @@
 
 Реакции лунной кристаллизации (Moondrift Harmony — удары лунных клеток):
     18 — пока Цзы Бай на поле, 6 — в остальное время;
-    C2 Линеи: ещё 12 (6 + 6) от Heavy Overdrive Hammer.
+    C2 Линеи: ещё 12 (6 + 6) от Heavy Overdrive Hammer — доля каждого
+    участника в них 0.6 (все четверо — гидро/гео).
     A4 Колумбины (Law of the New Moon): в среднем ×1.33 к числу ударов.
 
 Окна баффов:
@@ -28,7 +29,8 @@ from ...data.artifacts import *
 from ...data.artifacts_presets import *
 from ...data.tags import *
 from ...data.characters.zibai import ZIBAI_COMBO_DICT, ZIBAI_NAME, zibai_time
-from ...data.characters.linnea import LINNEA_COMBO_DICT, LINNEA_NAME, LINNEA_TIME
+from ...data.characters.linnea import (LINNEA_COMBO_DICT, LINNEA_NAME, LINNEA_TIME,
+                                      LINNEA_C2_WEIGHTS)
 from ...data.characters.columbina import (COLUMBINA_COMBO_DICT, COLUMBINA_NAME,
                                           COLUMBINA_TIME, MOONDRIFT_EXTRA)
 from ...data.characters.illuga import ILLUGA_COMBO_DICT, ILLUGA_NAME, ILLUGA_TIME
@@ -50,15 +52,26 @@ def enemy() -> Enemy:
 
 
 def reactions(linnea_c: int, with_columbina: bool = True):
-    """Удары лунных клеток за ротацию."""
+    """Удары лунных клеток за ротацию.
+
+    Реакции от C2 Линеи — отдельные события: в них все гидро и гео персонажи
+    участвуют с долей 0.6 каждый (LINNEA_C2_WEIGHTS).
+    """
     k = 1.0 + (MOONDRIFT_EXTRA if with_columbina else 0.0)
-    on = LC_ON_ZIBAI + (LC_LINNEA_C2_ON if linnea_c >= 2 else 0)
-    off = LC_OFF_ZIBAI + (LC_LINNEA_C2_OFF if linnea_c >= 2 else 0)
-    return (
-        lunar_crystallize_reaction(on * k, name="Лунная кристаллизация (Цзы Бай на поле)"),
-        lunar_crystallize_reaction(off * k, name="Лунная кристаллизация (Цзы Бай вне поля)",
+    events = [
+        lunar_crystallize_reaction(LC_ON_ZIBAI * k, name="Лунная кристаллизация (Цзы Бай на поле)"),
+        lunar_crystallize_reaction(LC_OFF_ZIBAI * k, name="Лунная кристаллизация (Цзы Бай вне поля)",
                                    field_override={ZIBAI_NAME: OFF}),
-    )
+    ]
+    if linnea_c >= 2:
+        events += [
+            lunar_crystallize_reaction(LC_LINNEA_C2_ON * k, weights=LINNEA_C2_WEIGHTS,
+                                       name="C2 Линеи: лунная кристаллизация (Цзы Бай на поле)"),
+            lunar_crystallize_reaction(LC_LINNEA_C2_OFF * k, weights=LINNEA_C2_WEIGHTS,
+                                       name="C2 Линеи: лунная кристаллизация (Цзы Бай вне поля)",
+                                       field_override={ZIBAI_NAME: OFF}),
+        ]
+    return tuple(events)
 
 
 def zibai_build(constellation: int = 0, weapon=FLUTE_OF_EZPITZAL, artifacts=(NIGHT_SKY,),
@@ -117,12 +130,12 @@ def illuga_build(constellation: int = 6, weapon=DRAGONS_BANE, artifacts=(SERENAD
     )
 
 
-def make_team(name: str, zibai_c: int = 0, linnea_c: int = 0,
+def make_team(name: str, zibai_c: int = 0, linnea_c: int = 2,
               columbina_c: int = 0, illuga_c: int = 6,
               zibai_weapon=HARBINGER, linnea_weapon=COVENANT_FROST_SNOW,
               columbina_weapon=PROTOTYPE_AMBER, illuga_weapon=DRAGONS_BANE,
               zibai_artifacts=(NIGHT_SKY,), linnea_artifacts=(AUBADE,),
-              columbina_artifacts=(SERENADE,), illuga_artifacts=(INSTRUCTOR,)) -> Team:
+              columbina_artifacts=(AUBADE,), illuga_artifacts=(SERENADE,)) -> Team:
     return Team(
         name=name,
         builds=[
