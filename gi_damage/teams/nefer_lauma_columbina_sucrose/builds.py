@@ -1,7 +1,7 @@
 """
 Отряд лунных бутонов: Нефер / Лаума / Колумбина / Сахароза.
 
-Ротация: Лаума hE Q / Колумбина E Q / Сахароза E (Q) / Нефер (E sCA sCA sCA) × 2.
+Ротация: Лаума hE Q / Колумбина E Q CA / Сахароза E (Q) / Нефер (E sCA sCA sCA) × 2.
 Moonsign: Ascendant Gleam активен. Сахароза рассеивает гидро.
 Урона реакции у лунных бутонов нет — только прямой урон.
 
@@ -9,7 +9,8 @@ Moonsign: Ascendant Gleam активен. Сахароза рассеивает 
     Отряду: бонус лунных реакций от МС Сахарозы (не из лунного региона).
     INST       (Инструктор + A4 Сахарозы) — все удары Нефер и одно срабатывание
                Gravity Interference Колумбины (5 ударов);
-    PALE_HYMN  (Лаума, 36 стаков) — 18 ударов теней Нефер и 18 ударов бутонов Колумбины.
+    PALE_HYMN  (Лаума, 36 стаков) — 18 ударов теней Нефер и 18 ударов бутонов
+               Колумбины (15 Gravity Interference + 3 Moondew Cleanse).
 """
 
 from __future__ import annotations
@@ -26,7 +27,8 @@ from ...data.artifacts_presets import *
 from ...data.tags import *
 from ...data.characters.nefer import NEFER_COMBO_DICT, NEFER_TIME
 from ...data.characters.lauma import LAUMA_COMBO_DICT, LAUMA_TIME
-from ...data.characters.columbina import COLUMBINA_COMBO_DICT, COLUMBINA_TIME
+from ...data.characters.columbina import (COLUMBINA_COMBO_DICT, COLUMBINA_TIME,
+                                          MOONDEW_CLEANSE_TIME)
 from ...data.characters.sucrose import SUCROSE_COMBO_DICT
 from ...data.weapons import *
 from ...data.team_buffs import lunar_outsider_buff
@@ -39,7 +41,7 @@ TEAM_BUFFS = (
 
 SUCROSE_TIME = 2.95
 
-ROTATION = "Лаума hE Q/Колумбина EQ/Сахароза E(Q)/Нефер (E sCA sCA sCA)×2"
+ROTATION = "Лаума hE Q/Колумбина EQ CA/Сахароза E(Q)/Нефер (E sCA sCA sCA)×2"
 
 MAIN_EM_EM_CRIT = {S.BASE_EM: 187.0 * 2, S.CRIT_VALUE: 0.622}
 
@@ -85,7 +87,7 @@ def columbina_build(constellation: int = 0, weapon=PROTOTYPE_AMBER, artifacts=(S
         artifacts=artifacts,
         extra_stats=merge_dicts(main_stats, STANDART_SUBSTAT_PRESET),
         extra_buffs=tuple(extra_buffs),
-        time=COLUMBINA_TIME,
+        time=COLUMBINA_TIME + MOONDEW_CLEANSE_TIME,   # E Q + CA (Moondew Cleanse)
     )
 
 
@@ -102,7 +104,7 @@ def sucrose_build(constellation: int = 6, weapon=SACFRAG, artifacts=(INSTRUCTOR,
     )
 
 
-def make_team(name: str, nefer_c: int = 0, lauma_c: int = 0, columbina_c: int = 0,
+def make_team(name: str, nefer_c: int = 2, lauma_c: int = 0, columbina_c: int = 0,
               nefer_weapon=BLACKMARROW, lauma_weapon=SPINDLELUTE,
               columbina_weapon=PROTOTYPE_AMBER, sucrose_weapon=SACFRAG,
               nefer_artifacts=(NIGHT_SKY,), lauma_artifacts=(DEEPWOOD,),

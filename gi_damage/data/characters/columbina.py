@@ -54,6 +54,9 @@ INTERFERENCE_MV, INTERFERENCE_MV_C3 = 0.1588, 0.1875              # криста
 INTERFERENCE_CHARGED_MV, INTERFERENCE_CHARGED_MV_C3 = 0.0847, 0.10  # заряд
 INTERFERENCE_BLOOM_MV, INTERFERENCE_BLOOM_MV_C3 = 0.0253, 0.0299    # бутоны, × 5
 INTERFERENCE_BLOOM_HITS = 5
+MOONDEW_CLEANSE_MV = 0.0272         # заряженная атака Moondew Cleanse, × 3 (лунные бутоны)
+MOONDEW_CLEANSE_HITS = 3
+MOONDEW_CLEANSE_TIME = 0.5          # +0.5 с к ротации
 BURST_MV, BURST_MV_C5 = 0.5803, 0.6851
 DOMAIN_LUNAR_BONUS, DOMAIN_LUNAR_BONUS_C5 = 0.40, 0.49
 
@@ -240,16 +243,22 @@ _BLOOM_SOURCES, _BLOOM_CONST_SOURCES = _support_combo(
                                          kind="skill", **kw),
     "бутоны", INTERFERENCE_BLOOM_HITS)
 
-# Лунные бутоны в отряде Нефер / Лаума / Сахароза:
+# Лунные бутоны в отряде Нефер / Лаума / Сахароза (ротация E Q CA, +0.5 с):
 #   одно срабатывание (5 ударов) — под Сахарозой и Инструктором (INST);
-#   18 стаков Pale Hymn Лаумы — на удары бутонов Колумбины: 15 основных + 3 из C1.
+#   18 стаков Pale Hymn Лаумы — на удары бутонов Колумбины: 15 основных
+#   Gravity Interference + 3 удара заряженной атаки Moondew Cleanse
+#   (она — с поля, без Сахарозы и Инструктора); удары от C1 стаков не получают.
 _BLOOM_LAUMA_SOURCES, _BLOOM_LAUMA_CONST_SOURCES = _support_combo(
     lambda name, occs, **kw: lunar_bloom(name, "hp", INTERFERENCE_BLOOM_MV, occs,
                                          kind="skill", **kw),
     "бутоны", INTERFERENCE_BLOOM_HITS,
     main_occs=[occ(INTERFERENCE_BLOOM_HITS, OFF, INST, PALE_HYMN),
                occ((INTERFERENCE_HITS - 1) * INTERFERENCE_BLOOM_HITS, OFF, PALE_HYMN)],
-    c1_occs=[occ(3, ON, PALE_HYMN), occ(INTERFERENCE_BLOOM_HITS - 3, ON)],
+    c1_occs=[occ(INTERFERENCE_BLOOM_HITS, ON)],
+)
+_BLOOM_LAUMA_SOURCES = _BLOOM_LAUMA_SOURCES + (
+    lunar_bloom("Moondew Cleanse (бутоны)", "hp", MOONDEW_CLEANSE_MV,
+                [occ(MOONDEW_CLEANSE_HITS, ON, PALE_HYMN)], kind="charged"),
 )
 
 COLUMBINA_COMBO_DICT = {
