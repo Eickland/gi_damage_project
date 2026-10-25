@@ -1,0 +1,133 @@
+diff --git a/gi_damage/data/characters/linnea.py b/gi_damage/data/characters/linnea.py
+index 8c74e8c..572f1b4 100644
+--- a/gi_damage/data/characters/linnea.py
++++ b/gi_damage/data/characters/linnea.py
+@@ -13,9 +13,8 @@
+     C1  Field Catalog: удар лунной кристаллизации (окно FIELD_CATALOG) получает
+         доп. базовый урон = 75% ЗЩ Линеи (18 стаков)
+     C2  +40% КУ гео и гидро персонажам отряда; Ascendant Gleam: каждый
+-        Heavy Overdrive Hammer вызывает Moondrift Harmony, в которой все гидро
+-        и гео персонажи — участники: доля каждого 0.6 (LINNEA_C2_WEIGHTS;
+-        реакции — в отряде)
++        Heavy Overdrive Hammer вызывает Moondrift Harmony (обычные реакции,
++        считаются в отряде)
+     C3  новые множители
+     C4  +25% ЗЩ Линее и активному персонажу
+     C6  Field Catalog: ×1.5 (112.5% ЗЩ), +25% возвышения лунной кристаллизации отряду
+@@ -56,9 +55,6 @@ C6_LC_ELEVATION = 0.25
+ 
+ LINNEA_TIME = 1.2
+ 
+-#: C2 (Ascendant Gleam): в Moondrift Harmony от Heavy Overdrive Hammer все гидро
+-#: и гео персонажи считаются участниками — каждый вносит долю 0.6 (а не 60/30/5/5)
+-LINNEA_C2_WEIGHTS = (0.6, 0.3, 0.05, 0.05)
+ 
+ 
+ def _linnea_def(ctx) -> float:
+diff --git a/gi_damage/teams/zibai_linnea_columbina_illuga/builds.py b/gi_damage/teams/zibai_linnea_columbina_illuga/builds.py
+index 17065d8..3f15768 100644
+--- a/gi_damage/teams/zibai_linnea_columbina_illuga/builds.py
++++ b/gi_damage/teams/zibai_linnea_columbina_illuga/builds.py
+@@ -5,8 +5,8 @@
+ 
+ Реакции лунной кристаллизации (Moondrift Harmony — удары лунных клеток):
+     18 — пока Цзы Бай на поле, 6 — в остальное время;
+-    C2 Линеи: ещё 12 (6 + 6) от Heavy Overdrive Hammer — доля каждого
+-    участника в них 0.6 (все четверо — гидро/гео).
++    C2 Линеи: ещё 12 (6 + 6) от Heavy Overdrive Hammer.
++    Ростеры/поиск: передавайте tweak=refresh_reactions (см. ниже).
+     A4 Колумбины (Law of the New Moon): в среднем ×1.33 к числу ударов.
+ 
+ Окна баффов:
+@@ -17,6 +17,7 @@
+ 
+ from __future__ import annotations
+ 
++from dataclasses import replace
+ from typing import Dict, Sequence
+ 
+ from ...core.buffs import OTHERS, SELF, TEAM, Buff, temp
+@@ -29,8 +30,7 @@ from ...data.artifacts import *
+ from ...data.artifacts_presets import *
+ from ...data.tags import *
+ from ...data.characters.zibai import ZIBAI_COMBO_DICT, ZIBAI_NAME, zibai_time
+-from ...data.characters.linnea import (LINNEA_COMBO_DICT, LINNEA_NAME, LINNEA_TIME,
+-                                      LINNEA_C2_WEIGHTS)
++from ...data.characters.linnea import LINNEA_COMBO_DICT, LINNEA_NAME, LINNEA_TIME
+ from ...data.characters.columbina import (COLUMBINA_COMBO_DICT, COLUMBINA_NAME,
+                                           COLUMBINA_TIME, MOONDRIFT_EXTRA)
+ from ...data.characters.illuga import ILLUGA_COMBO_DICT, ILLUGA_NAME, ILLUGA_TIME
+@@ -52,26 +52,30 @@ def enemy() -> Enemy:
+ 
+ 
+ def reactions(linnea_c: int, with_columbina: bool = True):
+-    """Удары лунных клеток за ротацию.
+-
+-    Реакции от C2 Линеи — отдельные события: в них все гидро и гео персонажи
+-    участвуют с долей 0.6 каждый (LINNEA_C2_WEIGHTS).
+-    """
++    """Удары лунных клеток за ротацию (C2 Линеи добавляет обычные реакции)."""
+     k = 1.0 + (MOONDRIFT_EXTRA if with_columbina else 0.0)
+-    events = [
+-        lunar_crystallize_reaction(LC_ON_ZIBAI * k, name="Лунная кристаллизация (Цзы Бай на поле)"),
+-        lunar_crystallize_reaction(LC_OFF_ZIBAI * k, name="Лунная кристаллизация (Цзы Бай вне поля)",
++    on = LC_ON_ZIBAI + (LC_LINNEA_C2_ON if linnea_c >= 2 else 0)
++    off = LC_OFF_ZIBAI + (LC_LINNEA_C2_OFF if linnea_c >= 2 else 0)
++    return (
++        lunar_crystallize_reaction(on * k, name="Лунная кристаллизация (Цзы Бай на поле)"),
++        lunar_crystallize_reaction(off * k, name="Лунная кристаллизация (Цзы Бай вне поля)",
+                                    field_override={ZIBAI_NAME: OFF}),
+-    ]
+-    if linnea_c >= 2:
+-        events += [
+-            lunar_crystallize_reaction(LC_LINNEA_C2_ON * k, weights=LINNEA_C2_WEIGHTS,
+-                                       name="C2 Линеи: лунная кристаллизация (Цзы Бай на поле)"),
+-            lunar_crystallize_reaction(LC_LINNEA_C2_OFF * k, weights=LINNEA_C2_WEIGHTS,
+-                                       name="C2 Линеи: лунная кристаллизация (Цзы Бай вне поля)",
+-                                       field_override={ZIBAI_NAME: OFF}),
+-        ]
+-    return tuple(events)
++    )
++
++
++def refresh_reactions(team: Team) -> Team:
++    """Пересобрать реакции по ТЕКУЩИМ сборкам отряда.
++
++    Число реакций зависит от созвездия Линеи (C2) и от того, есть ли в отряде
++    Колумбина (A4). Ростеры и поиск подменяют сборки, но не реакции — поэтому
++    передавайте эту функцию как tweak:
++
++        Roster(base, [...], tweak=refresh_reactions)
++        plan_investments(baseline, ..., tweak=refresh_reactions)
++    """
++    names = {b.name: b for b in team.builds}
++    linnea_c = names[LINNEA_NAME].constellation if LINNEA_NAME in names else 0
++    return replace(team, reactions=reactions(linnea_c, COLUMBINA_NAME in names))
+ 
+ 
+ def zibai_build(constellation: int = 0, weapon=FLUTE_OF_EZPITZAL, artifacts=(NIGHT_SKY,),
+diff --git a/gi_damage/teams/zibai_linnea_columbina_illuga/search.py b/gi_damage/teams/zibai_linnea_columbina_illuga/search.py
+index 93da515..5b6f4d4 100644
+--- a/gi_damage/teams/zibai_linnea_columbina_illuga/search.py
++++ b/gi_damage/teams/zibai_linnea_columbina_illuga/search.py
+@@ -22,7 +22,8 @@ from gi_damage.core.search import (Candidate, Investable, SignatureWeapon,
+ from gi_damage.data.artifacts import *
+ from gi_damage.data.weapons import *
+ from gi_damage.teams.zibai_linnea_columbina_illuga.builds import (
+-    zibai_build, make_team, columbina_build,linnea_build,illuga_build)
++    zibai_build, make_team, columbina_build,linnea_build,illuga_build,
++    refresh_reactions)
+ from gi_damage.teams.mizuki_faruzan_cmc_odette.rosters import c6_mizuki_main_stats
+ from gi_damage.teams.mizuki_faruzan_diona_odette.builds import diona_build
+ from gi_damage.teams.mizuki_faruzan_qiqi_odette.builds import qiqi_build
+@@ -62,7 +63,9 @@ def investments(book: SearchBook, budget: int = 40) -> None:
+         SignatureWeapon("Колумбина", NOCTURNE, 5, character="Колумбина"),
+         SignatureWeapon("Линея", GOLDEN_OATH, 5, character="Линея"),
+     ]
+-    plan = plan_investments(baseline, investables, weapons, budget=budget,)
++    # Реакции зависят от созвездия Линеи (C2) — пересчитываем их для каждого варианта
++    plan = plan_investments(baseline, investables, weapons, budget=budget,
++                            tweak=refresh_reactions)
+     book.add_plan(plan, f"Порядок инвестиций (до {budget} костов)",
+                   notes=["Кост = C0 персонажа, любое созвездие, R1 сигны и каждое пробуждение.",
+                          "Если на косте меняется несколько позиций — лучший вариант не "

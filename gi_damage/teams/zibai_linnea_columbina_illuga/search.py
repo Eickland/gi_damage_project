@@ -22,7 +22,8 @@ from gi_damage.core.search import (Candidate, Investable, SignatureWeapon,
 from gi_damage.data.artifacts import *
 from gi_damage.data.weapons import *
 from gi_damage.teams.zibai_linnea_columbina_illuga.builds import (
-    zibai_build, make_team, columbina_build,linnea_build,illuga_build)
+    zibai_build, make_team, columbina_build,linnea_build,illuga_build,
+    refresh_reactions)
 from gi_damage.teams.mizuki_faruzan_cmc_odette.rosters import c6_mizuki_main_stats
 from gi_damage.teams.mizuki_faruzan_diona_odette.builds import diona_build
 from gi_damage.teams.mizuki_faruzan_qiqi_odette.builds import qiqi_build
@@ -62,7 +63,9 @@ def investments(book: SearchBook, budget: int = 40) -> None:
         SignatureWeapon("Колумбина", NOCTURNE, 5, character="Колумбина"),
         SignatureWeapon("Линея", GOLDEN_OATH, 5, character="Линея"),
     ]
-    plan = plan_investments(baseline, investables, weapons, budget=budget,)
+    # Реакции зависят от созвездия Линеи (C2) — пересчитываем их для каждого варианта
+    plan = plan_investments(baseline, investables, weapons, budget=budget,
+                            tweak=refresh_reactions)
     book.add_plan(plan, f"Порядок инвестиций (до {budget} костов)",
                   notes=["Кост = C0 персонажа, любое созвездие, R1 сигны и каждое пробуждение.",
                          "Если на косте меняется несколько позиций — лучший вариант не "
