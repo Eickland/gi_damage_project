@@ -6,6 +6,7 @@ Moonsign: Ascendant Gleam активен. Сахароза рассеивает 
 Урона реакции у лунных бутонов нет — только прямой урон.
 
 Окна баффов:
+    Отряду: бонус лунных реакций от МС Сахарозы (не из лунного региона).
     INST       (Инструктор + A4 Сахарозы) — все удары Нефер и одно срабатывание
                Gravity Interference Колумбины (5 ударов);
     PALE_HYMN  (Лаума, 36 стаков) — 18 ударов теней Нефер и 18 ударов бутонов Колумбины.
@@ -28,9 +29,12 @@ from ...data.characters.lauma import LAUMA_COMBO_DICT, LAUMA_TIME
 from ...data.characters.columbina import COLUMBINA_COMBO_DICT, COLUMBINA_TIME
 from ...data.characters.sucrose import SUCROSE_COMBO_DICT
 from ...data.weapons import *
+from ...data.team_buffs import lunar_outsider_buff
 
 TEAM_BUFFS = (
     Buff(S.BASE_EM, 80.0, target=TEAM, source="Дендро резонанс: +80 МС"),
+    # Сахароза не из лунного региона: +2.25% урона лунных реакций за 100 МС (макс. 36%)
+    lunar_outsider_buff("Сахароза", "anemo"),
 )
 
 SUCROSE_TIME = 2.95
@@ -52,7 +56,7 @@ def nefer_build(constellation: int = 0, weapon=BLACKMARROW, artifacts=(NIGHT_SKY
         constellation=constellation,
         weapon=weapon,
         artifacts=artifacts,
-        extra_stats=merge_dicts(main_stats, STANDART_SUBSTAT_PRESET),
+        extra_stats=merge_dicts(main_stats, STANDART_SUBSTAT_PRESET_EM_SCALE),
         extra_buffs=tuple(extra_buffs),
         time=NEFER_TIME,
     )
@@ -65,7 +69,7 @@ def lauma_build(constellation: int = 0, weapon=SPINDLELUTE, artifacts=(DEEPWOOD,
         constellation=constellation,
         weapon=weapon,
         artifacts=artifacts,
-        extra_stats=merge_dicts(main_stats, STANDART_SUBSTAT_PRESET),
+        extra_stats=merge_dicts(main_stats, STANDART_SUBSTAT_PRESET_EM_SCALE),
         extra_buffs=tuple(extra_buffs),
         time=LAUMA_TIME,
     )
@@ -92,7 +96,7 @@ def sucrose_build(constellation: int = 6, weapon=SACFRAG, artifacts=(INSTRUCTOR,
         constellation=constellation,
         weapon=weapon,
         artifacts=artifacts,
-        extra_stats=merge_dicts({S.BASE_EM: 187.0 * 3}, STANDART_SUBSTAT_PRESET),
+        extra_stats=merge_dicts({S.BASE_EM: 139 * 2 + 187}, STANDART_SUBSTAT_PRESET),
         extra_buffs=tuple(extra_buffs),
         time=SUCROSE_TIME,
     )
