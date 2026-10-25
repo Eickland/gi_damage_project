@@ -171,6 +171,18 @@ SERENADE = ArtifactSet(
     },
 )
 
+DEEPWOOD = ArtifactSet(
+    name = "Воспоминания леса",
+    pieces=4,
+    stats_by_pieces={
+        2: {"dmg_bonus.dendro": 0.15},
+    },
+    buffs_by_pieces={
+        4: (Buff("res_reduction.dendro", 0.30, target=TEAM,
+                 source="Воспоминания леса 4ч: −30% дендро сопротивления"),),
+    },
+)
+
 GILDED = ArtifactSet(
     name="Позолоченные сны",
     pieces=4,

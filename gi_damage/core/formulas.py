@@ -69,10 +69,17 @@ def stellar_conduct_multiplier(polar_stacks:int = 1):
 #  Лунные реакции                                                              #
 # --------------------------------------------------------------------------- #
 #: Множитель прямого урона лунной реакции (Direct Lunar-…), по типу реакции
-LUNAR_DIRECT_FACTOR = {"lunar_crystallize": 1.6}
+LUNAR_DIRECT_FACTOR = {
+    "lunar_crystallize": 1.6,
+    "lunar_charged": 3.0,
+    "lunar_bloom": 1.0,
+}
 #: Базовый множитель урона лунной реакции (Reaction Lunar-…):
-#: урон = 1446.85 × множитель × …  (1.6 — именно у лунной кристаллизации)
-LUNAR_REACTION_MULTIPLIER = {"lunar_crystallize": 1.6}
+#: урон = 1446.85 × множитель × …  (урона реакции лунных бутонов не существует)
+LUNAR_REACTION_MULTIPLIER = {
+    "lunar_crystallize": 1.6,
+    "lunar_charged": 3.0,
+}
 
 
 def lunar_multiplier(stats: Stats, *tags: str) -> float:

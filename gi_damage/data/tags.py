@@ -34,6 +34,9 @@ DA4 = "da4"
 DA5 = "da5"
 DA6 = "da6"
 
+# --- Сахароза ------------------------------------ #
+SUCROSE_PASSIVE = "sucrose_passive"
+
 # --- Водяница ------------------------------------ #
 VODYA_LEAD  = "vodya_lead"     # 1-й потраченный стак Lead Vocal
 VODYA_CHORUS = "vodya_chorus"  # 1-й потраченный стак Chorus
@@ -111,10 +114,15 @@ FIELD_CATALOG = "field_catalog"
 #: Удар активного персонажа, тратящий стак Nightingale's Song (взрыв Иллуги)
 NIGHTINGALE = "nightingale_song"
 
+# --- Лаума ------------------------------------ #
+#: Удар лунных бутонов, тратящий стак Pale Hymn (взрыв Лаумы)
+PALE_HYMN = "pale_hymn"
+
 #Элегия
 ELEGY = "ELEGY"
 
 __all__ = ["ON", "OFF", "INST", "DREAM", "FROSTGLOW", "BREEZEBORNE",
            "ARMED", "DA1", "DA2", "DA3", "DA4", "DA5", "DA6","VODYA_LEAD","VODYA_CHORUS","TTDS_HALF","VV_CRYO","VV_PYRO"
            ,"VV_HYDRO","VV_ELECTRO","CATS_TAIL","SEVEN_SACRED","MIZUKI_C1","DECODING","TTDS_FULL","SANDRONE_CA_STACKS_1","SANDRONE_CA_STACKS_2","SANDRONE_CA_STACKS_3",
-           "NOBLE","PACTSWORN","TOGETHER_WE_RISE","SESSHOU_SAKURA","STARSAME","ELEGY","OFFENSIVE_DIRECTIVE","WRIO_C1","THEOSIS","VODYA_LEAD_ELEM","ZIBAI_C1","FIELD_CATALOG","NIGHTINGALE"]
+           "NOBLE","PACTSWORN","TOGETHER_WE_RISE","SESSHOU_SAKURA","STARSAME","ELEGY","OFFENSIVE_DIRECTIVE","WRIO_C1","THEOSIS","VODYA_LEAD_ELEM",
+           "ZIBAI_C1","FIELD_CATALOG","NIGHTINGALE","PALE_HYMN","SUCROSE_PASSIVE"]

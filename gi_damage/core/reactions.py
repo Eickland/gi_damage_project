@@ -28,6 +28,7 @@ DEFAULT_WEIGHTS: Tuple[float, ...] = (3 / 5, 3 / 10, 1 / 20, 1 / 20)
 #: Модели реакций
 REACTION_SSW = "stellar_swirl"
 REACTION_LUNAR_CRYSTALLIZE = "lunar_crystallize"
+REACTION_LUNAR_CHARGED = "lunar_charged"
 
 
 @dataclass
@@ -123,6 +124,30 @@ def lunar_crystallize_reaction(count: float, *tags: str, **kwargs) -> ReactionEv
         count=count,
         weights=kwargs.pop("weights", (0.60, 0.30, 0.05, 0.05)),
         model=REACTION_LUNAR_CRYSTALLIZE,
+        **kwargs,
+    )
+
+
+# --------------------------------------------------------------------------- #
+#  Лунный заряд                                                                #
+# --------------------------------------------------------------------------- #
+def lunar_charged_reaction(count: float, *tags: str, **kwargs) -> ReactionEvent:
+    """Урон реакции лунного заряда (удары молний Thundercloud), электро.
+
+        Урон = 3 × 1446.85 × (1 + Base Increase) × (1 + 6·МС/(МС+2000) + бонус)
+               × Сопр. × Крит × Возвышение
+
+    Считается для каждого персонажа и распределяется 60/30/5/5 по убыванию.
+    count — число ударов за ротацию.
+    """
+    return ReactionEvent(
+        name=kwargs.pop("name", "Лунный заряд"),
+        element=kwargs.pop("element", "electro"),
+        multiplier=LUNAR_REACTION_MULTIPLIER["lunar_charged"],
+        tags=tuple(tags),
+        count=count,
+        weights=kwargs.pop("weights", (0.60, 0.30, 0.05, 0.05)),
+        model=REACTION_LUNAR_CHARGED,
         **kwargs,
     )
 

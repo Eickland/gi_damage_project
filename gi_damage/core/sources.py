@@ -35,8 +35,11 @@ from .buffs import State, state
 ELEMENTAL = "elemental"
 STELLAR_SWIRL = "stellar_swirl"
 STELLAR_CONDUCT = "stellar_conduct"
-#: Прямой урон лунной кристаллизации (Direct Lunar-Crystallize)
+#: Прямой урон лунных реакций (Direct Lunar-…)
 LUNAR_CRYSTALLIZE = "lunar_crystallize"
+LUNAR_CHARGED = "lunar_charged"
+LUNAR_BLOOM = "lunar_bloom"
+LUNAR_MODELS = (LUNAR_CRYSTALLIZE, LUNAR_CHARGED, LUNAR_BLOOM)
 #: Общий тег всех лунных реакций (для "elevation.lunar", "lunar_bonus" и т.п.)
 LUNAR = "lunar"
 
@@ -131,22 +134,50 @@ def stellar_conduct(name: str, scaling: str, mv: MotionValue, element: str,
                         occurrences=list(occurrences), **kwargs)
 
 
-def lunar_crystallize(name: str, scaling: str, mv: MotionValue,
-                      occurrences: Sequence[Occurrence], kind: str = "skill",
-                      element: str = "geo", **kwargs) -> DamageSource:
-    """Прямой урон лунной кристаллизации (гео урон, считающийся уроном реакции).
+def lunar_direct_source(name: str, reaction: str, scaling: str, mv: MotionValue,
+                        occurrences: Sequence[Occurrence], element: str,
+                        kind: str = "skill", **kwargs) -> DamageSource:
+    """Прямой урон лунной реакции (Direct Lunar-…).
 
-        База = 1.6 × Стат × Множитель × (1 + Base Increase)
+        База = K × Стат × Множитель × (1 + Base Increase)
                × (1 + 6·МС/(МС+2000) + лунный бонус урона)
         Итог = (База + Доп. базовый урон) × Сопр. × Крит × Возвышение
 
-    Защита цели не учитывается. Теги удара: стихия, тип, "lunar_crystallize",
-    "lunar" — поэтому работают ключи "lunar_bonus", "lunar_bonus.lunar_crystallize",
-    "elevation.lunar", "flat_base_dmg.lunar_crystallize" и т.д.
+    K — formulas.LUNAR_DIRECT_FACTOR: кристаллизация 1.6, заряд 3, бутоны 1.
+    Защита цели не учитывается. Теги удара: стихия, тип, модель реакции
+    ("lunar_crystallize" / "lunar_charged" / "lunar_bloom") и общий "lunar" —
+    поэтому работают ключи "lunar_bonus", "lunar_bonus.lunar_charged",
+    "elevation.lunar", "flat_base_dmg.lunar_bloom" и т.д.
     """
+    if reaction not in LUNAR_MODELS:
+        raise ValueError(f"Неизвестная лунная реакция: {reaction!r}")
     kwargs.setdefault("applies_def", False)
     extra = tuple(kwargs.pop("extra_tags", ()))
     return DamageSource(name=name, scaling=scaling, mv=mv, element=element,
-                        kind=kind, model=LUNAR_CRYSTALLIZE,
+                        kind=kind, model=reaction,
                         occurrences=list(occurrences),
                         extra_tags=(LUNAR,) + extra, **kwargs)
+
+
+def lunar_crystallize(name: str, scaling: str, mv: MotionValue,
+                      occurrences: Sequence[Occurrence], kind: str = "skill",
+                      element: str = "geo", **kwargs) -> DamageSource:
+    """Прямой урон лунной кристаллизации (гео, ×1.6)."""
+    return lunar_direct_source(name, LUNAR_CRYSTALLIZE, scaling, mv, occurrences,
+                               element, kind, **kwargs)
+
+
+def lunar_charged(name: str, scaling: str, mv: MotionValue,
+                  occurrences: Sequence[Occurrence], kind: str = "skill",
+                  element: str = "electro", **kwargs) -> DamageSource:
+    """Прямой урон лунного заряда (электро, ×3)."""
+    return lunar_direct_source(name, LUNAR_CHARGED, scaling, mv, occurrences,
+                               element, kind, **kwargs)
+
+
+def lunar_bloom(name: str, scaling: str, mv: MotionValue,
+                occurrences: Sequence[Occurrence], kind: str = "skill",
+                element: str = "dendro", **kwargs) -> DamageSource:
+    """Прямой урон лунных бутонов (дендро, ×1). Урона реакции у бутонов нет."""
+    return lunar_direct_source(name, LUNAR_BLOOM, scaling, mv, occurrences,
+                               element, kind, **kwargs)

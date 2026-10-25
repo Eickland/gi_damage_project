@@ -782,16 +782,17 @@ NOCTURNE = Weapon(
     base_atk=542.0,
     refinement=1,
     stats={S.CRIT_VALUE: 0.882},
+    # крит-вэлью ко ВСЕМ лунным реакциям (ключ "crit_value.lunar")
     stats_by_refinement={1: {S.HP_PCT: 0.24,
-                             "crit_value.lunar_crystallize":0.6},
+                             "crit_value.lunar":0.6},
                          2: {S.HP_PCT: 0.28,
-                              "crit_value.lunar_crystallize":0.8},
+                              "crit_value.lunar":0.8},
                         3: {S.HP_PCT: 0.32,
-                             "crit_value.lunar_crystallize":1},
+                             "crit_value.lunar":1},
                         4: {S.HP_PCT: 0.36,
-                             "crit_value.lunar_crystallize":1.2},
+                             "crit_value.lunar":1.2},
                         5: {S.HP_PCT: 0.4,
-                             "crit_value.lunar_crystallize":1.4},},
+                             "crit_value.lunar":1.4},},
     note="",
 )
 
@@ -811,6 +812,48 @@ MOONSHARD = Weapon(
                         5: {S.DEF_PCT: 0.4,
                              "lunar_bonus.lunar_crystallize":1.28},},
     note="",
+)
+
+# --------------------------------------------------------------------------- #
+#  Оружие отрядов лунных бутонов                                               #
+# --------------------------------------------------------------------------- #
+BLACKMARROW = Weapon(
+    name="Blackmarrow",
+    base_atk=454.0,
+    refinement=5,
+    stats={S.BASE_EM: 221.0},
+    # +24% урона лунных бутонов и ещё +24% при Moonsign: Ascendant Gleam
+    # (бонус к урону цветения пока не используется — реакции нет)
+    stats_by_refinement={5: {"lunar_bonus.lunar_bloom": 0.24 + 0.24}},
+    note="Катализатор. Значения пассивки — как в описании.",
+)
+
+#: Пассивка Реликвии истины по рангу: КШ, МС (Secret of Lies), КУ (Moon of Truth)
+RELIQUARY_PASSIVE = {r: (0.08 + 0.02 * (r - 1), 80.0 + 20.0 * (r - 1), 0.24 + 0.06 * (r - 1))
+                     for r in range(1, 6)}
+#: Оба эффекта активны одновременно → МС и КУ ×1.5
+RELIQUARY_BOTH = 1.5
+
+#: Реликвия истины, когда выполнены ВСЕ условия (навык + урон лунных бутонов):
+#: КШ, МС ×1.5 и КУ ×1.5. Для персонажей без лунных бутонов — RELIQUARY_OF_TRUTH.
+RELIQUARY_OF_TRUTH_LUNAR = Weapon(
+    name="Reliquary of Truth",
+    base_atk=542.0,
+    stats={S.CRIT_VALUE: 0.882},
+    refinement=1,
+    stats_by_refinement={
+        r: {S.CRIT_VALUE: 2 * cr + cd * RELIQUARY_BOTH, S.BASE_EM: em * RELIQUARY_BOTH}
+        for r, (cr, em, cd) in RELIQUARY_PASSIVE.items()
+    },
+    note="Сигна Нефер; Secret of Lies + Moon of Truth одновременно.",
+)
+
+SPINDLELUTE = Weapon(
+    name="Spindlelute",
+    base_atk=510.0,
+    refinement=5,
+    stats_by_refinement={5: {S.BASE_EM: 200.0}},
+    note="Катализатор. Пассивка R5: +200 МС.",
 )
 
 ALL = {w.name: w for w in (WANDERER_SONG, SUNNY_MORNING_SLEEP_IN, EXAIPHANES,

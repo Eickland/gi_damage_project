@@ -24,7 +24,7 @@ from .entities import Build, Enemy
 from .formulas import (defense_multiplier, elemental_damage, lunar_direct, lunar_reaction, stellar_swirl_direct,
                        stellar_swirl_reaction,stellar_conduct_direct)
 from .reactions import ReactionEvent, distribute, pick_primary
-from .sources import ELEMENTAL, STELLAR_SWIRL,STELLAR_CONDUCT, LUNAR_CRYSTALLIZE, LUNAR, DamageSource
+from .sources import ELEMENTAL, STELLAR_SWIRL,STELLAR_CONDUCT, LUNAR_MODELS, LUNAR, DamageSource
 from .stats import S, Stats, crit_multiplier
 from .cycle import Phase
 
@@ -356,10 +356,11 @@ class Team:
                 stat_value, mv, stats, tags, res, crit, elevation,
                 flat_base=src.flat_base + stats.flat_base_dmg(*tags),
                 polar_stacks=src.polar_stacks)
-        elif src.model == LUNAR_CRYSTALLIZE:
+        elif src.model in LUNAR_MODELS:
             value = lunar_direct(
                 stat_value, mv, stats, tags, res, crit, elevation,
-                flat_base=src.flat_base + stats.flat_base_dmg(*tags))
+                flat_base=src.flat_base + stats.flat_base_dmg(*tags),
+                reaction=src.model)
         else:
             def_mult = self.enemy.def_mult if src.applies_def else 1.0
             ignore = stats.def_ignore(*tags)
@@ -392,14 +393,15 @@ class Team:
         return self.enemy.res_multiplier(element, stats.res_reduction(element))
 
     def _reaction_damage(self, event: ReactionEvent, stats: Stats, b: Build) -> float:
-        if event.model == LUNAR_CRYSTALLIZE:
-            tags = (event.element, LUNAR_CRYSTALLIZE, LUNAR, "reaction")
+        lunar = event.model in LUNAR_MODELS
+        if lunar:
+            tags = (event.element, event.model, LUNAR, "reaction")
         else:
             tags = (event.element, "stellar_swirl", "reaction")
         crit = crit_multiplier(stats, b.effective_crit_mode(), *tags)
         res = self._res(event.element, stats, event.res_override)
         elevation = self.enemy.elevation + stats.elevation(*tags)
-        if event.model == LUNAR_CRYSTALLIZE:
+        if lunar:
             return lunar_reaction(
                 event.multiplier, stats, tags, res, crit, elevation,
                 base_dmg=event.base_dmg, flat_base=stats.flat_base_dmg(*tags))
