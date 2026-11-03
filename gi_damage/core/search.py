@@ -179,6 +179,10 @@ class Investable:
     owned             — True: C0 уже есть (бесплатен), платные только C1..Cn;
                         False: C0 тоже стоит 1 кост, пока не куплен — слот
                         занимает базовый персонаж
+    fixed_constellation — закрепить персонажа на этом созвездии: он есть
+                        бесплатно, созвездия не докупаются (max_constellation
+                        и owned игнорируются). Его сигна (`SignatureWeapon`
+                        с character=label) покупается как обычно.
     """
 
     label: str
@@ -186,14 +190,28 @@ class Investable:
     make: Callable[[int], Build]
     max_constellation: int = 6
     owned: bool = True
+    fixed_constellation: Optional[int] = None
     _name: Optional[str] = field(default=None, init=False, repr=False, compare=False)
+
+    def __post_init__(self) -> None:
+        fc = self.fixed_constellation
+        if fc is not None and not 0 <= fc <= 6:
+            raise ValueError(f"Investable {self.label!r}: fixed_constellation={fc}, нужно 0..6")
+
+    @property
+    def fixed(self) -> bool:
+        return self.fixed_constellation is not None
 
     @property
     def max_steps(self) -> int:
+        if self.fixed:
+            return 0
         return self.max_constellation + (0 if self.owned else 1)
 
     def constellation_at(self, steps: int) -> Optional[int]:
         """Созвездие после `steps` покупок; None — персонажа нет."""
+        if self.fixed:
+            return self.fixed_constellation
         if self.owned:
             return steps
         return None if steps == 0 else steps - 1

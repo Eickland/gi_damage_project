@@ -37,6 +37,9 @@ def main(argv: list[str]) -> int:
 
     book.add(Roster(base, [Variation(slot="Ризли", constellations=[1, 2, 6])]),
              "Созвездия Ризли", ascending=True)
+    book.add(Roster(base, [Variation(slot="Ризли",
+                                     weapons=[ECHOES.at(5), KAGURA.at(1), WANDERER_SONG_CRYO.at(5),STARSEALED,SACFRAG])]),
+             "Оружие Яэ", ascending=True)
     book.add(Roster(base, [Variation(slot="Яэ Мико", constellations=[1, 2, 6])]),
              "Созвездия Яэ", ascending=True)
     book.add(Roster(base, [Variation(slot="Одетта", builds=[

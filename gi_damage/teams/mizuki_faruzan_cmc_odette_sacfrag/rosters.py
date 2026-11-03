@@ -125,7 +125,7 @@ def main(argv: list[str]) -> int:
     book.add(roster4, "Созвездия Одетта", ascending=True)
     
     roster5 = Roster(base, [
-        Variation(slot="Мидзуки", artifact_sets=[(VIRIDESCENT,), (NIGHT_SKY.at(2),AUBADE.at(2),), (SCARLET_PROOF,)]),
+        Variation(slot="Мидзуки", artifact_sets=[(VIRIDESCENT,), (NIGHT_SKY.at(2),AUBADE.at(2),), (SCARLET_PROOF,), (GILDED,)]),
     ], tweak=keep_viridescent)
     book.add(roster5, "Наборы артефактов Мидзуки", ascending=True)
     

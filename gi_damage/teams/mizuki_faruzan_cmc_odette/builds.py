@@ -190,7 +190,7 @@ def make_team(name: str, mizuki_c: int, mizuki_weapon, odette_c, odette_weapon, 
 
 def all_teams() -> Dict[str, Team]:
     variants = (
-        ("Мидзуки C2R0, C0R0 Одетта, C4R3 Крио ГГ, С6R0 Фарузан", 2, WANDERER_SONG.at(5), 0, SILVER_LIGHT,(NIGHT_SKY.at(2),AUBADE.at(2)),VIRIDESCENT,FAV_BOW, MILLELITH,4),
+        ("Мидзуки C2R0, C0R0 Одетта, C4R3 Крио ГГ, С6R0 Фарузан", 2, SACFRAG.at(5), 0, SILVER_LIGHT,(NIGHT_SKY.at(2),AUBADE.at(2)),VIRIDESCENT,FAV_BOW, MILLELITH,4),
         ("Мидзуки C2R0, C2R0 Одетта, C4R3 Крио ГГ, С6R3 Фарузан", 2, WANDERER_SONG.at(5), 2, SILVER_LIGHT,(NIGHT_SKY.at(2),AUBADE.at(2)),VIRIDESCENT,BREEZEBORNE_BOW.at(3), MILLELITH,4),
         ("Мидзуки C3R1, C2R1 Одетта, C4R3 Крио ГГ, С4R3 Фарузан", 3, SUNNY_MORNING_SLEEP_IN, 2, FROSTFEATHER,(NIGHT_SKY.at(2),AUBADE.at(2)),VIRIDESCENT,BREEZEBORNE_BOW.at(3), MILLELITH,4),
         ("Мидзуки C3R1, C2R1 Одетта, C6R3 Крио ГГ, С4R3 Фарузан", 3, SUNNY_MORNING_SLEEP_IN, 2, FROSTFEATHER,(NIGHT_SKY.at(2),AUBADE.at(2)),VIRIDESCENT,BREEZEBORNE_BOW.at(3), MILLELITH,6),

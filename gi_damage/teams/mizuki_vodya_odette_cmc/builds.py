@@ -195,7 +195,8 @@ def all_teams() -> Dict[str, Team]:
         ("Мидзуки C2, C2 Одетта, C2R3 Крио ГГ, С0 Водяница", 2, WANDERER_SONG.at(5), 2, SILVER_LIGHT,(GILDED,),(MILLELITH,),TTDS_HALF_CATALYSATOR,0,4,(HEART_OF_FORGE.at(2),SCARLET_PROOF.at(2))),
         ("Мидзуки C3R1, C2R1 Одетта, C4R3 Крио ГГ, С0 Водяница", 3, SUNNY_MORNING_SLEEP_IN.at(1), 2, FROSTFEATHER,(VIRIDESCENT,),(MILLELITH,),TTDS_HALF_CATALYSATOR,0,4,(HEART_OF_FORGE.at(2),SCARLET_PROOF.at(2))),
         ("Мидзуки C3R1, C2R1 Одетта, C6R3 Крио ГГ, С0 Водяница", 3, SUNNY_MORNING_SLEEP_IN.at(1), 2, FROSTFEATHER,(VIRIDESCENT,),(MILLELITH,),TTDS_HALF_CATALYSATOR,0,6,(HEART_OF_FORGE.at(2),SCARLET_PROOF.at(2))),
-        ("Мидзуки C6R0, C2R0 Одетта, C4R3 Крио ГГ, С0R1 Водяница", 6, STARCALLERS_WATCH.at(1), 2, AZURELIGHT,(GILDED,),(MILLELITH,),MAELSTROM,0,4,(HEART_OF_FORGE.at(2),SCARLET_PROOF.at(2))),
+        ("Мидзуки C6R0, C2R0 Одетта, C6R3 Крио ГГ, С2R1 Водяница", 6, STARCALLERS_WATCH.at(1), 2, AZURELIGHT,(GILDED,),(MILLELITH,),MAELSTROM,2,6,(HEART_OF_FORGE.at(2),SCARLET_PROOF.at(2))),
+        ("Мидзуки C6R5, C6R5 Одетта, C6R3 Крио ГГ, С6R5 Водяница", 6, SUNNY_MORNING_SLEEP_IN.at(5), 6, FROSTFEATHER.at(5),(GILDED,),(MILLELITH,),MAELSTROM.at(5),6,4,(HEART_OF_FORGE.at(2),SCARLET_PROOF.at(2))),
 
 
     )

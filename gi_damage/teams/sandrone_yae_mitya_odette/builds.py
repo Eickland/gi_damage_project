@@ -102,9 +102,9 @@ def mitya_build(constellation: int = 0, weapon=TTDS_FULL_CATALYSATOR, artifacts=
     )
 
 
-def make_team(name: str, sandrone_c: int = 0, sandrone_weapon=TIDAL_SHADOW,
+def make_team(name: str, sandrone_c: int = 0, sandrone_weapon=TEASPOON,
               odette_c: int = 0, odette_weapon=SILVER_LIGHT,
-              yae_c: int = 1, yae_weapon=ECHOES.at(5),
+              yae_c: int = 2, yae_weapon=ECHOES.at(5),
               mitya_c: int = 0, mitya_weapon=TTDS_FULL_CATALYSATOR,
               sandrone_artifacts=(DISENCHANTMENT,), odette_artifacts=(HEART_OF_FORGE,),
               yae_artifacts=(DISENCHANTMENT,), mitya_artifacts=(MILLELITH,)) -> Team:

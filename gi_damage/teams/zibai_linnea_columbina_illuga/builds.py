@@ -4,14 +4,16 @@
 Все четверо — Moonsign, поэтому эффекты Ascendant Gleam активны.
 
 Реакции лунной кристаллизации (Moondrift Harmony — удары лунных клеток):
-    18 — пока Цзы Бай на поле, 6 — в остальное время;
-    C2 Линеи: ещё 12 (6 + 6) от Heavy Overdrive Hammer.
+    12 — пока Цзы Бай на поле, 6 — в остальное время;
+    C2 Линеи (зависит от комбо, LC_LINNEA_C2):
+        super_power — 6 пока Цзы Бай на поле + 6 вне поля;
+        ultra_power — 0 пока Цзы Бай на поле + 3 вне поля.
     Ростеры/поиск: передавайте tweak=refresh_reactions (см. ниже).
     A4 Колумбины (Law of the New Moon): в среднем ×1.33 к числу ударов.
 
 Окна баффов:
     NIGHTINGALE (взрыв Иллуги) — все удары Цзы Бай и удар Колумбины от C1;
-    FIELD_CATALOG (C1 Линеи)   — удары LC Линеи (4), Цзы Бай (9, с C1 — 10),
+    FIELD_CATALOG (C1 Линеи)   — удар LC Линеи (1, Million Ton Crush), Цзы Бай (9, с C1 — 10),
                                  Колумбины (3).
 """
 
@@ -30,7 +32,8 @@ from ...data.artifacts import *
 from ...data.artifacts_presets import *
 from ...data.tags import *
 from ...data.characters.zibai import ZIBAI_COMBO_DICT, ZIBAI_NAME, zibai_time
-from ...data.characters.linnea import LINNEA_COMBO_DICT, LINNEA_NAME, LINNEA_TIME
+from ...data.characters.linnea import (LINNEA_COMBO_DICT, LINNEA_NAME, LINNEA_TIME,
+                                       linnea_combo_name)
 from ...data.characters.columbina import (COLUMBINA_COMBO_DICT, COLUMBINA_NAME,
                                           COLUMBINA_TIME, MOONDRIFT_EXTRA)
 from ...data.characters.illuga import ILLUGA_COMBO_DICT, ILLUGA_NAME, ILLUGA_TIME
@@ -44,18 +47,26 @@ ROTATION = "Линея E/Колумбина EQ/Иллуги EQ/Цзы Бай E N
 #: Реакции за ротацию (до множителя A4 Колумбины)
 LC_ON_ZIBAI = 12
 LC_OFF_ZIBAI = 6
-LC_LINNEA_C2_ON, LC_LINNEA_C2_OFF = 6, 6
+#: Реакции от C2 Линеи по комбо: (пока Цзы Бай на поле, пока Цзы Бай вне поля)
+LC_LINNEA_C2 = {
+    "super_power": (6, 6),
+    "ultra_power": (0, 3),
+}
+LINNEA_DEFAULT_COMBO = "super_power"
 
 
 def enemy() -> Enemy:
     return Enemy(res={"geo": 0.10, "hydro": 0.10}, def_mult=0.4875, elevation=0.0)
 
 
-def reactions(linnea_c: int, with_columbina: bool = True):
-    """Удары лунных клеток за ротацию (C2 Линеи добавляет обычные реакции)."""
+def reactions(linnea_c: int, with_columbina: bool = True,
+              linnea_combo: str = LINNEA_DEFAULT_COMBO):
+    """Удары лунных клеток за ротацию (C2 Линеи добавляет обычные реакции,
+    их число зависит от комбо Линеи — см. LC_LINNEA_C2)."""
     k = 1.0 + (MOONDRIFT_EXTRA if with_columbina else 0.0)
-    on = LC_ON_ZIBAI + (LC_LINNEA_C2_ON if linnea_c >= 2 else 0)
-    off = LC_OFF_ZIBAI + (LC_LINNEA_C2_OFF if linnea_c >= 2 else 0)
+    c2_on, c2_off = LC_LINNEA_C2[linnea_combo] if linnea_c >= 2 else (0, 0)
+    on = LC_ON_ZIBAI + c2_on
+    off = LC_OFF_ZIBAI + c2_off
     return (
         lunar_crystallize_reaction(on * k, name="Лунная кристаллизация (Цзы Бай на поле)"),
         lunar_crystallize_reaction(off * k, name="Лунная кристаллизация (Цзы Бай вне поля)",
@@ -74,8 +85,10 @@ def refresh_reactions(team: Team) -> Team:
         plan_investments(baseline, ..., tweak=refresh_reactions)
     """
     names = {b.name: b for b in team.builds}
-    linnea_c = names[LINNEA_NAME].constellation if LINNEA_NAME in names else 0
-    return replace(team, reactions=reactions(linnea_c, COLUMBINA_NAME in names))
+    linnea = names.get(LINNEA_NAME)
+    linnea_c = linnea.constellation if linnea else 0
+    combo = linnea_combo_name(linnea.character) if linnea else LINNEA_DEFAULT_COMBO
+    return replace(team, reactions=reactions(linnea_c, COLUMBINA_NAME in names, combo))
 
 
 def zibai_build(constellation: int = 0, weapon=FLUTE_OF_EZPITZAL, artifacts=(NIGHT_SKY,),
@@ -94,9 +107,10 @@ def zibai_build(constellation: int = 0, weapon=FLUTE_OF_EZPITZAL, artifacts=(NIG
 
 def linnea_build(constellation: int = 0, weapon=COVENANT_FROST_SNOW, artifacts=(AUBADE,),
                  main_stats={S.DEF_PCT: 0.583 * 2, S.CRIT_VALUE: 0.622},
-                 extra_buffs: Sequence[Buff] = ()) -> Build:
+                 extra_buffs: Sequence[Buff] = (),
+                 combo: str = LINNEA_DEFAULT_COMBO) -> Build:
     return Build(
-        character=LINNEA_COMBO_DICT["super_power"],
+        character=LINNEA_COMBO_DICT[combo],
         constellation=constellation,
         weapon=weapon,
         artifacts=artifacts,
@@ -134,31 +148,32 @@ def illuga_build(constellation: int = 6, weapon=DRAGONS_BANE, artifacts=(SERENAD
     )
 
 
-def make_team(name: str, zibai_c: int = 0, linnea_c: int = 2,
-              columbina_c: int = 0, illuga_c: int = 6,
-              zibai_weapon=HARBINGER.at(5), linnea_weapon=GOLDEN_OATH.at(1),
-              columbina_weapon=PROTOTYPE_AMBER.at(1), illuga_weapon=DRAGONS_BANE,
+def make_team(name: str, zibai_c: int = 2, linnea_c: int = 2,
+              columbina_c: int = 2, illuga_c: int = 6,
+              zibai_weapon=MOONSHARD.at(1), linnea_weapon=GOLDEN_OATH.at(1),
+              columbina_weapon=NOCTURNE.at(1), illuga_weapon=DRAGONS_BANE,
               zibai_artifacts=(NIGHT_SKY,), linnea_artifacts=(AUBADE,),
-              columbina_artifacts=(AUBADE,), illuga_artifacts=(SERENADE,)) -> Team:
+              columbina_artifacts=(AUBADE,), illuga_artifacts=(SERENADE,),
+              linnea_combo: str = "super_power") -> Team:
     return Team(
         name=name,
         builds=[
             zibai_build(zibai_c, zibai_weapon, zibai_artifacts),
-            linnea_build(linnea_c, linnea_weapon, linnea_artifacts),
+            linnea_build(linnea_c, linnea_weapon, linnea_artifacts, combo=linnea_combo),
             columbina_build(columbina_c, columbina_weapon, columbina_artifacts),
             illuga_build(illuga_c, illuga_weapon, illuga_artifacts),
         ],
         enemy=enemy(),
-        reactions=reactions(linnea_c),
+        reactions=reactions(linnea_c, linnea_combo=linnea_combo),
         buffs=TEAM_BUFFS,
         rotation=ROTATION,
         config=Config(),
     )
 
 
-def team_name(zibai_c=0, linnea_c=2, columbina_c=2, illuga_c=6) -> str:
-    return (f"C{zibai_c}R5 Цзы Бай, C{linnea_c}R5 Линея, "
-            f"C{columbina_c}R5 Колумбина, C{illuga_c}R5 Иллуги")
+def team_name(zibai_c=0, linnea_c=0, columbina_c=0, illuga_c=6) -> str:
+    return (f"C{zibai_c}R0 Цзы Бай, C{linnea_c}R0 Линея, "
+            f"C{columbina_c}R0 Колумбина, C{illuga_c}R0 Иллуги")
 
 
 BASE_NAME = team_name()

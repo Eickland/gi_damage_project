@@ -29,7 +29,7 @@ TEAM_BUFFS = (
 )
 
 #: Время каждого персонажа в ротации (секунды)
-TIMES = {"Сандроне": 14.5, "Алеша": 1.65, "Одетта": 2.4, "Яэ Мико": 2.4}
+TIMES = {"Сандроне": 14.5, "Алеша": 1.9, "Одетта": 2.4, "Яэ Мико": 2.4}
 
 ROTATION = "Алеша EQ/Одетта EE/Яэ EEE/Сандроне E CA EQ CA E CA E"
 
@@ -104,11 +104,11 @@ def alyosha_build(constellation: int = 6, weapon=FAV_LANCE, artifacts=(HEART_OF_
 
 
 def make_team(name: str, sandrone_c: int = 0, sandrone_weapon=ATONEMENT,
-              odette_c: int = 0, odette_weapon=SILVER_LIGHT,
+              odette_c: int = 2, odette_weapon=SILVER_LIGHT,
               yae_c: int = 2, yae_weapon=ECHOES.at(5),
-              alyosha_c: int = 6, alyosha_weapon=FAV_LANCE,
-              sandrone_artifacts=(DISENCHANTMENT,), odette_artifacts=(MILLELITH,),
-              yae_artifacts=(DISENCHANTMENT,), alyosha_artifacts=(HEART_OF_FORGE,)) -> Team:
+              alyosha_c: int = 6, alyosha_weapon=SYMPHONIST,
+              sandrone_artifacts=(DISENCHANTMENT,), odette_artifacts=(DISENCHANTMENT,),
+              yae_artifacts=(MILLELITH,), alyosha_artifacts=(HEART_OF_FORGE,)) -> Team:
     return Team(
         name=name,
         builds=[

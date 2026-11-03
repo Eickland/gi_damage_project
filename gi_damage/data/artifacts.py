@@ -143,6 +143,8 @@ AUBADE = ArtifactSet(
     buffs_by_pieces={
         4: (Buff(S.LUNAR_BONUS, 0.60, target=SELF, requires=(OFF,),
                  source="Рассветная песнь 4ч: +60% урона лунных реакций вне поля"),),
+        4: (Buff(S.LUNAR_BONUS, 0.60, target=SELF, requires=(AUBADE_SPECIAL,),
+                 source="Рассветная песнь 4ч: +60% урона лунных реакций для ударов на поле, занимающие менее 3с после переключения персонажа"),),
     },
 )
 
@@ -197,6 +199,21 @@ GILDED = ArtifactSet(
                  source="Позолоченные сны 4ч: +50 МС за союзника иной стихии (до 3)"),
         ),
     },
+)
+
+
+STELLAR_SET = ArtifactSet(
+    name="Звёздный сет",
+    pieces=4,
+    stats_by_pieces={
+        # 2 предмета: +18% атаки носителю
+        2: {S.ATK_PCT: 0.18},
+    },
+    buffs_by_pieces={
+        4: (Buff(S.CRIT_VALUE, 0.40 * 2, target=SELF,
+                 source="Звёздный сет 4ч: +40% крит. шанса носителю"),),
+    },
+    note="Название набора пока неизвестно.",
 )
 
 ALL = {a.name: a for a in (INSTRUCTOR, VIRIDESCENT, MILLELITH, HEART_OF_FORGE)}

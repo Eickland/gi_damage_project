@@ -51,6 +51,10 @@ ALIASES: Dict[str, Dict[str, str]] = {
         "Иллуги" : "illuga",
         "Нефер" : "nefer",
         "Лаума" : "lauma",
+        "Нилу" : "nilou",
+        "Шилонен" : "xilonen",
+        "Даника" : "danika",
+        "Анастасия" : "anastasia",
     },
     "weapons": {
         "Песнь странника": "wanderers_song",
@@ -98,6 +102,9 @@ ALIASES: Dict[str, Dict[str, str]] = {
         "Spindlelute":"spindlelute",
         "Nightweaver":"nightweaver",
         "Blackmarrow":"blackmarrow",
+        "Ключ Хадж-нисут":"key_of_khaj_nisut",
+        "Кодекс фавония":"fav_codex",
+        "Артемизия":"artemisia",
     },
     "artifacts": {
         "Инструктор": "instructor",
@@ -113,6 +120,7 @@ ALIASES: Dict[str, Dict[str, str]] = {
         "Знать":"noble",
         "Серенада":"serenade",
         "Воспоминания леса":"deepwood",
+        "Звёздный сет":"stellar_set",
     },
 }
 

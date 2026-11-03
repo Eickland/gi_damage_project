@@ -75,7 +75,7 @@ def main(argv: list[str]) -> int:
     #  Пример 1: перебор оружия Мидзуки                                    #
     # ------------------------------------------------------------------ #
 
-    base = make_team("Мидзуки C2", 2, STARCALLERS_WATCH, 2, SILVER_LIGHT, (GILDED,), (MILLELITH,), MAELSTROM,0,4,(HEART_OF_FORGE.at(2),SCARLET_PROOF.at(2)))
+    base = make_team("Мидзуки C2", 2, STARCALLERS_WATCH, 0, SILVER_LIGHT, (GILDED,), (MILLELITH,), TTDS_FULL_CATALYSATOR,0,4,(HEART_OF_FORGE.at(2),SCARLET_PROOF.at(2)))
     
     
     roster = Roster(base, [Variation(slot="Мидзуки",

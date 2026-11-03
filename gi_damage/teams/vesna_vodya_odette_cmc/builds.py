@@ -137,13 +137,13 @@ def odette_build(constellation: int = 0, weapon=SILVER_LIGHT,
         time=TIMES["Одетта"] + (ODETTE_BURST_TIME if use_burst else 0.0),
     )
 
-def vodya_build(constellation: int = 0,weapon=TTDS_HALF_CATALYSATOR,artifacts:ArtifactSet=MILLELITH, extra_buffs: Sequence[Buff] = ()) -> Build:
+def vodya_build(constellation: int = 0,weapon=TTDS_HALF_CATALYSATOR,artifacts=(MILLELITH,), extra_buffs: Sequence[Buff] = ()) -> Build:
 
     return Build(
         character=VODYA_COMBO_DICT["off_field"],
         constellation=constellation,
         weapon=weapon,
-        artifacts=(artifacts,),
+        artifacts=artifacts,
         extra_stats=merge_dicts(
             {S.HP_PCT: 0.466 * 3},
             STANDART_SUBSTAT_PRESET),
@@ -169,7 +169,7 @@ def reactions():
 # =========================================================================== #
 #  Отряды                                                                     #
 # =========================================================================== #
-def make_team(name: str, vesna_c: int, vesna_weapon, odette_c, odette_weapon, vesna_artifacts = SCARLET_PROOF, vodya_artifacts = MILLELITH,
+def make_team(name: str, vesna_c: int, vesna_weapon, odette_c, odette_weapon, vesna_artifacts = SCARLET_PROOF, vodya_artifacts = (MILLELITH,),
               vodya_weapon = TTDS_HALF_CATALYSATOR, vodya_c = 0, cmc_c=4,cmc_arts=(HEART_OF_FORGE.at(2),SCARLET_PROOF.at(2))) -> Team:
     """Собрать отряд. mizuki_c — созвездие Мидзуки (0, 1 или 2).
 
@@ -195,12 +195,10 @@ def make_team(name: str, vesna_c: int, vesna_weapon, odette_c, odette_weapon, ve
 
 def all_teams() -> Dict[str, Team]:
     variants = (
-        ("Весна C0R0, C0R0 Одетта, C4R3 Крио ГГ, С0R0 Водяница", 0, EMBERWELL.at(5), 0, SILVER_LIGHT,SCARLET_PROOF,MILLELITH,TTDS_HALF_CATALYSATOR,0,4,(HEART_OF_FORGE.at(2),SCARLET_PROOF.at(2))),
-        ("Весна C1R1, C0R0 Одетта, C4R3 Крио ГГ, С0R1 Водяница", 1, CHRYSALIS, 0, SILVER_LIGHT,SCARLET_PROOF,MILLELITH,MAELSTROM,0,4,(NOBLESSE,)),
-        ("Весна C0R1, C0R0 Одетта, C4R3 Крио ГГ, С0R0 Водяница", 0, CHRYSALIS.at(1), 0, SILVER_LIGHT, SCARLET_PROOF, MILLELITH, TTDS_HALF_CATALYSATOR,0,4,(HEART_OF_FORGE.at(2),SCARLET_PROOF.at(2))),
-        ("Весна C0R1, C0R0 Одетта, C4R3 Крио ГГ, С0R1 Водяница", 0, CHRYSALIS.at(1), 0, SILVER_LIGHT, SCARLET_PROOF, MILLELITH, MAELSTROM,0,4,(HEART_OF_FORGE.at(2),SCARLET_PROOF.at(2))),
-        ("Весна C0R0, C2R0 Одетта, C4R3 Крио ГГ, С0R0 Водяница", 0, EMBERWELL.at(5), 2, SILVER_LIGHT,SCARLET_PROOF,MILLELITH,TTDS_HALF_CATALYSATOR,0,4,(HEART_OF_FORGE.at(2),SCARLET_PROOF.at(2))),
-        ("Весна C0R1, C2R0 Одетта, C4R3 Крио ГГ, С0R0 Водяница", 0, CHRYSALIS, 2, SILVER_LIGHT,SCARLET_PROOF,MILLELITH,TTDS_HALF_CATALYSATOR,0,4,(HEART_OF_FORGE.at(2),SCARLET_PROOF.at(2))),
+        ("Весна C0R1, C2R1 Одетта, C4R3 Крио ГГ, С0R0 Водяница", 0, CHRYSALIS, 2, FROSTFEATHER,SCARLET_PROOF,(MILLELITH.at(2),VOURUKASHA.at(2)),TTDS_HALF_CATALYSATOR,0,4,(MILLELITH,)),
+        ("Весна C1R1, C2R1 Одетта, C4R3 Крио ГГ, С0R0 Водяница", 1, CHRYSALIS, 2, FROSTFEATHER,SCARLET_PROOF,(MILLELITH,),TTDS_HALF_CATALYSATOR,0,4,(NOBLESSE,)),
+        ("Весна C0R1, C2R1 Одетта, C4R3 Крио ГГ, С0R1 Водяница", 0, CHRYSALIS, 2, FROSTFEATHER,SCARLET_PROOF,(MILLELITH,),MAELSTROM,0,4,(NOBLESSE,)),
+        ("Весна C0R0, C0R0 Одетта, C4R3 Крио ГГ, С0R0 Водяница", 0, CHRYSALIS, 2, FROSTFEATHER,SCARLET_PROOF,(MILLELITH,),TTDS_HALF_CATALYSATOR,0,4,(NOBLESSE,)),
 
 
     )

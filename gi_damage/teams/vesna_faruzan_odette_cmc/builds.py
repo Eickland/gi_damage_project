@@ -54,7 +54,7 @@ def enemy() -> Enemy:
 def vesna_build(constellation: int, weapon, artifacts, extra_buffs: Sequence[Buff] = ()) -> Build:
 
     return Build(
-        character=VESNA_COMBO_DICT["ssw_burst_combo"],
+        character=VESNA_COMBO_DICT["vesna_ssw_burst_combo"],
         constellation=constellation,
         weapon=weapon,
         artifacts=(artifacts,),
@@ -163,7 +163,7 @@ def all_teams() -> Dict[str, Team]:
         ("Весна C0R0, C0R0 Одетта, C4R3 Крио ГГ, С6R0 Фарузан", 0, EMBERWELL.at(5), 0, SILVER_LIGHT,SCARLET_PROOF,VIRIDESCENT,FAV_BOW,4),
         ("Весна C0R1, C0R0 Одетта, C4R3 Крио ГГ, С6R1 Фарузан", 0,  CHRYSALIS.at(1), 0, SILVER_LIGHT,SCARLET_PROOF,VIRIDESCENT,BREEZEBORNE_BOW.at(1),4),
         ("Весна C1R1, C0R0 Одетта, C4R3 Крио ГГ, С6R1 Фарузан", 1,  CHRYSALIS.at(1), 0, SILVER_LIGHT,SCARLET_PROOF,VIRIDESCENT,BREEZEBORNE_BOW.at(1),4),
-        ("Весна C2R1, C0R0 Одетта, C4R3 Крио ГГ, С6R1 Фарузан", 2,  CHRYSALIS.at(1), 0, SILVER_LIGHT,SCARLET_PROOF,VIRIDESCENT,BREEZEBORNE_BOW.at(1),4),
+        ("Весна C2R1, C0R0 Одетта, C6R3 Крио ГГ, С6R5 Фарузан", 2,  CHRYSALIS.at(1), 0, SILVER_LIGHT,SCARLET_PROOF,VIRIDESCENT,BREEZEBORNE_BOW.at(5),6),
 
 
     )

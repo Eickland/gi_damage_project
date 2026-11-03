@@ -21,7 +21,7 @@ from gi_damage.teams.mizuki_faruzan_diona_odette.builds import all_teams, make_t
 from gi_damage.core.report import roster_report
 
 from dataclasses import replace
-
+from gi_damage.visual.rosters import RosterBook
 def keep_viridescent(team):
     """Изумрудная тень обязана быть в отряде.
 
@@ -54,7 +54,7 @@ SHOW_ALL_TEAMS = True
 
 def main(argv: list[str]) -> int:
     details = "--details" in argv
-
+    book = RosterBook() 
     print("Стандарты")
 
     teams = all_teams()
@@ -77,7 +77,7 @@ def main(argv: list[str]) -> int:
     #  Пример 1: перебор оружия Мидзуки                                    #
     # ------------------------------------------------------------------ #
 
-    base = make_team("Мидзуки C2", 2, WANDERER_SONG.at(5), 0, SILVER_LIGHT, (NIGHT_SKY.at(2),AUBADE.at(2)), VIRIDESCENT, FAV_BOW.at(5), MILLELITH,4)
+    base = make_team("Мидзуки C2", 2, WANDERER_SONG.at(5), 0, SILVER_LIGHT, (NIGHT_SKY.at(2),AUBADE.at(2)), VIRIDESCENT, FAV_BOW.at(5), MILLELITH,6)
     
     
     roster = Roster(base, [Variation(slot="Мидзуки",
@@ -87,7 +87,12 @@ def main(argv: list[str]) -> int:
                                               SAC_JADE.at(1),
                                               SAC_JADE.at(5),
                                               STARCALLERS_WATCH,
-                                              SACFRAG])])
+                                              WINTER.at(1),
+                                              WINTER.at(3),
+                                              WINTER.at(5),
+                                              SACFRAG,
+                                              STARSEALED])])
+    book.add(roster, "Оружие Мидзуки С2", ascending=True)
     print("========================")
     print("=== Ростер: оружие Мидзуки (C2) ===")
     print(roster_report(roster.run(), title="оружие Мидзуки (C2)", ascending=True))
@@ -100,9 +105,6 @@ def main(argv: list[str]) -> int:
                                               FROSTFEATHER.at(3),
                                               FROSTFEATHER.at(5),
                                               FINALE.at(5),
-                                              LOW_BASE_CRIT_STATSTICK,
-                                              MID_BASE_CRIT_STATSTICK,
-                                              HIGH_BASE_CRIT_STATSTICK,
                                               HARBINGER.at(5),
                                               BOUGH.at(1),
                                               BOUGH.at(3),
@@ -148,7 +150,7 @@ def main(argv: list[str]) -> int:
     print("========================")
     print("=== Ростер: наборы артефактов Мидзуки ===")
     print(roster_report(roster5.run(), title="наборы артефактов Мидзуки", ascending=True))                     
-    
+    book.save("rosters.html")
     return 0
     
 

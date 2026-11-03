@@ -8,7 +8,7 @@ from __future__ import annotations
 from ..core.buffs import SELF, Buff, TEAM, temp, OTHERS
 from ..core.entities import Weapon
 from ..core.stats import S
-from .tags import BREEZEBORNE, TTDS_HALF, ON,TTDS_FULL, ELEGY
+from .tags import BREEZEBORNE, TTDS_HALF, ON, OFF, TTDS_FULL, ELEGY
 
 # --------------------------------------------------------------------------- #
 WANDERER_SONG = Weapon(
@@ -166,34 +166,26 @@ RELIQUARY_OF_TRUTH = Weapon(
     note="",
 )
 
+#: Starsealed Edict: каждое пробуждение +25% от бонусов R1
+STARSEALED_K = {r: 1 + 0.25 * (r - 1) for r in range(1, 6)}
+STARSEALED_SC_CD = 0.36      # R1: +36% КУ урона звёздного проводника
+
 STARSEALED = Weapon(
     name="Starsealed Edict",
     base_atk=542.0,
     stats={S.CRIT_VALUE: 0.882},
     refinement=1,
     stats_by_refinement={
-        1: {
-            S.BASE_EM: 48+72,
-            S.CRIT_VALUE: 0.24
-        },
-        2: {
-            S.BASE_EM: (48+72)*1.25,
-            S.CRIT_VALUE: 0.24*1.25
-        },
-        3: {
-            S.BASE_EM: (48+72)*1.5,
-            S.CRIT_VALUE: 0.24*1.5
-        },
-        4: {
-            S.BASE_EM: (48+72)*1.75,
-            S.CRIT_VALUE: 0.24*1.75
-        },
-        5: {
-            S.BASE_EM: (48+72)*2,
-            S.CRIT_VALUE: 0.24*2
-        },
+        r: {
+            S.BASE_EM: (48 + 72) * k,
+            S.CRIT_VALUE: 0.24 * k,
+            # КУ только для урона звёздного проводника (в балансе КУ = крит-вэлью)
+            "crit_value.stellar_conduct": STARSEALED_SC_CD * k,
+        }
+        for r, k in STARSEALED_K.items()
     },
-    note="",
+    note="Сигна Мити. R1: +120 МС, +24% крит-вэлью, +36% КУ звёздного проводника; "
+         "+25% от R1 за каждое пробуждение.",
 )
 
 DAWNING_FROST = Weapon(
@@ -229,6 +221,9 @@ EXAIPHANES = Weapon(
     stats_by_refinement={
         3: {
             S.ATK_PCT: 0.24,
+        },
+        5: {
+            S.ATK_PCT: 0.40,
         },
     },
     note="Сигна Крио ГГ.",
@@ -873,6 +868,78 @@ SPINDLELUTE = Weapon(
     refinement=5,
     stats_by_refinement={5: {S.BASE_EM: 200.0}},
     note="Катализатор. Пассивка R5: +200 МС.",
+)
+
+
+#: Ключ Хадж-нисут: каждое пробуждение +25% от бонусов R1
+KHAJ_NISUT_HP = {r: 0.20 * (1 + 0.25 * (r - 1)) for r in range(1, 6)}
+KHAJ_NISUT_EM_PER_HP = {r: 0.002 * (1 + 0.25 * (r - 1)) for r in range(1, 6)}
+
+
+def _khaj_nisut_em(k: float):
+    # HP владельца вне поля — так же, как остальные баффы саппортов от HP
+    return lambda ctx: k * ctx.own("hp", frozenset({OFF}))
+
+
+KEY_OF_KHAJ_NISUT = Weapon(
+    name="Ключ Хадж-нисут",
+    base_atk=542.0,
+    refinement=1,
+    stats={S.HP_PCT: 0.662},
+    stats_by_refinement={r: {S.HP_PCT: KHAJ_NISUT_HP[r]} for r in KHAJ_NISUT_HP},
+    buffs_by_refinement={
+        r: (Buff(S.FLAT_EM, _khaj_nisut_em(KHAJ_NISUT_EM_PER_HP[r]), target=TEAM,
+                 source=f"Ключ Хадж-нисут R{r}: +{KHAJ_NISUT_EM_PER_HP[r]:.2%} "
+                        f"макс. HP владельца в МС всему отряду"),)
+        for r in KHAJ_NISUT_EM_PER_HP
+    },
+    note="Сигна Нилу. R1: +20% HP; МС отряду = 0.2% макс. HP владельца.",
+)
+
+CODEX_FAVONIUS = Weapon(
+    name="Кодекс фавония",
+    base_atk=510.0,
+    refinement=1,
+    note="Катализатор. Учитывается только базовая атака.",
+)
+
+
+#: Артемизия: каждое пробуждение +25% от бонусов R1
+ARTEMISIA_K = {r: 1 + 0.25 * (r - 1) for r in range(1, 6)}
+ARTEMISIA_EM = 64.0        # R1: +64 МС за союзника той же стихии
+ARTEMISIA_ATK = 0.12       # R1: +12% АТК за союзника иной стихии
+ARTEMISIA_CAP = 3
+
+
+def _artemisia_counts(ctx):
+    """(союзников той же стихии, иной стихии) — всего не больше 3,
+    в первую очередь — совпадающие."""
+    els = ctx.elements()
+    own = els[ctx.owner]
+    others = [el for name, el in els.items() if name != ctx.owner]
+    same = min(ARTEMISIA_CAP, sum(1 for el in others if el == own))
+    diff = min(ARTEMISIA_CAP - same, sum(1 for el in others if el != own))
+    return same, diff
+
+
+ARTEMISIA = Weapon(
+    name="Артемизия",
+    base_atk=510.0,
+    refinement=1,
+    stats={S.CRIT_VALUE: 0.276 * 2},
+    buffs_by_refinement={
+        r: (
+            Buff(S.BASE_EM, lambda ctx, k=k: ARTEMISIA_EM * k * _artemisia_counts(ctx)[0],
+                 target=SELF,
+                 source=f"Артемизия R{r}: +{ARTEMISIA_EM * k:g} МС за союзника той же стихии"),
+            Buff(S.ATK_PCT, lambda ctx, k=k: ARTEMISIA_ATK * k * _artemisia_counts(ctx)[1],
+                 target=SELF,
+                 source=f"Артемизия R{r}: +{ARTEMISIA_ATK * k:.0%} АТК за союзника иной стихии"),
+        )
+        for r, k in ARTEMISIA_K.items()
+    },
+    note="Лук. 27.6% КШ. За каждого союзника (до 3, сначала совпадающие): "
+         "та же стихия — +64 МС, иная — +12% АТК; +25% от R1 за пробуждение.",
 )
 
 ALL = {w.name: w for w in (WANDERER_SONG, SUNNY_MORNING_SLEEP_IN, EXAIPHANES,

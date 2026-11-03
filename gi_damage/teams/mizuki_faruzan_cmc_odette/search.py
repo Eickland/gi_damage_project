@@ -31,6 +31,12 @@ from gi_damage.teams.mizuki_vodya_odette_cmc.builds import vodya_build
 from gi_damage.visual import SearchBook
 
 
+# Созвездие Мидзуки задаётся вручную: C2 и C6 бесплатные, но C6 получается
+# не так, как обычные созвездия, поэтому в поиске они не докупаются.
+# Сигна Мидзуки при этом покупается по общим правилам.
+MIZUKI_C = 2
+
+
 def mizuki_crown(team):
     m = team.build("Мидзуки")
     return replace(team, builds=[
@@ -41,7 +47,7 @@ def mizuki_crown(team):
 #  1. Замены слота                                                            #
 # --------------------------------------------------------------------------- #
 def alternatives(book: SearchBook) -> None:
-    base = make_team("База", 6, SACFRAG.at(5), 0, SILVER_LIGHT,
+    base = make_team("База", 2, SACFRAG.at(5), 0, SILVER_LIGHT,
                          (NIGHT_SKY.at(2), AUBADE.at(2)),(MILLELITH,),TTDS_HALF_CATALYSATOR,0,4, 
                          (HEART_OF_FORGE.at(2), SCARLET_PROOF.at(2)))
 
@@ -67,7 +73,7 @@ def alternatives(book: SearchBook) -> None:
 # --------------------------------------------------------------------------- #
 def investments(book: SearchBook, budget: int = 24) -> None:
     # База: всё доступное. В слоте Крио ГГ пока стоит бесплатная Ци Ци.
-    baseline = make_team("База", 6, SUNNY_MORNING_SLEEP_IN, 0, SILVER_LIGHT,
+    baseline = make_team("База", MIZUKI_C, WANDERER_SONG, 0, SILVER_LIGHT,
                          (NIGHT_SKY.at(2), AUBADE.at(2)),(MILLELITH,),TTDS_HALF_CATALYSATOR,0,4, 
                          (HEART_OF_FORGE.at(2), SCARLET_PROOF.at(2)),
 )
@@ -87,14 +93,19 @@ def investments(book: SearchBook, budget: int = 24) -> None:
         Investable("Водяница", "Фарузан",
                    lambda c: vodya_build(c,TTDS_HALF_CATALYSATOR, (MILLELITH,)),
                    max_constellation=6, owned=False),
+        # Закреплена на MIZUKI_C: созвездия не покупаются, сигна — да
+        Investable("Мидзуки", "Мидзуки",
+                   lambda c: mizuki_build(c, WANDERER_SONG, (NIGHT_SKY.at(2), AUBADE.at(2))),
+                   fixed_constellation=MIZUKI_C),
     ]
     weapons = [
         SignatureWeapon("Одетта", FROSTFEATHER, 5, character="Одетта"),
         SignatureWeapon("Водяница", MAELSTROM, 5, character="Водяница"),
+        SignatureWeapon("Мидзуки", SUNNY_MORNING_SLEEP_IN, 5, character="Мидзуки"),
     ]
     plan = plan_investments(baseline, investables, weapons, budget=budget,
                             tweak=mizuki_crown)
-    book.add_plan(plan, f"Порядок инвестиций (до {budget} костов)",
+    book.add_plan(plan, f"Порядок инвестиций (до {budget} костов, Мидзуки C{MIZUKI_C})",
                   notes=["Кост = C0 персонажа, любое созвездие, R1 сигны и каждое пробуждение.",
                          "Если на косте меняется несколько позиций — лучший вариант не "
                          "достраивается из лучшего предыдущего."])

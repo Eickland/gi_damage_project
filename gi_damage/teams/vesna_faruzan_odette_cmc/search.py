@@ -5,7 +5,7 @@
   1. Замены слота «Крио ГГ»: сам Крио ГГ, Ци Ци, Диона.
   2. Порядок инвестиций: что докупать по косту (созвездия, Крио ГГ, сигны).
 
-Запуск:  python -m gi_damage.teams.mizuki_faruzan_cmc_odette.search
+Запуск:  python -m gi_damage.teams.vesna_faruzan_odette_cmc.search
 Результат: текст в консоли + search.html (карточки с иконками).
 """
 

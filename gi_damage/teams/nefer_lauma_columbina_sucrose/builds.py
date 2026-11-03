@@ -39,7 +39,7 @@ TEAM_BUFFS = (
     lunar_outsider_buff("Сахароза", "anemo"),
 )
 
-SUCROSE_TIME = 2.95
+SUCROSE_TIME = 3.1
 
 ROTATION = "Лаума hE Q/Колумбина EQ CA/Сахароза E(Q)/Нефер (E sCA sCA sCA)×2"
 
@@ -71,14 +71,14 @@ def lauma_build(constellation: int = 0, weapon=SPINDLELUTE, artifacts=(DEEPWOOD,
         constellation=constellation,
         weapon=weapon,
         artifacts=artifacts,
-        extra_stats=merge_dicts(main_stats, STANDART_SUBSTAT_PRESET_EM_SCALE),
+        extra_stats=merge_dicts(main_stats, EM_ER_SUBSTAT_PRESET),
         extra_buffs=tuple(extra_buffs),
         time=LAUMA_TIME,
     )
 
 
 def columbina_build(constellation: int = 0, weapon=PROTOTYPE_AMBER, artifacts=(SERENADE,),
-                    main_stats={S.HP_PCT: 0.466 * 2, S.CRIT_VALUE: 0.622},
+                    main_stats={S.HP_PCT: 0.466 * 1, S.CRIT_VALUE: 0.622},
                     extra_buffs: Sequence[Buff] = ()) -> Build:
     return Build(
         character=COLUMBINA_COMBO_DICT["lbloom_nefer_lauma"],
@@ -104,7 +104,7 @@ def sucrose_build(constellation: int = 6, weapon=SACFRAG, artifacts=(INSTRUCTOR,
     )
 
 
-def make_team(name: str, nefer_c: int = 0, lauma_c: int = 2, columbina_c: int = 2,
+def make_team(name: str, nefer_c: int = 0, lauma_c: int = 0, columbina_c: int = 0,
               nefer_weapon=BLACKMARROW, lauma_weapon=SPINDLELUTE,
               columbina_weapon=PROTOTYPE_AMBER, sucrose_weapon=SACFRAG,
               nefer_artifacts=(NIGHT_SKY,), lauma_artifacts=(DEEPWOOD,),

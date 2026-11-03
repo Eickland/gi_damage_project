@@ -161,13 +161,13 @@ SANDRONE_COMBO_DICT = {
                       "cryo", [occ(4, ON, INST,BREEZEBORNE,VV_CRYO,TTDS_FULL,SEVEN_SACRED,CATS_TAIL,NOBLE),
                                occ(3, ON, INST,BREEZEBORNE,VV_CRYO,SEVEN_SACRED,CATS_TAIL),
                                occ(1, ON,BREEZEBORNE,VV_CRYO,TTDS_FULL,NOBLE),
-                               occ(1, ON,),], kind="charged",polar_stacks=9),
+                               occ(1, ON,),], kind="charged",polar_stacks=8),
         stellar_conduct("Prism Shot Stellar-Conduct DMG", "atk", 0.3888*4,
                       "cryo", [occ(1, ON, INST,BREEZEBORNE,VV_CRYO,TTDS_FULL,CATS_TAIL,SEVEN_SACRED,NOBLE),
                                occ(1, ON,BREEZEBORNE,VV_CRYO,TTDS_FULL,CATS_TAIL,SEVEN_SACRED,NOBLE),
-                               occ(1, ON,),], kind="skill",polar_stacks=9),
+                               occ(1, ON,),], kind="skill",polar_stacks=7),
         stellar_conduct("Convective Inhibition Ray Stellar-Conduct DMG", "atk", 2*3.9696, "cryo",
-                      [occ(1, ON, INST,BREEZEBORNE,FROSTGLOW,VV_CRYO,TTDS_FULL,CATS_TAIL,SEVEN_SACRED,NOBLE)], kind="burst",polar_stacks=10),
+                      [occ(1, ON, INST,BREEZEBORNE,FROSTGLOW,VV_CRYO,TTDS_FULL,CATS_TAIL,SEVEN_SACRED,NOBLE)], kind="burst",polar_stacks=9),
     ),
     constellation_patches={
         1: {

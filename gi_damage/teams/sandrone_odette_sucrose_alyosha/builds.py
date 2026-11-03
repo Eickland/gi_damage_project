@@ -56,7 +56,7 @@ def odette_build(constellation: int, weapon,artifacts=(MILLELITH,),
         use_burst = constellation >= 4
         
     return Build(
-        character=ODETTE_COMBO_DICT["odette_ssc_combo_sucrose"],
+        character=ODETTE_COMBO_DICT["odette_ssc_combo_sucrose_sandrone"],
         constellation=constellation,
         weapon=weapon,
         artifacts=artifacts,

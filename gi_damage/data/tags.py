@@ -121,8 +121,18 @@ PALE_HYMN = "pale_hymn"
 #Элегия
 ELEGY = "ELEGY"
 
+#Рассветная песнь
+AUBADE_SPECIAL = "AUBADE_SPECIAL"
+# --- Даника ------------------------------------ #
+#: Удар звёздного проводника, тратящий стак C2 Даники
+#: (доп. базовый урон = 100% АТК Даники). 10 стаков активному, 7 остальным.
+DANIKA_C2 = "danika_c2"
+#: Служебное состояние: АТК Даники без её собственного бонуса АТК от взрыва
+#: (чтобы бафф «12.5% АТК отряду» не считал сам себя).
+DANIKA_SNAPSHOT = "danika_snapshot"
+
 __all__ = ["ON", "OFF", "INST", "DREAM", "FROSTGLOW", "BREEZEBORNE",
            "ARMED", "DA1", "DA2", "DA3", "DA4", "DA5", "DA6","VODYA_LEAD","VODYA_CHORUS","TTDS_HALF","VV_CRYO","VV_PYRO"
            ,"VV_HYDRO","VV_ELECTRO","CATS_TAIL","SEVEN_SACRED","MIZUKI_C1","DECODING","TTDS_FULL","SANDRONE_CA_STACKS_1","SANDRONE_CA_STACKS_2","SANDRONE_CA_STACKS_3",
            "NOBLE","PACTSWORN","TOGETHER_WE_RISE","SESSHOU_SAKURA","STARSAME","ELEGY","OFFENSIVE_DIRECTIVE","WRIO_C1","THEOSIS","VODYA_LEAD_ELEM",
-           "ZIBAI_C1","FIELD_CATALOG","NIGHTINGALE","PALE_HYMN","SUCROSE_PASSIVE"]
+           "ZIBAI_C1","FIELD_CATALOG","NIGHTINGALE","PALE_HYMN","SUCROSE_PASSIVE","AUBADE_SPECIAL","DANIKA_C2","DANIKA_SNAPSHOT"]

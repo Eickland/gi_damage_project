@@ -1,0 +1,288 @@
+"""
+Анастасия — крио, лук. Пока только САППОРТ-режим («Милосердие»: навык
+нажатием + взрыв «To a New World»). Режим «Слава» (копьё, Annihilation)
+не реализован — неизвестно число ударов за ротацию.
+
+База: 350 базовой АТК, 0.984 крит-вэлью.
+
+Удары (за ротацию отряда)
+    * навык нажатием — крио 118.2% (ур. 1), 1 раз;
+    * взрыв «To a New World» — крио 360.7%, 1 раз;
+    * Корона (Azure Star Crown), 10 атак:
+        - крио 64% × 10;
+        - Radiance: второй удар — SC 40% или SSW 60% × 10;
+        - доп. удар от взрыва — SC 20.2% или SSW 30.2% × 10.
+      Взрыв замораживает корону — все 10 атак идут под ним.
+    SC или SSW — по режиму отряда (anastasia_support(mode="sc" | "ssw")).
+
+Баффы
+    * Взрыв: +50% урона звёздных реакций (SC и SSW) всему отряду — постоянно.
+    * Stellar Benediction: +0.7% базового урона SC и SSW отряду за каждые
+      100 АТК Анастасии, максимум 14%.
+    * Glory of the Radiant Night: +12% крит. урона отряду. Анастасия после
+      взрыва запечатывает себя — её Слава делится на остальных троих
+      (+16% им), у самой — только в ударах на поле.
+    * An Unfinished Requiem:
+        - SC: +1 стак Polestar ВСЕМ ударам SC отряда — polar_shift() в файлах
+          отрядов (отдельное «комбо» с +1 стаком у каждого персонажа);
+        - SSW: базовый множитель реакций SSW ×1.15 (requiem_reactions()) и
+          +4 вихря 2 уровня (requiem_vortex()).
+
+Созвездия (саппорт-режим)
+    C1  Слава: +15% АТК крио персонажам, +60 МС остальным; Анастасия свою
+        Славу не теряет; пока она запечатана, Слава остальным ×3
+        (36% КУ, 45% АТК крио, 180 МС).
+    C2  Милосердие: +60% крит. урона звёздных реакций отряду; +5% возвышения
+        звёздных реакций отряду.
+    C4  Все эффекты Славы ×1.3.
+    C6  Милосердие: Triumph при выходе следующего персонажа, 250% урона
+        (SC 400.8% / SSW 601.2% × 2.5), 1 раз; +10% возвышения звёздных
+        реакций отряду.
+
+Допущения
+    * C1 «×3» берётся от исходной Славы (12%), без доли, перераспределённой
+      от Анастасии;
+    * самостоятельный Triumph после конца запечатывания не считается;
+    * множитель навыка нажатием — 1 уровня (118.2%), как в утечке;
+    * стаки Polestar у ударов SC короны — ANASTASIA_POLAR_STACKS (+1 от Requiem
+      добавляется polar_shift() вместе со всеми).
+"""
+
+from __future__ import annotations
+from dataclasses import replace
+from typing import Sequence
+
+from ...core.buffs import OTHERS, SELF, TEAM, Buff, temp
+from ...core.entities import Character, Constellation, with_rotation
+from ...core.reactions import REACTION_SSW, ssw_vortex
+from ...core.sources import (STELLAR_CONDUCT, Occurrence, elemental, occ,
+                             stellar_conduct, stellar_swirl)
+from ...core.stats import S
+from ..tags import *
+
+ANASTASIA_NAME = "Анастасия"
+
+# --------------------------------------------------------------------------- #
+#  Множители (в долях)                                                         #
+# --------------------------------------------------------------------------- #
+TAP_MV = 1.182                    # навык нажатием, начальный урон (ур. 1)
+BURST_MV = 3.607                  # «To a New World», начальный урон
+CROWN_CRYO_MV = 0.64              # корона: крио удар
+CROWN_MV = {"sc": 0.40, "ssw": 0.60}          # корона: второй удар в Radiance
+CROWN_BURST_MV = {"sc": 0.202, "ssw": 0.302}  # корона: доп. удар во время взрыва
+TRIUMPH_MV = {"sc": 4.008, "ssw": 6.012}      # Azure Star Decree — Triumph
+CROWN_HITS = 10
+
+BURST_SG_BONUS = 0.50             # +50% урона звёздных реакций отряду
+BASE_INC_PER_100_ATK = 0.007      # +0.7% базового урона за 100 АТК
+BASE_INC_CAP = 0.14
+
+GLORY_CD = 0.12                   # Слава: +12% КУ
+GLORY_ATK = 0.15                  # C1: +15% АТК крио персонажам
+GLORY_EM = 60.0                   # C1: +60 МС персонажам других стихий
+C1_SEALED_FACTOR = 3.0            # C1: пока Анастасия запечатана, Слава остальным ×3
+C4_FACTOR = 1.3                   # C4: эффекты Славы ×1.3
+
+C2_SG_CRIT_DMG = 0.60             # C2: +60% КУ звёздных реакций
+C2_SG_ELEVATION = 0.05            # C2: +5% возвышения звёздных реакций
+C6_SG_ELEVATION = 0.10            # C6: +10% возвышения звёздных реакций
+C6_TRIUMPH_FACTOR = 2.5           # C6: Triumph на 250% урона
+
+REQUIEM_POLAR = 1                 # Requiem (SC): +1 стак Polestar всем
+REQUIEM_SSW_MULT = 1.15           # Requiem (SSW): базовый множитель реакций ×1.15
+REQUIEM_VORTEX_LEVEL = 2          # Requiem (SSW): вихри сразу 2 уровня
+REQUIEM_VORTEX_HITS = 4           # доп. вихрей 2 уровня за ротацию
+
+#: Стаки Polestar у ударов SC короны (до +1 от Requiem)
+ANASTASIA_POLAR_STACKS = 7
+
+_SG = ("stellar_conduct", "stellar_swirl")
+
+
+def _anastasia_atk(ctx) -> float:
+    return ctx.stat(ANASTASIA_NAME, "atk", frozenset({OFF}))
+
+
+def _is_cryo(ctx) -> bool:
+    return ctx.recipient_element() == "cryo"
+
+
+def _glory_buffs(factor_self: float, factor_others: float, with_c1: bool, tag: str):
+    """Слава: себе (factor_self единиц) и остальным (factor_others единиц)."""
+    out = []
+    if factor_self:
+        out.append(Buff(S.CRIT_VALUE, GLORY_CD * factor_self, target=SELF,
+                        source=f"{tag}: Слава, +{GLORY_CD * factor_self:.1%} КУ себе"))
+        if with_c1:
+            out.append(Buff(S.ATK_PCT, GLORY_ATK * factor_self, target=SELF,
+                            source=f"{tag}: Слава, +{GLORY_ATK * factor_self:.1%} АТК себе"))
+    if factor_others:
+        out.append(Buff(S.CRIT_VALUE, GLORY_CD * factor_others, target=OTHERS,
+                        source=f"{tag}: Слава, +{GLORY_CD * factor_others:.1%} КУ отряду"))
+        if with_c1:
+            atk, em = GLORY_ATK * factor_others, GLORY_EM * factor_others
+            out.append(Buff(S.ATK_PCT, lambda ctx, v=atk: v if _is_cryo(ctx) else 0.0,
+                            target=OTHERS,
+                            source=f"{tag}: Слава, +{atk:.1%} АТК крио персонажам"))
+            out.append(Buff(S.BASE_EM, lambda ctx, v=em: 0.0 if _is_cryo(ctx) else v,
+                            target=OTHERS,
+                            source=f"{tag}: Слава, +{em:g} МС персонажам других стихий"))
+    return tuple(out)
+
+
+def _sg_buffs(stat: str, value: float, tag: str):
+    return tuple(Buff(f"{stat}.{m}", value, target=TEAM, source=f"{tag} ({m})") for m in _SG)
+
+
+# C0: сама — 1 единица Славы только на поле; остальным — своя + 1/3 её.
+_C0_SELF_ON = Buff(S.CRIT_VALUE, GLORY_CD, target=SELF, requires=(ON,),
+                   source="Glory of the Radiant Night: +12% КУ себе (на поле)")
+_C0_OTHERS = 1.0 + 1.0 / 3.0
+# C1: остальным ×3 от исходной; сама Славу не теряет (и вне поля).
+_C1_OTHERS = C1_SEALED_FACTOR
+
+ANASTASIA_KIT = Character(
+    name=ANASTASIA_NAME,
+    element="cryo",
+    weapon_type="bow",
+    default_field=OFF,
+    crit_mode="balance",
+    stats={
+        S.BASE_ATK: 350.0,
+        S.CRIT_VALUE: 0.984,
+    },
+    buffs=(
+        Buff(S.SC_BONUS, BURST_SG_BONUS, target=TEAM,
+             source="To a New World: +50% урона звёздного проводника отряду"),
+        Buff(S.SSW_BONUS, BURST_SG_BONUS, target=TEAM,
+             source="To a New World: +50% урона звёздного рассеивания отряду"),
+        Buff(S.SC_BASE_INC,
+             lambda ctx: min(BASE_INC_CAP, BASE_INC_PER_100_ATK * _anastasia_atk(ctx) / 100.0),
+             target=TEAM,
+             source="Stellar Benediction: +0.7% базового урона SC за 100 АТК (макс. 14%)"),
+        Buff(S.SSW_BASE_INC,
+             lambda ctx: min(BASE_INC_CAP, BASE_INC_PER_100_ATK * _anastasia_atk(ctx) / 100.0),
+             target=TEAM,
+             source="Stellar Benediction: +0.7% базового урона SSW за 100 АТК (макс. 14%)"),
+        _C0_SELF_ON,
+    ) + _glory_buffs(0.0, _C0_OTHERS, False, "Glory of the Radiant Night"),
+    sources=(),
+    constellations={
+        1: Constellation(
+            number=1, name="C1",
+            buffs=(
+                # Себе: Слава и вне поля + АТК крио на поле и вне его
+                Buff(S.CRIT_VALUE, GLORY_CD, target=SELF, requires=(OFF,),
+                     source="C1: Слава не пропадает при запечатывании (+12% КУ себе)"),
+                Buff(S.ATK_PCT, GLORY_ATK, target=SELF,
+                     source="C1: Слава, +15% АТК себе"),
+                # Остальным: добираем КУ с 4/3 до 3 единиц, плюс АТК/МС ×3
+                Buff(S.CRIT_VALUE, GLORY_CD * (_C1_OTHERS - _C0_OTHERS), target=OTHERS,
+                     source="C1: пока Анастасия запечатана, Слава остальным ×3 (КУ до 36%)"),
+            ) + tuple(b for b in _glory_buffs(0.0, _C1_OTHERS, True, "C1")
+                      if b.stat != S.CRIT_VALUE),
+        ),
+        2: Constellation(
+            number=2, name="C2",
+            buffs=_sg_buffs("crit_value", C2_SG_CRIT_DMG,
+                            "C2 Милосердие: +60% КУ звёздных реакций отряду")
+                  + _sg_buffs("elevation", C2_SG_ELEVATION,
+                              "C2: +5% возвышения звёздных реакций отряду"),
+        ),
+        # C4: +30% ко всем эффектам Славы (C1 уже взят)
+        4: Constellation(
+            number=4, name="C4",
+            buffs=(
+                Buff(S.CRIT_VALUE, GLORY_CD * (C4_FACTOR - 1), target=SELF,
+                     source="C4: Слава ×1.3 (КУ себе)"),
+                Buff(S.ATK_PCT, GLORY_ATK * (C4_FACTOR - 1), target=SELF,
+                     source="C4: Слава ×1.3 (АТК себе)"),
+            ) + _glory_buffs(0.0, _C1_OTHERS * (C4_FACTOR - 1), True, "C4 (Слава ×1.3)"),
+        ),
+        6: Constellation(
+            number=6, name="C6",
+            buffs=_sg_buffs("elevation", C6_SG_ELEVATION,
+                            "C6 Милосердие: +10% возвышения звёздных реакций отряду"),
+        ),
+    },
+    note="Саппорт (Милосердие). Режим «Слава» не реализован.",
+)
+
+
+def anastasia_support(mode: str, crown_occ: Sequence[Occurrence],
+                      on_tags: Sequence[str] = (ON,), off_tags: Sequence[str] = (OFF,),
+                      polar_stacks: int = ANASTASIA_POLAR_STACKS) -> Character:
+    """Анастасия-саппорт под конкретный отряд.
+
+    mode      — "sc" (звёздный проводник) или "ssw" (звёздное рассеивание);
+    crown_occ — вхождения 10 атак короны (теги окон отряда), например
+                [occ(6, OFF, DREAM), occ(4, OFF)];
+    on_tags   — теги навыка и взрыва (Анастасия на поле);
+    off_tags  — теги Triumph от C6.
+    """
+    if mode not in ("sc", "ssw"):
+        raise ValueError(f"mode должен быть 'sc' или 'ssw', а не {mode!r}")
+    direct = stellar_conduct if mode == "sc" else stellar_swirl
+    extra = {"polar_stacks": polar_stacks} if mode == "sc" else {}
+    label = "SC" if mode == "sc" else "SSW"
+    crown_occ = list(crown_occ)
+    on_tags, off_tags = tuple(on_tags), tuple(off_tags)
+    return with_rotation(
+        ANASTASIA_KIT,
+        sources=(
+            elemental("Навык нажатием — начальный урон", "atk", TAP_MV, "cryo", "skill",
+                      [occ(1, *on_tags)]),
+            elemental("Взрыв «To a New World» — начальный урон", "atk", BURST_MV, "cryo",
+                      "burst", [occ(1, *on_tags)]),
+            elemental("Корона — крио", "atk", CROWN_CRYO_MV, "cryo", "skill", crown_occ),
+            direct(f"Корона — {label}", "atk", CROWN_MV[mode], "cryo", crown_occ,
+                   kind="skill", **extra),
+            direct(f"Корона — доп. удар взрыва ({label})", "atk", CROWN_BURST_MV[mode],
+                   "cryo", crown_occ, kind="burst", **extra),
+        ),
+        constellation_sources={
+            6: (
+                direct(f"C6: Triumph ×250% ({label})", "atk",
+                       TRIUMPH_MV[mode] * C6_TRIUMPH_FACTOR, "cryo",
+                       [occ(1, *off_tags)], kind="skill", **extra),
+            ),
+        },
+    )
+
+
+# --------------------------------------------------------------------------- #
+#  An Unfinished Requiem — эффекты на отряд                                    #
+# --------------------------------------------------------------------------- #
+def _shift(src, n: int):
+    return replace(src, polar_stacks=src.polar_stacks + n) if src.model == STELLAR_CONDUCT else src
+
+
+def polar_shift(character: Character, n: int = REQUIEM_POLAR) -> Character:
+    """Копия персонажа (комбо), у которой все удары SC — с +n стаками Polestar.
+
+    Сдвигаются и собственные источники, и источники созвездий; патчи
+    созвездий меняют occurrences / mv и стаки сохраняют.
+    """
+    consts = {k: replace(c, sources=tuple(_shift(s, n) for s in c.sources))
+              for k, c in character.constellations.items()}
+    return replace(character, sources=tuple(_shift(s, n) for s in character.sources),
+                   constellations=consts)
+
+
+def requiem_reactions(events):
+    """Базовый множитель реакций SSW ×1.15."""
+    return tuple(replace(e, multiplier=e.multiplier * REQUIEM_SSW_MULT)
+                 if e.model == REACTION_SSW else e for e in events)
+
+
+def requiem_vortex(*tags: str, count: float = REQUIEM_VORTEX_HITS, **kwargs):
+    """Доп. детонации вихря 2 уровня (Requiem: вихри сразу 2 уровня)."""
+    return ssw_vortex(REQUIEM_VORTEX_LEVEL, count, *tags,
+                      name=kwargs.pop("name", "SSW вихрь 2 ур. (Requiem Анастасии)"),
+                      **kwargs)
+
+
+ANASTASIA_COMBO_DICT = {
+    "support_sc": anastasia_support("sc", [occ(CROWN_HITS, OFF)]),
+    "support_ssw": anastasia_support("ssw", [occ(CROWN_HITS, OFF)]),
+}
