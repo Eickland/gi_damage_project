@@ -129,3 +129,120 @@ def all_teams() -> Dict[str, Team]:
     )
     return {name: make_team(name, c, sandrone_w, c_odette, odette_w, sandrone_art, alyosha_art,alyosha_w,alyosha_c,sucr_art,odette_art) 
             for name, c, sandrone_w, c_odette, odette_w, sandrone_art, alyosha_art, alyosha_w,alyosha_c,sucr_art,odette_art in variants}
+
+
+# =========================================================================== #
+#  Замены Сахарозы: Даника / Анастасия                                        #
+# =========================================================================== #
+# С Сахарозой у Сандроне и Одетты свои комбо (sandrone_sc_sucrose_combo,
+# odette_ssc_combo_sucrose_sandrone — стаков полярности меньше). Без неё —
+# обычные комбо. С Анастасией у всех ударов SC ещё +1 стак Polestar (Requiem).
+from dataclasses import replace as _replace
+
+from ...core.sources import occ as _occ
+from ...data.characters.danika import DANIKA_COMBO_DICT
+from ...data.characters.anastasia import anastasia_support, polar_shift, CROWN_HITS
+
+SWAP_OPTIONS = ("Сахароза", "Даника", "Анастасия")
+
+SWAP_TIMES = {"Даника": 3.0, "Анастасия": 3.0}
+
+SWAP_ROTATION = {
+    "Сахароза": ROTATION,
+    "Даника": "Алеша EQ/Даника EQ/Одетта EE/Сандроне E CA EQ CA E CA E",
+    "Анастасия": "Алеша EQ/Анастасия EQ/Одетта EE/Сандроне E CA EQ CA E CA E",
+}
+
+#: База ростера замен
+SWAP_BASE = dict(
+    sandrone_c=0, sandrone_weapon=TIDAL_SHADOW, sandrone_artifacts=(DISENCHANTMENT,),
+    odette_c=0, odette_weapon=SILVER_LIGHT.at(1), odette_artifacts=(STELLAR_SET,),
+    alyosha_c=6, alyosha_weapon=FAV_LANCE, alyosha_artifacts=(HEART_OF_FORGE,),
+    sucrose_weapon=TTDS_FULL_CATALYSATOR, sucrose_artifacts=(VIRIDESCENT,),
+)
+
+FULL_ATK = {S.ATK_PCT: 0.466 * 3}                      # АТК/АТК/АТК (Даника)
+MAIN_ATK = {S.ATK_PCT: 0.466 * 2, S.CRIT_VALUE: 0.622}  # АТК/АТК/крит
+
+
+def swap_enemy() -> Enemy:
+    """Как enemy(), но с электро сопротивлением — чтобы работало снижение
+    электро сопротивления Даники (на остальных вариантах ничего не меняет)."""
+    return Enemy(res={"anemo": 0.10, "cryo": 0.10, "electro": 0.10},
+                 def_mult=0.4875, elevation=0.0)
+
+
+def danika_build(constellation: int = 0, weapon=ATONEMENT, artifacts=(MILLELITH,),
+                 main_stats=FULL_ATK, extra_buffs: Sequence[Buff] = ()) -> Build:
+    return Build(
+        character=DANIKA_COMBO_DICT["support_eq"],
+        constellation=constellation,
+        weapon=weapon,
+        artifacts=artifacts,
+        extra_stats=merge_dicts(main_stats, STANDART_SUBSTAT_FULL_ATK_PRESET),
+        extra_buffs=tuple(extra_buffs),
+        time=SWAP_TIMES["Даника"],
+    )
+
+
+def anastasia_build(constellation: int = 0, weapon=ARTEMISIA, artifacts=(DISENCHANTMENT,),
+                    main_stats=MAIN_ATK, extra_buffs: Sequence[Buff] = ()) -> Build:
+    return Build(
+        character=polar_shift(anastasia_support("sc", [_occ(CROWN_HITS, OFF)])),
+        constellation=constellation,
+        weapon=weapon,
+        artifacts=artifacts,
+        extra_stats=merge_dicts(main_stats, STANDART_SUBSTAT_PRESET),
+        extra_buffs=tuple(extra_buffs),
+        time=SWAP_TIMES["Анастасия"],
+    )
+
+
+def swap_team_name(fourth: str, danika_c: int = 0, anastasia_c: int = 0,
+                   danika_weapon=ATONEMENT) -> str:
+    dw = "" if danika_weapon.name == ATONEMENT.name else f", {danika_weapon.name}"
+    extra = {"Сахароза": "Сахароза (Эпос, Изумрудная тень)",
+             "Даника": f"C{danika_c} Даника (Миллелит{dw})",
+             "Анастасия": f"C{anastasia_c} Анастасия (Звёздный сет)"}[fourth]
+    return f"C0 Сандроне, C2R1 Одетта, C6 Алеша, {extra}"
+
+
+def make_swap_team(fourth: str = "Сахароза", name: str | None = None,
+                   danika_c: int = 0, anastasia_c: int = 0, danika_weapon=ATONEMENT,
+                   **kw) -> Team:
+    """Сандроне / Одетта / C6 Алеша + четвёртый: Сахароза, Даника или Анастасия."""
+    if fourth not in SWAP_OPTIONS:
+        raise ValueError(f"fourth: одно из {SWAP_OPTIONS}, а не {fourth!r}")
+    p = {**SWAP_BASE, **kw}
+    sandrone = sandrone_build(p["sandrone_c"], p["sandrone_weapon"], p["sandrone_artifacts"])
+    odette = odette_build(p["odette_c"], p["odette_weapon"], artifacts=p["odette_artifacts"])
+    alyosha = alyosha_build(p["alyosha_c"], p["alyosha_artifacts"], weapon=p["alyosha_weapon"])
+
+    if fourth == "Сахароза":
+        other = sucrose_build(p["sucrose_artifacts"], weapon=p["sucrose_weapon"])
+    else:
+        shift = polar_shift if fourth == "Анастасия" else (lambda ch: ch)
+        sandrone = _replace(sandrone, character=shift(SANDRONE_COMBO_DICT["sandrone_sc_combo"]))
+        odette = _replace(odette, character=shift(ODETTE_COMBO_DICT["odette_ssc_combo"]))
+        other = (danika_build(danika_c, danika_weapon) if fourth == "Даника"
+                 else anastasia_build(anastasia_c))
+
+    return Team(
+        name=name or swap_team_name(fourth, danika_c, anastasia_c, danika_weapon),
+        builds=[sandrone, other, odette, alyosha],
+        enemy=swap_enemy(),
+        buffs=TEAM_BUFFS,
+        rotation=SWAP_ROTATION[fourth],
+        config=Config(),
+    )
+
+
+def swap_teams() -> Dict[str, Team]:
+    out: Dict[str, Team] = {}
+    for fourth in SWAP_OPTIONS:
+        team = make_swap_team(fourth)
+        out[team.name] = team
+    # Даника с сигной (Весенний прилив R1)
+    team = make_swap_team("Даника", danika_weapon=SPRING_TIDE)
+    out[team.name] = team
+    return out

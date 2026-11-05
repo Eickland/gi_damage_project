@@ -58,7 +58,7 @@ def cryo_mc_build(constellation: int = 4, weapon=EXAIPHANES.at(3),
         constellation=constellation,
         weapon=weapon,
         artifacts=artifacts,
-        extra_stats=merge_dicts(main_stats, HIGH_SUBSTAT_PRESET),
+        extra_stats=merge_dicts(main_stats, STANDART_SUBSTAT_PRESET),
         extra_buffs=tuple(extra_buffs),
         time=TIMES["Крио ГГ"],
     )

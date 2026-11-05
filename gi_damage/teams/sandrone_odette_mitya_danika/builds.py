@@ -44,6 +44,7 @@ TIMES = {"Сандроне": 14.5, "Даника": 3, "Одетта": 2.4, "Ми
 ROTATION = "Даника EQ/Одетта EE/Митя E/Сандроне E CA EQ CA E CA E"
 
 MAIN_ATK = {S.ATK_PCT: 0.466 * 2, S.CRIT_VALUE: 0.622}       # АТК/АТК/крит
+FULL_ATK = {S.ATK_PCT: 0.466 * 3}                            # АТК/АТК/АТК (Даника)
 MAIN_EM = {S.BASE_EM: 187.0 * 2, S.CRIT_VALUE: 0.622}        # МС/МС/крит (Митя)
 
 
@@ -104,13 +105,13 @@ def mitya_build(constellation: int = 0, weapon=STARSEALED, artifacts=(DISENCHANT
 
 
 def danika_build(constellation: int = 0, weapon=ATONEMENT, artifacts=(HEART_OF_FORGE,),
-                 main_stats=MAIN_ATK, extra_buffs: Sequence[Buff] = ()) -> Build:
+                 main_stats=FULL_ATK, extra_buffs: Sequence[Buff] = ()) -> Build:
     return _c2(Build(
         character=DANIKA_COMBO_DICT["support_eq"],
         constellation=constellation,
         weapon=weapon,
         artifacts=artifacts,
-        extra_stats=merge_dicts(main_stats, STANDART_SUBSTAT_PRESET),
+        extra_stats=merge_dicts(main_stats, STANDART_SUBSTAT_FULL_ATK_PRESET),
         extra_buffs=tuple(extra_buffs),
         time=TIMES["Даника"],
     ), C2_OTHER_STACKS if constellation >= 2 else 0)
@@ -145,10 +146,11 @@ def make_team(name: str, sandrone_c: int = 0, sandrone_weapon=ATONEMENT,
 def team_name(sandrone_c: int = 0, sandrone_weapon=ATONEMENT, odette_c: int = 0,
               odette_weapon=SILVER_LIGHT, mitya_c: int = 0, mitya_weapon=TTDS_FULL_CATALYSATOR,
               danika_c: int = 0, danika_weapon=ATONEMENT) -> str:
+    _dw = (f" ({danika_weapon.name})" if danika_weapon.name != ATONEMENT.name else "")
     return (f"C{sandrone_c}R{sandrone_weapon.refinement} Сандроне, "
             f"C{odette_c}R{odette_weapon.refinement} Одетта, "
             f"C{mitya_c}R{mitya_weapon.refinement} Митя, "
-            f"C{danika_c}R{danika_weapon.refinement} Даника")
+            f"C{danika_c}R{danika_weapon.refinement} Даника{_dw}")
 
 
 #: Вариации: C0 / C1 / C2 Даники
@@ -156,6 +158,7 @@ VARIANTS = (
     {"danika_c": 0},
     {"danika_c": 1},
     {"danika_c": 2},
+            {"danika_c": 0, "danika_weapon": SPRING_TIDE},  # Даника с сигной (Весенний прилив R1)
 )
 
 BASE_NAME = team_name()
@@ -164,6 +167,6 @@ BASE_NAME = team_name()
 def all_teams() -> Dict[str, Team]:
     out: Dict[str, Team] = {}
     for kw in VARIANTS:
-        name = team_name(**kw)
-        out[name] = make_team(name, **kw)
+        name = team_name(**kw) # pyright: ignore[reportArgumentType]
+        out[name] = make_team(name, **kw) # pyright: ignore[reportArgumentType]
     return out

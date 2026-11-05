@@ -42,7 +42,7 @@ TEAM_BUFFS = (
 )
 
 #: Время каждого персонажа в ротации (секунды)
-TIMES = {"Весна": 11.5, "Анастасия": 2.0, "Одетта": 2.4, "Водяница": 1.6}
+TIMES = {"Весна": 11.5, "Анастасия": 3.0, "Одетта": 2.4, "Водяница": 1.6}
 
 ROTATION = "Odette EE/Анастасия EQ/Водяница E/Vesna combo"
 
@@ -154,13 +154,13 @@ def make_team(name: str, vesna_c: int = 0, vesna_weapon=BOUGH,
               vesna_artifacts=SCARLET_PROOF, vodya_artifacts=(MILLELITH,),
               vodya_weapon=TTDS_HALF_CATALYSATOR, vodya_c: int = 0,
               anastasia_c: int = 0, anastasia_weapon=ARTEMISIA,
-              anastasia_artifacts=(STELLAR_SET,)) -> Team:
+              anastasia_artifacts=(STELLAR_SET,),odette__artifacts=(HEART_OF_FORGE,)) -> Team:
     return Team(
         name=name,
         builds=[
             vesna_build(vesna_c, vesna_weapon, vesna_artifacts),
             anastasia_build(anastasia_c, anastasia_weapon, anastasia_artifacts),
-            odette_build(odette_c, odette_weapon),
+            odette_build(odette_c, odette_weapon,odette__artifacts),
             vodya_build(vodya_c, vodya_weapon, vodya_artifacts),
         ],
         enemy=enemy(),
@@ -174,16 +174,20 @@ def make_team(name: str, vesna_c: int = 0, vesna_weapon=BOUGH,
 
 #: Те же вариации, что у отряда с Крио ГГ (без него)
 VARIANTS = (
-    ("Весна C0R1, C2R1 Одетта, C0R1 Анастасия, С0R0 Водяница",
+    ("Весна C0R0, C2R1 Одетта, C0R0 Анастасия, С0R0 Водяница",
      dict(vesna_c=0)),
-    ("Весна C1R1, C2R1 Одетта, C0R1 Анастасия, С0R0 Водяница",
-     dict(vesna_c=1)),
-    ("Весна C0R1, C2R1 Одетта, C0R1 Анастасия, С0R1 Водяница",
+    ("Весна C0R1, C2R1 Одетта, C0R0 Анастасия, С0R0 Водяница",
+     dict(vesna_weapon = CHRYSALIS,odette_c=2,odette_weapon=FROSTFEATHER,anastasia_weapon=BREEZEBORNE_BOW.at(3),anastasia_artifacts=(HEART_OF_FORGE,),
+          odette__artifacts=(STELLAR_SET,))),
+    ("Весна C0R0, C2R1 Одетта, C0R0 Анастасия, С0R1 Водяница",
      dict(vesna_c=0, vodya_weapon=MAELSTROM)),
+    ("Весна C1R1, C0R0 Одетта, C0R0 Анастасия, С0R1 Водяница",
+     dict(vesna_c=1,vesna_weapon = CHRYSALIS,odette_c=0,odette_weapon=SILVER_LIGHT,anastasia_weapon=BREEZEBORNE_BOW.at(1),anastasia_artifacts=(HEART_OF_FORGE,),
+          odette__artifacts=(STELLAR_SET,), vodya_weapon=MAELSTROM)),
 )
 
 BASE_NAME = VARIANTS[0][0]
 
 
 def all_teams() -> Dict[str, Team]:
-    return {name: make_team(name, **kw) for name, kw in VARIANTS}
+    return {name: make_team(name, **kw) for name, kw in VARIANTS} # pyright: ignore[reportArgumentType]

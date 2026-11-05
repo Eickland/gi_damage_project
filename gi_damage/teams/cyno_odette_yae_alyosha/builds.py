@@ -17,7 +17,7 @@ from ...core.utilits import merge_dicts
 from ...data.artifacts import *
 from ...data.artifacts_presets import *
 from ...data.tags import *
-from ...data.characters.cyno import CYNO_COMBO_DICT
+from ...data.characters.cyno import CYNO_COMBO_DICT, cyno_main_stats
 from ...data.characters.odette import (odette_burst_buffs, ODETTE_BURST_TIME,
                                        ODETTE_COMBO_DICT, ODETTE_BURST_SOURCES)
 from ...data.characters.yae import YAE_COMBO_DICT
@@ -47,7 +47,10 @@ def enemy() -> Enemy:
 
 
 def cyno_build(constellation: int = 1, weapon=DEATHMATCH, artifacts=(DISENCHANTMENT,),
-               main_stats=CYNO_MAIN, extra_buffs: Sequence[Buff] = ()) -> Build:
+               main_stats=None, extra_buffs: Sequence[Buff] = ()) -> Build:
+    if main_stats is None:
+        # сигна (Посох алых песков) -> МС/МС/крит, иначе АТК/АТК/крит
+        main_stats = cyno_main_stats(weapon)
     return Build(
         character=CYNO_COMBO_DICT["sc_combo"],
         constellation=constellation,
@@ -115,7 +118,7 @@ def make_team(name: str, cyno_c: int = 2, cyno_weapon=SCARLET_SANDS.at(2),
               alyosha_c: int = 6, alyosha_weapon=ELEGY_BOW,
               cyno_artifacts=(DISENCHANTMENT,), odette_artifacts=(HEART_OF_FORGE,),
               yae_artifacts=(DISENCHANTMENT,), alyosha_artifacts=(NOBLESSE,),
-              cyno_main_stats=CYNO_MAIN, yae_main_stats=YAE_MAIN) -> Team:
+              cyno_main_stats=None, yae_main_stats=YAE_MAIN) -> Team:
     return Team(
         name=name,
         builds=[

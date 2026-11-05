@@ -42,11 +42,12 @@ TEAM_BUFFS = (
 )
 
 #: Время каждого персонажа в ротации (секунды)
-TIMES = {"Сандроне": 14.5, "Анастасия": 2.0, "Даника": 3.0, "Одетта": 2.4}
+TIMES = {"Сандроне": 14.5, "Анастасия": 3.0, "Даника": 3.0, "Одетта": 2.4}
 
 ROTATION = "Даника EQ/Анастасия EQ/Одетта EE/Сандроне E CA EQ CA E CA E"
 
 MAIN_ATK = {S.ATK_PCT: 0.466 * 2, S.CRIT_VALUE: 0.622}       # АТК/АТК/крит
+FULL_ATK = {S.ATK_PCT: 0.466 * 3}                            # АТК/АТК/АТК (Даника)
 
 #: Комбо с +1 стаком Polestar (Requiem Анастасии)
 SANDRONE = polar_shift(SANDRONE_COMBO_DICT["sandrone_sc_combo"])
@@ -93,13 +94,13 @@ def anastasia_build(constellation: int = 0, weapon=ARTEMISIA, artifacts=(STELLAR
 
 
 def danika_build(constellation: int = 0, weapon=ATONEMENT, artifacts=(HEART_OF_FORGE,),
-                 main_stats=MAIN_ATK, extra_buffs: Sequence[Buff] = ()) -> Build:
+                 main_stats=FULL_ATK, extra_buffs: Sequence[Buff] = ()) -> Build:
     return _c2(Build(
         character=DANIKA,
         constellation=constellation,
         weapon=weapon,
         artifacts=artifacts,
-        extra_stats=merge_dicts(main_stats, STANDART_SUBSTAT_PRESET),
+        extra_stats=merge_dicts(main_stats, STANDART_SUBSTAT_FULL_ATK_PRESET),
         extra_buffs=tuple(extra_buffs),
         time=TIMES["Даника"],
     ), C2_OTHER_STACKS if constellation >= 2 else 0)
@@ -128,8 +129,8 @@ def make_team(name: str, sandrone_c: int = 0, sandrone_weapon=ATONEMENT,
               anastasia_c: int = 0, anastasia_weapon=ARTEMISIA,
               danika_c: int = 0, danika_weapon=ATONEMENT,
               odette_c: int = 0, odette_weapon=SILVER_LIGHT,
-              sandrone_artifacts=(DISENCHANTMENT,), anastasia_artifacts=(STELLAR_SET,),
-              danika_artifacts=(HEART_OF_FORGE,), odette_artifacts=(DISENCHANTMENT,)) -> Team:
+              sandrone_artifacts=(DISENCHANTMENT,), anastasia_artifacts=(MILLELITH,),
+              danika_artifacts=(HEART_OF_FORGE,), odette_artifacts=(STELLAR_SET,)) -> Team:
     c2 = danika_c >= 2
     return Team(
         name=name,
@@ -153,13 +154,16 @@ def team_name(sandrone_c: int = 0, sandrone_weapon=ATONEMENT,
               anastasia_c: int = 0, anastasia_weapon=ARTEMISIA,
               danika_c: int = 0, danika_weapon=ATONEMENT,
               odette_c: int = 0, odette_weapon=SILVER_LIGHT) -> str:
+    _dw = (f" ({danika_weapon.name})" if danika_weapon.name != ATONEMENT.name else "")
     return (f"C{sandrone_c}R{sandrone_weapon.refinement} Сандроне, "
             f"C{anastasia_c}R{anastasia_weapon.refinement} Анастасия, "
-            f"C{danika_c}R{danika_weapon.refinement} Даника, "
+            f"C{danika_c}R{danika_weapon.refinement} Даника{_dw}, "
             f"C{odette_c}R{odette_weapon.refinement} Одетта")
 
 
-VARIANTS = ({},)
+VARIANTS = ({},
+            {"danika_c": 0, "danika_weapon": SPRING_TIDE},  # Даника с сигной (Весенний прилив R1)
+)
 
 BASE_NAME = team_name()
 

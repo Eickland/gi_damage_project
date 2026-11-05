@@ -105,6 +105,8 @@ ALIASES: Dict[str, Dict[str, str]] = {
         "Ключ Хадж-нисут":"key_of_khaj_nisut",
         "Кодекс фавония":"fav_codex",
         "Артемизия":"artemisia",
+        "Весенний прилив":"spring_tide",
+        "Серебряное сияние":"silver_radiance",
     },
     "artifacts": {
         "Инструктор": "instructor",

@@ -102,7 +102,7 @@ def vesna_build(constellation: int, weapon, artifacts, extra_buffs: Sequence[Buf
 
 
 
-def cryo_mc_build(constellation: int, artifacts, weapon=EXAIPHANES, extra_buffs: Sequence[Buff] = ()) -> Build:
+def cryo_mc_build(constellation: int, artifacts, weapon=EXAIPHANES.at(5), extra_buffs: Sequence[Buff] = ()) -> Build:
     return Build(
         character=CMC_COMBO_DICT["cmc_ssw_vesna_combo"],
         constellation=constellation,
@@ -195,7 +195,7 @@ def make_team(name: str, vesna_c: int, vesna_weapon, odette_c, odette_weapon, ve
 
 def all_teams() -> Dict[str, Team]:
     variants = (
-        ("Весна C0R1, C2R1 Одетта, C4R3 Крио ГГ, С0R0 Водяница", 0, CHRYSALIS, 2, FROSTFEATHER,SCARLET_PROOF,(MILLELITH.at(2),VOURUKASHA.at(2)),TTDS_HALF_CATALYSATOR,0,4,(MILLELITH,)),
+        ("Весна C0R1, C2R1 Одетта, C6R5 Крио ГГ, С0R0 Водяница", 0, CHRYSALIS, 2, FROSTFEATHER,SCARLET_PROOF,(MILLELITH,),TTDS_HALF_CATALYSATOR,0,6,(NOBLESSE,)),
         ("Весна C1R1, C2R1 Одетта, C4R3 Крио ГГ, С0R0 Водяница", 1, CHRYSALIS, 2, FROSTFEATHER,SCARLET_PROOF,(MILLELITH,),TTDS_HALF_CATALYSATOR,0,4,(NOBLESSE,)),
         ("Весна C0R1, C2R1 Одетта, C4R3 Крио ГГ, С0R1 Водяница", 0, CHRYSALIS, 2, FROSTFEATHER,SCARLET_PROOF,(MILLELITH,),MAELSTROM,0,4,(NOBLESSE,)),
         ("Весна C0R0, C0R0 Одетта, C4R3 Крио ГГ, С0R0 Водяница", 0, CHRYSALIS, 2, FROSTFEATHER,SCARLET_PROOF,(MILLELITH,),TTDS_HALF_CATALYSATOR,0,4,(NOBLESSE,)),

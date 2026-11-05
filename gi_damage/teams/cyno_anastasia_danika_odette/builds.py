@@ -29,7 +29,7 @@ from ...core.utilits import merge_dicts
 from ...data.artifacts import *
 from ...data.artifacts_presets import *
 from ...data.tags import *
-from ...data.characters.cyno import CYNO_COMBO_DICT
+from ...data.characters.cyno import CYNO_COMBO_DICT, cyno_main_stats
 from ...data.characters.odette import (odette_burst_buffs, ODETTE_BURST_TIME,
                                        ODETTE_COMBO_DICT, ODETTE_BURST_SOURCES)
 from ...data.characters.danika import (DANIKA_COMBO_DICT, C2_ACTIVE_STACKS,
@@ -43,11 +43,12 @@ TEAM_BUFFS = (
 )
 
 #: Время каждого персонажа в ротации (секунды)
-TIMES = {"Сайно": 15.0, "Анастасия": 2.0, "Даника": 3.0, "Одетта": 2.4}
+TIMES = {"Сайно": 15.0, "Анастасия": 3.0, "Даника": 3.0, "Одетта": 2.4}
 
 ROTATION = "Одетта EE/Даника EQ/Анастасия EQ/Сайно QE (N2 CA N4 E)×3"
 
 MAIN_ATK = {S.ATK_PCT: 0.466 * 2, S.CRIT_VALUE: 0.622}       # АТК/АТК/крит
+FULL_ATK = {S.ATK_PCT: 0.466 * 3}                            # АТК/АТК/АТК (Даника)
 MAIN_EM = {S.BASE_EM: 187.0 * 2, S.CRIT_VALUE: 0.622}        # МС/МС/крит (Сайно)
 
 #: Комбо с +1 стаком Polestar (Requiem Анастасии)
@@ -67,8 +68,11 @@ def _c2(build: Build, hits: int) -> Build:
 
 
 def cyno_build(constellation: int = 1, weapon=DEATHMATCH.at(1), artifacts=(DISENCHANTMENT,),
-               main_stats=MAIN_EM, danika_c2_hits: int = 0,
+               main_stats=None, danika_c2_hits: int = 0,
                extra_buffs: Sequence[Buff] = ()) -> Build:
+    if main_stats is None:
+        # сигна (Посох алых песков) -> МС/МС/крит, иначе АТК/АТК/крит
+        main_stats = cyno_main_stats(weapon)
     return _c2(Build(
         character=CYNO,
         constellation=constellation,
@@ -95,13 +99,13 @@ def anastasia_build(constellation: int = 0, weapon=ARTEMISIA, artifacts=(STELLAR
 
 
 def danika_build(constellation: int = 0, weapon=ATONEMENT, artifacts=(HEART_OF_FORGE,),
-                 main_stats=MAIN_ATK, extra_buffs: Sequence[Buff] = ()) -> Build:
+                 main_stats=FULL_ATK, extra_buffs: Sequence[Buff] = ()) -> Build:
     return _c2(Build(
         character=DANIKA,
         constellation=constellation,
         weapon=weapon,
         artifacts=artifacts,
-        extra_stats=merge_dicts(main_stats, STANDART_SUBSTAT_PRESET),
+        extra_stats=merge_dicts(main_stats, STANDART_SUBSTAT_FULL_ATK_PRESET),
         extra_buffs=tuple(extra_buffs),
         time=TIMES["Даника"],
     ), C2_OTHER_STACKS if constellation >= 2 else 0)
@@ -130,8 +134,8 @@ def make_team(name: str, cyno_c: int = 1, cyno_weapon=DEATHMATCH.at(1),
               anastasia_c: int = 0, anastasia_weapon=ARTEMISIA,
               danika_c: int = 0, danika_weapon=ATONEMENT,
               odette_c: int = 0, odette_weapon=SILVER_LIGHT,
-              cyno_artifacts=(DISENCHANTMENT,), anastasia_artifacts=(STELLAR_SET,),
-              danika_artifacts=(HEART_OF_FORGE,), odette_artifacts=(DISENCHANTMENT,)) -> Team:
+              cyno_artifacts=(DISENCHANTMENT,), anastasia_artifacts=(MILLELITH,),
+              danika_artifacts=(HEART_OF_FORGE,), odette_artifacts=(STELLAR_SET,)) -> Team:
     c2 = danika_c >= 2
     return Team(
         name=name,
@@ -155,13 +159,16 @@ def team_name(cyno_c: int = 1, cyno_weapon=DEATHMATCH.at(1),
               anastasia_c: int = 0, anastasia_weapon=ARTEMISIA,
               danika_c: int = 0, danika_weapon=ATONEMENT,
               odette_c: int = 0, odette_weapon=SILVER_LIGHT) -> str:
+    _dw = (f" ({danika_weapon.name})" if danika_weapon.name != ATONEMENT.name else "")
     return (f"C{cyno_c}R{cyno_weapon.refinement} Сайно, "
             f"C{anastasia_c}R{anastasia_weapon.refinement} Анастасия, "
-            f"C{danika_c}R{danika_weapon.refinement} Даника, "
+            f"C{danika_c}R{danika_weapon.refinement} Даника{_dw}, "
             f"C{odette_c}R{odette_weapon.refinement} Одетта")
 
 
-VARIANTS = ({},)
+VARIANTS = ({},
+            {"danika_c": 0, "danika_weapon": SPRING_TIDE},  # Даника с сигной (Весенний прилив R1)
+)
 
 BASE_NAME = team_name()
 

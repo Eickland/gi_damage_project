@@ -42,6 +42,7 @@ TIMES = {"Сандроне": 14.5, "Даника": 3, "Одетта": 2.4, "Яэ
 ROTATION = "Даника EQ/Одетта EE/Яэ EEE/Сандроне E CA EQ CA E CA E"
 
 MAIN_ATK = {S.ATK_PCT: 0.466 * 2, S.CRIT_VALUE: 0.622}       # АТК/АТК/крит
+FULL_ATK = {S.ATK_PCT: 0.466 * 3}                            # АТК/АТК/АТК (Даника)
 
 
 def enemy() -> Enemy:
@@ -101,13 +102,13 @@ def yae_build(constellation: int = 1, weapon=ECHOES.at(5), artifacts=(DISENCHANT
 
 
 def danika_build(constellation: int = 0, weapon=ATONEMENT, artifacts=(HEART_OF_FORGE,),
-                 main_stats=MAIN_ATK, extra_buffs: Sequence[Buff] = ()) -> Build:
+                 main_stats=FULL_ATK, extra_buffs: Sequence[Buff] = ()) -> Build:
     return _c2(Build(
         character=DANIKA_COMBO_DICT["support_eq"],
         constellation=constellation,
         weapon=weapon,
         artifacts=artifacts,
-        extra_stats=merge_dicts(main_stats, STANDART_SUBSTAT_PRESET),
+        extra_stats=merge_dicts(main_stats, STANDART_SUBSTAT_FULL_ATK_PRESET),
         extra_buffs=tuple(extra_buffs),
         time=TIMES["Даника"],
     ), C2_OTHER_STACKS if constellation >= 2 else 0)
@@ -117,8 +118,8 @@ def make_team(name: str, sandrone_c: int = 0, sandrone_weapon=ATONEMENT,
               odette_c: int = 0, odette_weapon=SILVER_LIGHT,
               yae_c: int = 1, yae_weapon=ECHOES.at(5),
               danika_c: int = 0, danika_weapon=ATONEMENT,
-              sandrone_artifacts=(DISENCHANTMENT,), odette_artifacts=(DISENCHANTMENT,),
-              yae_artifacts=(DISENCHANTMENT,), danika_artifacts=(HEART_OF_FORGE,)) -> Team:
+              sandrone_artifacts=(DISENCHANTMENT,), odette_artifacts=(HEART_OF_FORGE,),
+              yae_artifacts=(DISENCHANTMENT,), danika_artifacts=(MILLELITH,)) -> Team:
     c2 = danika_c >= 2
     return Team(
         name=name,
@@ -140,11 +141,12 @@ def make_team(name: str, sandrone_c: int = 0, sandrone_weapon=ATONEMENT,
 
 def team_name(sandrone_c: int = 0, sandrone_weapon=ATONEMENT, odette_c: int = 0,
               odette_weapon=SILVER_LIGHT, yae_c: int = 1, yae_weapon=ECHOES.at(5),
-              danika_c: int = 0, danika_weapon=ATONEMENT) -> str:
+              danika_c: int = 2, danika_weapon=ATONEMENT) -> str:
+    _dw = (f" ({danika_weapon.name})" if danika_weapon.name != ATONEMENT.name else "")
     return (f"C{sandrone_c}R{sandrone_weapon.refinement} Сандроне, "
             f"C{odette_c}R{odette_weapon.refinement} Одетта, "
             f"C{yae_c}R{yae_weapon.refinement} Яэ, "
-            f"C{danika_c}R{danika_weapon.refinement} Даника")
+            f"C{danika_c}R{danika_weapon.refinement} Даника{_dw}")
 
 
 #: Вариации: C0 / C1 / C2 Даники
@@ -152,6 +154,7 @@ VARIANTS = (
     {"danika_c": 0},
     {"danika_c": 1},
     {"danika_c": 2},
+            {"danika_c": 0, "danika_weapon": SPRING_TIDE},  # Даника с сигной (Весенний прилив R1)
 )
 
 BASE_NAME = team_name()
@@ -160,6 +163,6 @@ BASE_NAME = team_name()
 def all_teams() -> Dict[str, Team]:
     out: Dict[str, Team] = {}
     for kw in VARIANTS:
-        name = team_name(**kw)
-        out[name] = make_team(name, **kw)
+        name = team_name(**kw) # pyright: ignore[reportArgumentType]
+        out[name] = make_team(name, **kw) # pyright: ignore[reportArgumentType]
     return out

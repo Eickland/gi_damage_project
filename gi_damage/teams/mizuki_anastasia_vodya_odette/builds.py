@@ -38,7 +38,7 @@ TEAM_BUFFS = (
 )
 
 #: Время каждого персонажа в ротации (секунды)
-TIMES = {"Мидзуки": 10.5, "Анастасия": 2.0, "Одетта": 2.4, "Водяница": 1.35}
+TIMES = {"Мидзуки": 10.9, "Анастасия": 3.0, "Одетта": 2.4, "Водяница": 1.7}
 
 ROTATION = "Анастасия EQ/Водяница E/Odette EE/Midzuki EQ"
 
@@ -134,7 +134,7 @@ def make_team(name: str, mizuki_c: int = 2, mizuki_weapon=WANDERER_SONG.at(5),
               odette_c: int = 0, odette_weapon=SILVER_LIGHT,
               mizuki_artifacts=(VIRIDESCENT,), vodya_artifacts=(MILLELITH,),
               vodya_weapon=TTDS_HALF_CATALYSATOR, vodya_c: int = 0,
-              anastasia_c: int = 0, anastasia_weapon=ARTEMISIA,
+              anastasia_c: int = 1, anastasia_weapon=BREEZEBORNE_BOW,
               anastasia_artifacts=(STELLAR_SET,)) -> Team:
     return Team(
         name=name,
@@ -154,8 +154,8 @@ def make_team(name: str, mizuki_c: int = 2, mizuki_weapon=WANDERER_SONG.at(5),
 
 #: Первые вариации отряда с Крио ГГ (без него)
 VARIANTS = (
-    ("Мидзуки C1, C0 Одетта, C0R1 Анастасия, С0R0 Водяница (Мил)",
-     dict(mizuki_c=1, mizuki_artifacts=(GILDED,))),
+    ("Мидзуки C2, C0 Одетта, C0R1 Анастасия, С0R0 Водяница (Мил)",
+     dict(mizuki_c=2, mizuki_artifacts=(VIRIDESCENT,),anastasia_c=1)),
     ("Мидзуки C2, C0 Одетта, C0R1 Анастасия, С0R0 Водяница (Мил)",
      dict(mizuki_c=2, mizuki_artifacts=(VIRIDESCENT,))),
     ("Мидзуки C2, C0 Одетта, C0R1 Анастасия, С0R0 Водяница (2+2)",

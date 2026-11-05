@@ -180,3 +180,51 @@ WRIO_COMBO_DICT = {
         },
     ),
 }
+
+def wrio_loops_combo(loops: int = 4, tail: int = 3, tags=(ON,),
+                     polar_stacks: int = WRIO_POLAR_STACKS):
+    """Ризли: loops × (N5 CA) + хвост из `tail` обычных атак (N1..N{tail}).
+
+    C1: 5-й удар получает бонус, только если перед ним была Luster
+    (все круги, кроме первого); Luster — всегда после 5-го удара.
+    Хвост идёт после последней Luster: 5-го удара в нём нет, бонуса C1 нет.
+    """
+    tags = tuple(tags)
+    c1 = tags + (WRIO_C1,)
+
+    def n_hits(n: int) -> float:
+        return loops + (1 if tail >= n else 0)
+
+    five = [occ(1, *tags)] + ([occ(loops - 1, *c1)] if loops > 1 else [])
+    luster = [occ(loops, *c1)]
+    return with_rotation(
+        WRIO_KIT,
+        sources=(
+            elemental("1-й удар", "atk", _na(1), "cryo", "normal", [occ(n_hits(1), *tags)]),
+            elemental("2-й удар", "atk", _na(2), "cryo", "normal", [occ(n_hits(2), *tags)]),
+            stellar_conduct("3-й удар — SC", "atk", _na(3) * SC_SHARE[3], "cryo",
+                            [occ(n_hits(3), *tags)], kind="normal", polar_stacks=polar_stacks),
+            elemental("4-й удар (2 инстанса)", "atk", _na(4), "cryo", "normal",
+                      [occ(2 * n_hits(4), *tags)]),
+            stellar_conduct("5-й удар — SC", "atk", _na(5) * SC_SHARE[5], "cryo",
+                            five, kind="normal", polar_stacks=polar_stacks),
+            stellar_conduct("Luster: Vaulting Fist — SC", "atk", CA_MV * SC_SHARE["ca"], "cryo",
+                            luster, kind="charged", polar_stacks=polar_stacks),
+        ),
+        constellation_sources={
+            # C6 включает C2 — сосульки считаются от множителей C2
+            6: (
+                stellar_conduct("C6: сосулька 5-го удара — SC", "atk",
+                                _na(5) * SC_SHARE_C2[5] * C6_ICICLE, "cryo",
+                                five, kind="icicle", polar_stacks=polar_stacks),
+                stellar_conduct("C6: сосулька Luster — SC", "atk",
+                                CA_MV * SC_SHARE_C2["ca"] * C6_ICICLE, "cryo",
+                                luster, kind="icicle", polar_stacks=polar_stacks),
+            ),
+        },
+    )
+
+
+#: 4 × (N5 CA) + N3, 14 с (без Николь — окна Theosis нет)
+WRIO_COMBO_DICT["sc_4n5ca_n3"] = wrio_loops_combo(4, 3)
+WRIO_4N5CA_N3_TIME = 14.0

@@ -1,0 +1,169 @@
+"""
+Отряд звёздного проводника: Сандроне / Яэ Мико / Даника / Анастасия (Царица).
+
+Ротация: Даника EQ / Анастасия EQ / Яэ EEE / Сандроне E CA EQ CA E CA E.
+Реакций, наносящих урон, нет. Резонанс — крио (2 крио + 2 электро).
+
+Анастасия — саппорт (Милосердие): корона 10 атак вне поля, Triumph.
+An Unfinished Requiem: +1 стак Polestar всем ударам SC отряда (polar_shift()).
+
+Артефакты: Анастасия — Звёздный сет, Даника — Сердце горна,
+остальные — Разочарование.
+
+C2 Даники (если включить danika_c=2): стаки C2 — Сандроне 10, Яэ 7,
+Анастасия 7, Даника 7.
+"""
+
+from __future__ import annotations
+
+from typing import Dict, Sequence
+
+from ...core.buffs import OTHERS, SELF, TEAM, Buff, temp
+from ...core.engine import Config, Team
+from ...core.entities import Build, Enemy
+from ...core.sources import occ
+from ...core.stats import S
+from ...core.utilits import merge_dicts
+from ...data.artifacts import *
+from ...data.artifacts_presets import *
+from ...data.tags import *
+from ...data.characters.sandrone import SANDRONE_COMBO_DICT
+from ...data.characters.yae import YAE_COMBO_DICT
+from ...data.characters.danika import (DANIKA_COMBO_DICT, C2_ACTIVE_STACKS,
+                                       C2_OTHER_STACKS, tag_stellar_conduct_hits)
+from ...data.characters.anastasia import anastasia_support, polar_shift, CROWN_HITS
+from ...data.weapons import *
+
+TEAM_BUFFS = (
+    Buff(S.CRIT_VALUE, 0.30, target=TEAM,
+         source="Крио резонанс: +15% крит. шанса (0.30 крит-вэлью)"),
+)
+
+#: Время каждого персонажа в ротации (секунды)
+TIMES = {"Сандроне": 14.5, "Анастасия": 3.0, "Даника": 3.0, "Яэ Мико": 2.4}
+
+ROTATION = "Даника EQ/Анастасия EQ/Яэ EEE/Сандроне E CA EQ CA E CA E"
+
+MAIN_ATK = {S.ATK_PCT: 0.466 * 2, S.CRIT_VALUE: 0.622}       # АТК/АТК/крит
+FULL_ATK = {S.ATK_PCT: 0.466 * 3}                            # АТК/АТК/АТК (Даника)
+
+#: Комбо с +1 стаком Polestar (Requiem Анастасии)
+SANDRONE = polar_shift(SANDRONE_COMBO_DICT["sandrone_sc_combo"])
+YAE = polar_shift(YAE_COMBO_DICT["yae_sc_long_combo"])
+DANIKA = polar_shift(DANIKA_COMBO_DICT["support_eq"])
+ANASTASIA = polar_shift(anastasia_support("sc", [occ(CROWN_HITS, OFF)]))
+
+
+def enemy() -> Enemy:
+    return Enemy(res={"anemo": 0.10, "cryo": 0.10, "electro": 0.10},
+                 def_mult=0.4875, elevation=0.0)
+
+
+def _c2(build: Build, hits: int) -> Build:
+    return tag_stellar_conduct_hits(build, DANIKA_C2, hits)
+
+
+def sandrone_build(constellation: int = 0, weapon=ATONEMENT, artifacts=(DISENCHANTMENT,),
+                   main_stats=MAIN_ATK, danika_c2_hits: int = 0,
+                   extra_buffs: Sequence[Buff] = ()) -> Build:
+    return _c2(Build(
+        character=SANDRONE,
+        constellation=constellation,
+        weapon=weapon,
+        artifacts=artifacts,
+        extra_stats=merge_dicts(main_stats, STANDART_SUBSTAT_PRESET),
+        extra_buffs=tuple(extra_buffs),
+        time=TIMES["Сандроне"],
+    ), danika_c2_hits)
+
+
+def anastasia_build(constellation: int = 0, weapon=ARTEMISIA, artifacts=(STELLAR_SET,),
+                    main_stats=MAIN_ATK, danika_c2_hits: int = 0,
+                    extra_buffs: Sequence[Buff] = ()) -> Build:
+    return _c2(Build(
+        character=ANASTASIA,
+        constellation=constellation,
+        weapon=weapon,
+        artifacts=artifacts,
+        extra_stats=merge_dicts(main_stats, STANDART_SUBSTAT_PRESET),
+        extra_buffs=tuple(extra_buffs),
+        time=TIMES["Анастасия"],
+    ), danika_c2_hits)
+
+
+def danika_build(constellation: int = 0, weapon=ATONEMENT, artifacts=(HEART_OF_FORGE,),
+                 main_stats=FULL_ATK, extra_buffs: Sequence[Buff] = ()) -> Build:
+    return _c2(Build(
+        character=DANIKA,
+        constellation=constellation,
+        weapon=weapon,
+        artifacts=artifacts,
+        extra_stats=merge_dicts(main_stats, STANDART_SUBSTAT_FULL_ATK_PRESET),
+        extra_buffs=tuple(extra_buffs),
+        time=TIMES["Даника"],
+    ), C2_OTHER_STACKS if constellation >= 2 else 0)
+
+
+def yae_build(constellation: int = 1, weapon=ECHOES.at(5), artifacts=(DISENCHANTMENT,),
+              main_stats=MAIN_ATK, danika_c2_hits: int = 0,
+              extra_buffs: Sequence[Buff] = ()) -> Build:
+    return _c2(Build(
+        character=YAE,
+        constellation=constellation,
+        weapon=weapon,
+        artifacts=artifacts,
+        extra_stats=merge_dicts(main_stats, STANDART_SUBSTAT_PRESET),
+        extra_buffs=tuple(extra_buffs),
+        time=TIMES["Яэ Мико"],
+    ), danika_c2_hits)
+
+
+def make_team(name: str, sandrone_c: int = 0, sandrone_weapon=ATONEMENT,
+              anastasia_c: int = 0, anastasia_weapon=ARTEMISIA,
+              danika_c: int = 0, danika_weapon=ATONEMENT,
+              yae_c: int = 1, yae_weapon=ECHOES.at(5),
+              sandrone_artifacts=(DISENCHANTMENT,), anastasia_artifacts=(STELLAR_SET,),
+              danika_artifacts=(HEART_OF_FORGE,), yae_artifacts=(DISENCHANTMENT,)) -> Team:
+    c2 = danika_c >= 2
+    return Team(
+        name=name,
+        builds=[
+            sandrone_build(sandrone_c, sandrone_weapon, sandrone_artifacts,
+                           danika_c2_hits=C2_ACTIVE_STACKS if c2 else 0),
+            anastasia_build(anastasia_c, anastasia_weapon, anastasia_artifacts,
+                            danika_c2_hits=C2_OTHER_STACKS if c2 else 0),
+            danika_build(danika_c, danika_weapon, danika_artifacts),
+            yae_build(yae_c, yae_weapon, yae_artifacts,
+                      danika_c2_hits=C2_OTHER_STACKS if c2 else 0),
+        ],
+        enemy=enemy(),
+        buffs=TEAM_BUFFS,
+        rotation=ROTATION,
+        config=Config(),
+    )
+
+
+def team_name(sandrone_c: int = 0, sandrone_weapon=ATONEMENT,
+              anastasia_c: int = 0, anastasia_weapon=ARTEMISIA,
+              danika_c: int = 0, danika_weapon=ATONEMENT,
+              yae_c: int = 1, yae_weapon=ECHOES.at(5)) -> str:
+    _dw = (f" ({danika_weapon.name})" if danika_weapon.name != ATONEMENT.name else "")
+    return (f"C{sandrone_c}R{sandrone_weapon.refinement} Сандроне, "
+            f"C{anastasia_c}R{anastasia_weapon.refinement} Анастасия, "
+            f"C{danika_c}R{danika_weapon.refinement} Даника{_dw}, "
+            f"C{yae_c}R{yae_weapon.refinement} Яэ")
+
+
+VARIANTS = ({},
+            {"danika_c": 0, "danika_weapon": SPRING_TIDE},  # Даника с сигной (Весенний прилив R1)
+)
+
+BASE_NAME = team_name()
+
+
+def all_teams() -> Dict[str, Team]:
+    out: Dict[str, Team] = {}
+    for kw in VARIANTS:
+        name = team_name(**kw)
+        out[name] = make_team(name, **kw)
+    return out

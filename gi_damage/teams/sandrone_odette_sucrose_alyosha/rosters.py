@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
 Запуск:  python -m gi_damage.teams.sandrone_odette_sucrose_alyosha.rosters            (режим по формуле)
+         python -m gi_damage.teams.sandrone_odette_sucrose_alyosha.rosters --swaps    (только замены Сахарозы)
          python -m gi_damage.teams.sandrone_odette_sucrose_alyosha.rosters --details   (разбивка по ударам)
 """
 
@@ -17,6 +18,7 @@ from gi_damage.core.roster import Roster, Variation
 from gi_damage.data.weapons import *
 from gi_damage.data.artifacts import *
 from gi_damage.teams.sandrone_odette_sucrose_alyosha.builds import all_teams, make_team, alyosha_build, sucrose_build,odette_build,sandrone_build
+from gi_damage.teams.sandrone_odette_sucrose_alyosha.builds import swap_teams
 from gi_damage.core.report import roster_report
 
 from dataclasses import replace
@@ -25,9 +27,27 @@ from gi_damage.visual.rosters import RosterBook
     
 SHOW_ALL_TEAMS = True
 
+def swap_roster(book: RosterBook, details: bool = False) -> None:
+    """Замена Сахарозы на Данику / Анастасию (обе C0)."""
+    results = []
+    for team in swap_teams().values():
+        result = team.compute()
+        results.append(result)
+        if details:
+            print(team_summary(result))
+            print(source_breakdown(result))
+            print()
+    book.add_swaps(results, "Замена Сахарозы: Даника / Анастасия (C0)")
+
+
 def main(argv: list[str]) -> int:
     details = "--details" in argv
     book = RosterBook() 
+    if "--swaps" in argv:
+        # только ростер замен -> rosters_swaps.html
+        swap_roster(book, details)
+        book.save("rosters_swaps.html")
+        return 0
     print("Стандарты")
 
     teams = all_teams()
@@ -109,6 +129,8 @@ def main(argv: list[str]) -> int:
         Variation(slot="Сандроне", artifact_sets=[(DISENCHANTMENT,), (NIGHT_SKY.at(2),AUBADE.at(2)), (SCARLET_PROOF.at(2),DISENCHANTMENT.at(2)),]),
     ])
     book.add(roster5, "Наборы артефактов Сандроне", ascending=True)
+
+    swap_roster(book)
             
     book.save("rosters.html")
     return 0

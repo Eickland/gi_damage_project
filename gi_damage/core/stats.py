@@ -281,7 +281,7 @@ def crit_multiplier(stats: Stats, mode: str = "expected", *tags: str) -> float:
     if mode == "none":
         return 1.0
     cv = stats.crit_value(*tags)
-    if mode in ("cv_sq_8", "balance"):   # ЗАГЛУШКА: считаю "balance" == 1 + CV**2/8
+    if mode in ("cv_sq_8", "balance"):
         return 1.0 + cv * cv / 8.0
     if mode == "cv_minus_1":
         return cv - 1.0

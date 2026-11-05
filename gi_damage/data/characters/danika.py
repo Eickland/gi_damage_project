@@ -54,7 +54,7 @@ SKILL_CAST_MV = 0.773             # электро, применение нав�
 SKILL_ELECTRO_MV = 0.685          # электро удары навыка
 SKILL_ELECTRO_HITS = 8
 SKILL_SC_MV = 1.221               # удары звёздного проводника навыка
-SKILL_SC_HITS = 5
+SKILL_SC_HITS = 1
 
 BURST_ATK_SHARE = 0.125           # +12.5% АТК Даники отряду
 BURST_ATK_CAP = 500.0
@@ -121,7 +121,7 @@ DANIKA_KIT = Character(
     default_field=OFF,
     crit_mode="balance",
     stats={
-        S.BASE_ATK: 350.0,
+        S.BASE_ATK: 337.0,
         S.ATK_PCT: 0.288,
         S.CRIT_VALUE: 0.6,
     },

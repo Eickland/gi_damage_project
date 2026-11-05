@@ -1,0 +1,183 @@
+"""
+Отряд звёздного проводника: Анастасия (ДД, Слава) / Даника / Митя / Одетта.
+
+Ротация: Одетта EE / Даника EQ / Митя E / Анастасия hEQ (N5 sE)×3.
+Комбо Анастасии: hEQ (N5 sE)×3 — 3.1 + 3 × (2.8 + 1.5) = 16 с;
+короткое (short=True): hEQ N5sE N5sE sE — 13.2 с, без третьей N5.
+Реакций, наносящих урон, нет. Резонанс — крио.
+
+Окна баффов на отрезках комбо Анастасии [hEQ, N5 sE, N5 sE, N5 sE]:
+    Эпос Мити (TTDS_FULL) — hEQ, N5 sE, N5 sE.
+An Unfinished Requiem: +1 стак Polestar всем ударам SC отряда (polar_shift());
+у ударов Анастасии итого 9 стаков.
+
+Артефакты: Анастасия — Звёздный сет, Даника — Сердце горна (полная АТК), Митя — Миллелит (Эпос R5), Одетта — Разочарование.
+C2 Даники (danika_c=2): стаки — Анастасия 10, остальные по 7.
+"""
+
+from __future__ import annotations
+
+from typing import Dict, Sequence
+
+from ...core.buffs import OTHERS, SELF, TEAM, Buff, temp
+from ...core.engine import Config, Team
+from ...core.entities import Build, Enemy
+from ...core.stats import S
+from ...core.utilits import merge_dicts
+from ...data.artifacts import *
+from ...data.artifacts_presets import *
+from ...data.tags import *
+from ...data.characters.danika import C2_ACTIVE_STACKS, C2_OTHER_STACKS, tag_stellar_conduct_hits
+from ...data.characters.anastasia import anastasia_dd, polar_shift, DD_TIME, DD_TIME_SHORT, DD_POLAR_STACKS
+from ...data.characters.danika import DANIKA_COMBO_DICT
+from ...data.characters.mitya import MITYA_COMBO_DICT
+from ...data.characters.odette import (odette_burst_buffs, ODETTE_BURST_TIME,
+                                       ODETTE_COMBO_DICT, ODETTE_BURST_SOURCES)
+from ...data.weapons import *
+
+TEAM_BUFFS = (
+    Buff(S.CRIT_VALUE, 0.30, target=TEAM,
+         source="Крио резонанс: +15% крит. шанса (0.30 крит-вэлью)"),
+)
+
+#: Время каждого персонажа в ротации (секунды)
+TIMES = {"Анастасия": DD_TIME, "Даника": 3.0, "Митя": 1.5, "Одетта": 2.4}
+
+ROTATION = "Одетта EE/Даника EQ/Митя E/Анастасия hEQ (N5 sE)×3"
+ROTATION_SHORT = ROTATION.replace("hEQ (N5 sE)×3", "hEQ N5sE N5sE sE")
+
+MAIN_ATK = {S.ATK_PCT: 0.466 * 2, S.CRIT_VALUE: 0.622}       # АТК/АТК/крит
+MAIN_EM = {S.BASE_EM: 187.0 * 2, S.CRIT_VALUE: 0.622}        # МС/МС/крит
+FULL_ATK = {S.ATK_PCT: 0.466 * 3}                            # АТК/АТК/АТК (Даника)
+
+#: Теги отрезков комбо Анастасии: hEQ, N5 sE №1, №2, №3
+SEG_TAGS = ((ON, TTDS_FULL), (ON, TTDS_FULL), (ON, TTDS_FULL), (ON,))
+
+#: Комбо с +1 стаком Polestar (Requiem Анастасии): полное и короткое
+ANASTASIA = polar_shift(anastasia_dd("sc", SEG_TAGS, polar_stacks=DD_POLAR_STACKS - 1))
+ANASTASIA_SHORT = polar_shift(anastasia_dd("sc", SEG_TAGS, polar_stacks=DD_POLAR_STACKS - 1, n5=2))
+DANIKA = polar_shift(DANIKA_COMBO_DICT["support_eq"])
+MITYA = polar_shift(MITYA_COMBO_DICT["support_steady"])
+ODETTE = polar_shift(ODETTE_COMBO_DICT["odette_ssc_combo"])
+
+
+def enemy() -> Enemy:
+    return Enemy(res={"anemo": 0.10, "cryo": 0.10, "electro": 0.10},
+                 def_mult=0.4875, elevation=0.0)
+
+
+def _c2(build: Build, hits: int) -> Build:
+    return tag_stellar_conduct_hits(build, DANIKA_C2, hits)
+
+
+def anastasia_build(constellation: int = 0, weapon=ARTEMISIA, artifacts=(STELLAR_SET,),
+                    main_stats=MAIN_ATK, danika_c2_hits: int = 0, short: bool = False,
+                    extra_buffs: Sequence[Buff] = ()) -> Build:
+    """short=True — короткое комбо hEQ N5sE N5sE sE (13.2 с)."""
+    return _c2(Build(
+        character=ANASTASIA_SHORT if short else ANASTASIA,
+        constellation=constellation,
+        weapon=weapon,
+        artifacts=artifacts,
+        extra_stats=merge_dicts(main_stats, STANDART_SUBSTAT_PRESET),
+        extra_buffs=tuple(extra_buffs),
+        time=DD_TIME_SHORT if short else TIMES["Анастасия"],
+    ), danika_c2_hits)
+
+def danika_build(constellation: int = 0, weapon=ATONEMENT, artifacts=(HEART_OF_FORGE,),
+                 main_stats=FULL_ATK,
+                 extra_buffs: Sequence[Buff] = ()) -> Build:
+    return _c2(Build(
+        character=DANIKA,
+        constellation=constellation,
+        weapon=weapon,
+        artifacts=artifacts,
+        extra_stats=merge_dicts(main_stats, STANDART_SUBSTAT_FULL_ATK_PRESET),
+        extra_buffs=tuple(extra_buffs),
+        time=TIMES["Даника"],
+    ), C2_OTHER_STACKS if constellation >= 2 else 0)
+
+
+def mitya_build(constellation: int = 0, weapon=TTDS_FULL_CATALYSATOR, artifacts=(MILLELITH,),
+                main_stats=MAIN_EM, danika_c2_hits: int = 0,
+                extra_buffs: Sequence[Buff] = ()) -> Build:
+    return _c2(Build(
+        character=MITYA,
+        constellation=constellation,
+        weapon=weapon,
+        artifacts=artifacts,
+        extra_stats=merge_dicts(main_stats, STANDART_SUBSTAT_PRESET),
+        extra_buffs=tuple(extra_buffs),
+        time=TIMES["Митя"],
+    ), danika_c2_hits)
+
+
+def odette_build(constellation: int = 0, weapon=SILVER_LIGHT, artifacts=(DISENCHANTMENT,),
+                 use_burst: bool | None = None, danika_c2_hits: int = 0,
+                 extra_buffs: Sequence[Buff] = ()) -> Build:
+    """use_burst=None — авто: до C4 не применяем, с C4 применяем."""
+    if use_burst is None:
+        use_burst = constellation >= 4
+    return _c2(Build(
+        character=ODETTE,
+        constellation=constellation,
+        weapon=weapon,
+        artifacts=artifacts,
+        extra_stats=merge_dicts(MAIN_ATK, STANDART_SUBSTAT_PRESET),
+        extra_sources=ODETTE_BURST_SOURCES if use_burst else (),
+        extra_buffs=tuple(extra_buffs) + (odette_burst_buffs(constellation)
+                                          if use_burst else ()),
+        time=TIMES["Одетта"] + (ODETTE_BURST_TIME if use_burst else 0.0),
+    ), danika_c2_hits)
+
+
+def make_team(name: str, anastasia_c: int = 0, anastasia_weapon=ARTEMISIA,
+              anastasia_artifacts=(STELLAR_SET,), short: bool = False,
+              danika_c: int = 0, danika_weapon=ATONEMENT, danika_artifacts=(HEART_OF_FORGE,),
+              mitya_c: int = 0, mitya_weapon=TTDS_FULL_CATALYSATOR, mitya_artifacts=(MILLELITH,),
+              odette_c: int = 0, odette_weapon=SILVER_LIGHT, odette_artifacts=(DISENCHANTMENT,)) -> Team:
+    c2 = danika_c >= 2
+    return Team(
+        name=name,
+        builds=[
+            anastasia_build(anastasia_c, anastasia_weapon, anastasia_artifacts,
+                            danika_c2_hits=C2_ACTIVE_STACKS if c2 else 0, short=short),
+            danika_build(danika_c, danika_weapon, danika_artifacts),
+            mitya_build(mitya_c, mitya_weapon, mitya_artifacts),
+            odette_build(odette_c, odette_weapon, odette_artifacts, danika_c2_hits=C2_OTHER_STACKS if c2 else 0),
+        ],
+        enemy=enemy(),
+        buffs=TEAM_BUFFS,
+        rotation=ROTATION_SHORT if short else ROTATION,
+        config=Config(),
+    )
+
+
+def team_name(anastasia_c: int = 0, anastasia_weapon=ARTEMISIA, short: bool = False,
+              danika_c: int = 0, danika_weapon=ATONEMENT,
+              mitya_c: int = 0, mitya_weapon=TTDS_FULL_CATALYSATOR,
+              odette_c: int = 0, odette_weapon=SILVER_LIGHT) -> str:
+    _dw = (f" ({danika_weapon.name})" if danika_weapon.name != ATONEMENT.name else "")
+    combo = "короткое" if short else "полное"
+    if anastasia_weapon.name != ARTEMISIA.name:
+        combo += f", {anastasia_weapon.name}"
+    return (f"C{anastasia_c}R{anastasia_weapon.refinement} Анастасия (ДД, {combo}), "
+            + f"C{danika_c}R{danika_weapon.refinement} Даника{_dw}" + ", "
+            + f"C{mitya_c}R{mitya_weapon.refinement} Митя" + ", "
+            + f"C{odette_c}R{odette_weapon.refinement} Одетта")
+
+
+VARIANTS = ({"danika_c": 0}, {"danika_c": 1}, {"danika_c": 2}, {"danika_c": 0, "short": True}, {"danika_c": 1, "short": True}, {"danika_c": 2, "short": True},
+            {"danika_c": 0, "anastasia_weapon": SILVER_RADIANCE},
+            {"danika_c": 0, "danika_weapon": SPRING_TIDE},  # Даника с сигной (Весенний прилив R1)
+)  # сигна Анастасии
+
+BASE_NAME = team_name()
+
+
+def all_teams() -> Dict[str, Team]:
+    out: Dict[str, Team] = {}
+    for kw in VARIANTS:
+        name = team_name(**kw)
+        out[name] = make_team(name, **kw)
+    return out

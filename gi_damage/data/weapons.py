@@ -942,5 +942,49 @@ ARTEMISIA = Weapon(
          "та же стихия — +64 МС, иная — +12% АТК; +25% от R1 за пробуждение.",
 )
 
+
+#: Серебряное сияние (сигна Анастасии): R1 +40%, каждое пробуждение +12% плоско
+SILVER_RADIANCE_BONUS = {r: 0.40 + 0.12 * (r - 1) for r in range(1, 6)}   # 40/52/64/76/88%
+
+SILVER_RADIANCE = Weapon(
+    name="Серебряное сияние",
+    base_atk=674.0,
+    refinement=1,
+    stats={S.CRIT_VALUE: 0.441},
+    stats_by_refinement={
+        r: {
+            S.ATK_PCT: v,
+            # крит. урон реакций Звёздного блеска (в балансе КУ = крит-вэлью)
+            "crit_value.stellar_conduct": v,
+            "crit_value.stellar_swirl": v,
+        }
+        for r, v in SILVER_RADIANCE_BONUS.items()
+    },
+    note="Лук, сигна Анастасии. 44.1% КУ. +40% АТК и +40% КУ реакций Звёздного "
+         "блеска (R1), +12% к обоим за каждое пробуждение.",
+)
+
+
+#: Весенний прилив (сигна Даники). Даны только значения R1.
+SPRING_TIDE_ATK = {1: 0.32}       # +32% АТК носителю
+SPRING_TIDE_SC = {1: 0.40}        # +40% урона SC активного персонажа
+
+SPRING_TIDE = Weapon(
+    name="Весенний прилив",
+    base_atk=741.0,
+    refinement=1,
+    stats={S.ATK_PCT: 0.165},
+    stats_by_refinement={r: {S.ATK_PCT: v} for r, v in SPRING_TIDE_ATK.items()},
+    buffs_by_refinement={
+        r: (Buff(S.SC_BONUS, v, target=TEAM, requires=(ON,),
+                 source=f"Весенний прилив R{r}: +{v:.0%} урона звёздного проводника "
+                        f"активного персонажа"),)
+        for r, v in SPRING_TIDE_SC.items()
+    },
+    note="Двуручник, сигна Даники. 16.5% АТК. R1: +32% АТК носителю, +40% урона "
+         "звёздного проводника, который наносит активный персонаж. Пробуждения "
+         "не даны.",
+)
+
 ALL = {w.name: w for w in (WANDERER_SONG, SUNNY_MORNING_SLEEP_IN, EXAIPHANES,
                            SILVER_LIGHT, SACFRAG,FAV_BOW)}

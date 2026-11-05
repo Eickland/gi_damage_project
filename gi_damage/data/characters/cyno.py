@@ -152,3 +152,22 @@ CYNO_COMBO_DICT = {
         }, # type: ignore
     ),
 }
+
+
+# --------------------------------------------------------------------------- #
+#  Главные статы: зависят от оружия                                            #
+# --------------------------------------------------------------------------- #
+#: Сигна Сайно — «Посох алых песков» (Staff of the Scarlet Sands)
+CYNO_SIGNATURE = "Посох алых песков"
+CYNO_MAIN_EM = {S.BASE_EM: 187.0 * 2, S.CRIT_VALUE: 0.622}     # МС/МС/крит
+CYNO_MAIN_ATK = {S.ATK_PCT: 0.466 * 2, S.CRIT_VALUE: 0.622}    # АТК/АТК/крит
+
+
+def cyno_main_stats(weapon) -> dict:
+    """С сигной (Посох алых песков) — 2 главных стата на МС, иначе — на АТК.
+
+    Корона — всегда крит.
+    """
+    is_signature = weapon is not None and weapon.name == CYNO_SIGNATURE
+    return dict(CYNO_MAIN_EM if is_signature else CYNO_MAIN_ATK)
+
