@@ -4,6 +4,8 @@
     python -m scripts.render_new_teams_pdf                     # new_teams.pdf (+ .html)
     python -m scripts.render_new_teams_pdf --out my.pdf --columns 1
     python -m scripts.render_new_teams_pdf --html-only         # только HTML
+    python -m scripts.render_new_teams_pdf --one               # по одной команде из отряда (первой)
+    python -m scripts.render_new_teams_pdf --pick -1           # … или любой по номеру (-1 — последняя)
 
 Структура: титульная сводка (все отряды, DPS по группам), дальше —
 по разделу на каждого основного ДД, в разделе — карточки всех вариаций.
@@ -108,15 +110,35 @@ html,body{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 """
 
 
-def collect():
-    """[(группа, [(папка, [TeamResult...]), ...]), ...]"""
+def pick_teams(teams: dict, pick: int | None = None) -> dict:
+    """Отобрать команды отряда.
+
+    pick=None — все вариации (как раньше);
+    pick=0    — только первая; pick=-1 — только последняя; любой другой
+                номер — по порядку в all_teams() (как в Python-списке).
+    Номер за пределами списка берётся по краю (первая / последняя команда).
+    """
+    if pick is None or not teams:
+        return teams
+    items = list(teams.items())
+    i = max(-len(items), min(pick, len(items) - 1))
+    name, team = items[i]
+    return {name: team}
+
+
+def collect(pick: int | None = None):
+    """[(группа, [(папка, [TeamResult...]), ...]), ...]
+
+    pick — см. pick_teams(): None = все вариации, 0 = по одной (первой).
+    Отбор идёт до расчёта, так что с pick скрипт работает быстрее.
+    """
     out = []
     for title, folders in GROUPS:
         items = []
         for entry in folders:
             folder, _, func = entry.partition(":")
             module = importlib.import_module(f"gi_damage.teams.{folder}.builds")
-            teams = getattr(module, func or "all_teams")()
+            teams = pick_teams(getattr(module, func or "all_teams")(), pick)
             results = [team.compute() for team in teams.values()]
             items.append((entry, results))
             print(f"  {entry}: {len(results)} вар.")
@@ -193,10 +215,16 @@ def main() -> int:
     ap.add_argument("--columns", type=int, default=2)
     ap.add_argument("--title", default="Отряды с Даникой и Анастасией")
     ap.add_argument("--html-only", action="store_true", help="не печатать PDF")
+    sel = ap.add_mutually_exclusive_group()
+    sel.add_argument("--one", action="store_const", const=0, dest="pick",
+                     help="из каждого отряда только одна команда — первая")
+    sel.add_argument("--pick", type=int, default=None, metavar="N",
+                     help="из каждого отряда только команда номер N "
+                          "(0 — первая, -1 — последняя)")
     args = ap.parse_args()
 
     print("Считаю отряды:")
-    groups = collect()
+    groups = collect(args.pick)
     pdf_path = Path(args.out)
     html_path = pdf_path.with_suffix(".html")
     html_path.write_text(render(groups, args.columns, args.title), encoding="utf-8")

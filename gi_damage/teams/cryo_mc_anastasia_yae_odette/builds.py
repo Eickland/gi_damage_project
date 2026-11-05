@@ -133,8 +133,8 @@ def odette_build(constellation: int = 0, weapon=SILVER_LIGHT, artifacts=(HEART_O
 
 def make_team(name: str, cmc_c: int = 6, cmc_weapon=EXAIPHANES.at(5),
               cmc_artifacts=(DISENCHANTMENT,),
-              anastasia_c: int = 2, anastasia_weapon=ARTEMISIA, anastasia_artifacts=(MILLELITH,),
-              yae_c: int = 2, yae_weapon=ECHOES.at(5), yae_artifacts=(DISENCHANTMENT,),
+              anastasia_c: int = 0, anastasia_weapon=ARTEMISIA, anastasia_artifacts=(MILLELITH,),
+              yae_c: int = 1, yae_weapon=ECHOES.at(5), yae_artifacts=(DISENCHANTMENT,),
               odette_c: int = 0, odette_weapon=SILVER_LIGHT, odette_artifacts=(HEART_OF_FORGE,)) -> Team:
     c2 = False
     return Team(
