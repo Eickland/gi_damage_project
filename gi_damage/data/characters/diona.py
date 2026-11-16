@@ -16,6 +16,7 @@ DIONA_KIT = Character(
     element="cryo",
     weapon_type="bow",
     default_field=OFF,
+    polar_always=1.8,   # стаки Polestar отряду
     crit_mode="balance",
     stats={
         S.BASE_ATK: 212.0,
@@ -37,12 +38,13 @@ DIONA_COMBO_DICT = {
     "off_field" : with_rotation(
         DIONA_KIT, sources=(
         elemental("Использование навыка", "atk", 0.7546, "cryo", "skill",
-                  [occ(5, ON,),]),
+                  [occ(5, ON)]),
         elemental("Icy Paws", "atk", 0.7546, "cryo", "skill",
-                  [occ(2, OFF,), occ(3, OFF, DREAM)]),
+                  [occ(2, OFF),
+                   occ(3, OFF, DREAM)]),
         elemental("Использование взрыва стихии", "atk", 1.44, "cryo", "burst",
-                  [occ(1, ON,),]),
+                  [occ(1, ON)]),
         elemental("Drunken Mist", "atk", 0.9475, "cryo", "burst",
-                  [occ(6, OFF,),]),               
+                  [occ(6, OFF)]),               
         ))
 }

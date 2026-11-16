@@ -16,6 +16,7 @@ SUCROSE_KIT = Character(
     element="anemo",
     weapon_type="catalyst",
     default_field=OFF,
+    polar_always=1.0,   # стаки Polestar отряду
     crit_mode="balance",
     stats={
         S.BASE_ATK: 170.0,
@@ -38,14 +39,14 @@ SUCROSE_COMBO_DICT = {
     "no_burst_combo" : with_rotation(
         SUCROSE_KIT, sources=(
         elemental("Использование навыка (АТК)", "atk", 3.8016, "anemo", "skill",
-                  [occ(2, ON,)]),            
+                  [occ(2, ON)]),            
         )
     ),
     # Рассеивание гидро: доп. урон взрыва — гидро
     "hydro_burst_combo" : with_rotation(
         SUCROSE_KIT, sources=(
         elemental("Использование навыка (АТК)", "atk", 3.8016, "anemo", "skill",
-                  [occ(2, ON,)]),
+                  [occ(2, ON)]),
         elemental("Основной переодический урон", "atk", 2.664, "anemo", "burst", [occ(3, OFF, INST)]),
         elemental("Дополнительный переодический урон", "atk", 0.792, "hydro", "burst", [occ(3, OFF, INST)]),)
     ),
@@ -53,14 +54,14 @@ SUCROSE_COMBO_DICT = {
     "electro_burst_combo" : with_rotation(
         SUCROSE_KIT, sources=(
         elemental("Использование навыка (АТК)", "atk", 3.8016, "anemo", "skill",
-                  [occ(2, ON,)]),
+                  [occ(2, ON)]),
         elemental("Основной переодический урон", "atk", 2.664, "anemo", "burst", [occ(3, OFF, INST)]),
         elemental("Дополнительный переодический урон", "atk", 0.792, "electro", "burst", [occ(3, OFF, INST)]),)
     ),
     "cryo_burst_combo" : with_rotation(
         SUCROSE_KIT, sources=(
         elemental("Использование навыка (АТК)", "atk", 3.8016, "anemo", "skill",
-                  [occ(2, ON,)]),            
+                  [occ(2, ON)]),            
         elemental("Основной переодический урон", "atk", 2.664, "anemo", "burst", [occ(3, OFF, INST)]),
         
         elemental("Дополнительный переодический урон", "atk", 0.792, "cryo", "burst", [occ(3, OFF, INST)]),)

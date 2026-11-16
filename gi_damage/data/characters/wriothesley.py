@@ -46,10 +46,7 @@ C6_CRIT_RATE = 0.10               # C6: +10% КШ
 C6_CRIT_DMG = 0.80                # C6: +80% КУ
 C6_ICICLE = 0.20                  # C6: сосулька — 20% урона 5-го удара / Luster
 
-LOOPS = 3                         # 3 × (N5 CA)
 
-#: Стаки «полярности» для звёздного проводника Ризли (основной на поле)
-WRIO_POLAR_STACKS = 7
 
 
 def _na(n: int) -> float:
@@ -62,6 +59,7 @@ WRIO_KIT = Character(
     element="cryo",
     weapon_type="catalyst",
     default_field=ON,
+    polar_on_field=2.0,   # стаки Polestar отряду
     crit_mode="balance",
     stats={
         S.BASE_ATK: 311.0,
@@ -106,125 +104,146 @@ WRIO_KIT = Character(
     note="ДД звёздного проводника.",
 )
 
-#: Окна отряда, в которых находится Ризли. Расставляйте, как нужно.
-_FIRST = (ON,TTDS_HALF)                     # первая связка N5 CA
-_LATER = (ON, THEOSIS,TTDS_HALF)             # остальные — под Guidance of Theosis Николь
-
-
-def _occ_all(per_loop: float = 1):
-    """Удар в каждом из 3 кругов: 1-й без Theosis, 2-й и 3-й — с ним."""
-    return [occ(per_loop, *_FIRST), occ(per_loop * (LOOPS - 1), *_LATER)]
-
-
+#: Каждая строка occ(N, теги...) — N ударов в этом наборе окон; одинаковые
+#: удары с разными баффами идут строками подряд.
+#: THEOSIS — Guidance of Theosis Николь (со 2-й связки N5 CA);
+#: WRIO_C1 — бонус C1 (5-й удар после Luster и сама Luster).
 WRIO_COMBO_DICT = {
+    # 3 × (N5 CA)
     "sc_n5ca": with_rotation(
         WRIO_KIT,
         sources=(
-            elemental("1-й удар", "atk", _na(1), "cryo", "normal", _occ_all()),
-            elemental("2-й удар", "atk", _na(2), "cryo", "normal", _occ_all()),
-            stellar_conduct("3-й удар — SC", "atk", _na(3) * SC_SHARE[3], "cryo",
-                            _occ_all(), kind="normal", polar_stacks=WRIO_POLAR_STACKS),
-            elemental("4-й удар (2 инстанса)", "atk", _na(4), "cryo", "normal", _occ_all(2)),
+            elemental("1-й удар", "atk", _na(1), "cryo", "normal", [
+                occ(1, ON, TTDS_HALF, TTDS_FULL),
+                occ(2, ON, THEOSIS, TTDS_HALF, TTDS_FULL),
+            ]),
+            elemental("2-й удар", "atk", _na(2), "cryo", "normal", [
+                occ(1, ON, TTDS_HALF, TTDS_FULL),
+                occ(2, ON, THEOSIS, TTDS_HALF, TTDS_FULL),
+            ]),
+            stellar_conduct("3-й удар — SC", "atk", _na(3) * SC_SHARE[3], "cryo", [
+                occ(1, ON, TTDS_HALF, TTDS_FULL,ELEGY),
+                occ(2, ON, THEOSIS, TTDS_HALF, TTDS_FULL,NOBLE),
+            ], kind="normal"),
+            elemental("4-й удар (2 инстанса)", "atk", _na(4), "cryo", "normal", [
+                occ(2, ON, TTDS_HALF, TTDS_FULL),
+                occ(4, ON, THEOSIS, TTDS_HALF, TTDS_FULL,NOBLE),
+            ]),
             # 5-й удар первого круга идёт до первой Luster — без бонуса C1
-            stellar_conduct("5-й удар — SC", "atk", _na(5) * SC_SHARE[5], "cryo",
-                            [occ(1, *_FIRST), occ(LOOPS - 1, *_LATER, WRIO_C1)],
-                            kind="normal", polar_stacks=WRIO_POLAR_STACKS),
-            stellar_conduct("Luster: Vaulting Fist — SC", "atk", CA_MV * SC_SHARE["ca"], "cryo",
-                            [occ(1, *_FIRST, WRIO_C1), occ(LOOPS - 1, *_LATER, WRIO_C1)],
-                            kind="charged", polar_stacks=WRIO_POLAR_STACKS),
+            stellar_conduct("5-й удар — SC", "atk", _na(5) * SC_SHARE[5], "cryo", [
+                occ(1, ON, TTDS_HALF, TTDS_FULL,ELEGY),
+                occ(2, ON, THEOSIS, TTDS_HALF, TTDS_FULL, WRIO_C1,NOBLE),
+            ], kind="normal"),
+            stellar_conduct("Luster: Vaulting Fist — SC", "atk", CA_MV * SC_SHARE["ca"], "cryo", [
+                occ(1, ON, TTDS_HALF, TTDS_FULL, WRIO_C1),
+                occ(2, ON, THEOSIS, TTDS_HALF, TTDS_FULL, WRIO_C1,NOBLE,ELEGY),
+            ], kind="charged"),
         ),
         constellation_sources={
             # C6 включает C2 — сосульки считаются от множителей C2
             6: (
                 stellar_conduct("C6: сосулька 5-го удара — SC", "atk",
-                                _na(5) * SC_SHARE_C2[5] * C6_ICICLE, "cryo",
-                                [occ(1, *_FIRST), occ(LOOPS - 1, *_LATER, WRIO_C1)],
-                                kind="icicle", polar_stacks=WRIO_POLAR_STACKS),
+                                _na(5) * SC_SHARE_C2[5] * C6_ICICLE, "cryo", [
+                    occ(1, ON, TTDS_HALF, TTDS_FULL,ELEGY),
+                    occ(2, ON, THEOSIS, TTDS_HALF, TTDS_FULL, WRIO_C1,NOBLE),
+                ], kind="icicle"),
                 stellar_conduct("C6: сосулька Luster — SC", "atk",
-                                CA_MV * SC_SHARE_C2["ca"] * C6_ICICLE, "cryo",
-                                [occ(1, *_FIRST, WRIO_C1), occ(LOOPS - 1, *_LATER, WRIO_C1)],
-                                kind="icicle", polar_stacks=WRIO_POLAR_STACKS),
+                                CA_MV * SC_SHARE_C2["ca"] * C6_ICICLE, "cryo", [
+                    occ(1, ON, TTDS_HALF, TTDS_FULL, WRIO_C1),
+                    occ(2, ON, THEOSIS, TTDS_HALF, TTDS_FULL, WRIO_C1,NOBLE,ELEGY),
+                ], kind="icicle"),
             ),
         },
     ),
     "sc_n5ca_4": with_rotation(
         WRIO_KIT,
         sources=(
-            elemental("1-й удар", "atk", _na(1), "cryo", "normal", _occ_all()),
-            elemental("2-й удар", "atk", _na(2), "cryo", "normal", _occ_all()),
-            stellar_conduct("3-й удар — SC", "atk", _na(3) * SC_SHARE[3], "cryo",
-                            _occ_all(), kind="normal", polar_stacks=WRIO_POLAR_STACKS),
-            stellar_conduct("3-й удар — SC", "atk", _na(3) * SC_SHARE[3], "cryo",
-                            [occ(1, *_LATER)], kind="normal", polar_stacks=WRIO_POLAR_STACKS),
-            elemental("4-й удар (2 инстанса)", "atk", _na(4), "cryo", "normal", _occ_all(2)),
+            elemental("1-й удар", "atk", _na(1), "cryo", "normal", [
+                occ(1, ON, TTDS_HALF, TTDS_FULL),
+                occ(2, ON, THEOSIS, TTDS_HALF, TTDS_FULL,NOBLE),
+            ]),
+            elemental("2-й удар", "atk", _na(2), "cryo", "normal", [
+                occ(1, ON, TTDS_HALF, TTDS_FULL),
+                occ(2, ON, THEOSIS, TTDS_HALF, TTDS_FULL,NOBLE,ELEGY),
+            ]),
+            stellar_conduct("3-й удар — SC", "atk", _na(3) * SC_SHARE[3], "cryo", [
+                occ(1, ON, TTDS_HALF, TTDS_FULL),
+                occ(3, ON, THEOSIS, TTDS_HALF, TTDS_FULL,NOBLE),
+            ], kind="normal"),
+            elemental("4-й удар (2 инстанса)", "atk", _na(4), "cryo", "normal", [
+                occ(2, ON, TTDS_HALF, TTDS_FULL),
+                occ(4, ON, THEOSIS, TTDS_HALF, TTDS_FULL,NOBLE,ELEGY),
+            ]),
             # 5-й удар первого круга идёт до первой Luster — без бонуса C1
-            stellar_conduct("5-й удар — SC", "atk", _na(5) * SC_SHARE[5], "cryo",
-                            [occ(1, *_FIRST), occ(LOOPS, *_LATER, WRIO_C1)],
-                            kind="normal", polar_stacks=WRIO_POLAR_STACKS),
-            stellar_conduct("Luster: Vaulting Fist — SC", "atk", CA_MV * SC_SHARE["ca"], "cryo",
-                            [occ(1, *_FIRST, WRIO_C1), occ(LOOPS, *_LATER, WRIO_C1)],
-                            kind="charged", polar_stacks=WRIO_POLAR_STACKS),
+            stellar_conduct("5-й удар — SC", "atk", _na(5) * SC_SHARE[5], "cryo", [
+                occ(1, ON, TTDS_HALF, TTDS_FULL),
+                occ(3, ON, THEOSIS, TTDS_HALF, TTDS_FULL, WRIO_C1,NOBLE,ELEGY),
+            ], kind="normal"),
+            stellar_conduct("Luster: Vaulting Fist — SC", "atk", CA_MV * SC_SHARE["ca"], "cryo", [
+                occ(1, ON, TTDS_HALF, TTDS_FULL, WRIO_C1),
+                occ(3, ON, THEOSIS, TTDS_HALF, TTDS_FULL, WRIO_C1,NOBLE),
+            ], kind="charged"),
         ),
         constellation_sources={
             # C6 включает C2 — сосульки считаются от множителей C2
             6: (
                 stellar_conduct("C6: сосулька 5-го удара — SC", "atk",
-                                _na(5) * SC_SHARE_C2[5] * C6_ICICLE, "cryo",
-                                [occ(1, *_FIRST), occ(LOOPS - 1, *_LATER, WRIO_C1)],
-                                kind="icicle", polar_stacks=WRIO_POLAR_STACKS),
+                                _na(5) * SC_SHARE_C2[5] * C6_ICICLE, "cryo", [
+                    occ(1, ON, TTDS_HALF, TTDS_FULL,ELEGY),
+                    occ(2, ON, THEOSIS, TTDS_HALF, TTDS_FULL, WRIO_C1,NOBLE),
+                ], kind="icicle"),
                 stellar_conduct("C6: сосулька Luster — SC", "atk",
-                                CA_MV * SC_SHARE_C2["ca"] * C6_ICICLE, "cryo",
-                                [occ(1, *_FIRST, WRIO_C1), occ(LOOPS - 1, *_LATER, WRIO_C1)],
-                                kind="icicle", polar_stacks=WRIO_POLAR_STACKS),
+                                CA_MV * SC_SHARE_C2["ca"] * C6_ICICLE, "cryo", [
+                    occ(1, ON, TTDS_HALF, TTDS_FULL, WRIO_C1),
+                    occ(2, ON, THEOSIS, TTDS_HALF, TTDS_FULL, WRIO_C1,NOBLE,ELEGY),
+                ], kind="icicle"),
+            ),
+        },
+    ),
+    # 4 × (N5 CA) + N3, 14 с (без Николь — окна Theosis нет).
+    # C1: 5-й удар получает бонус, только если перед ним была Luster.
+    "sc_4n5ca_n3": with_rotation(
+        WRIO_KIT,
+        sources=(
+            elemental("1-й удар", "atk", _na(1), "cryo", "normal", [
+                occ(3, ON, TTDS_HALF, TTDS_FULL),
+                occ(2, ON),
+            ]),
+            elemental("2-й удар", "atk", _na(2), "cryo", "normal", [
+                occ(3, ON,ELEGY, TTDS_HALF, TTDS_FULL),
+                occ(2, ON),
+            ]),
+            stellar_conduct("3-й удар — SC", "atk", _na(3) * SC_SHARE[3], "cryo", [
+                occ(3, ON,NOBLE, TTDS_HALF, TTDS_FULL),
+                occ(2, ON),
+            ], kind="normal"),
+            elemental("4-й удар (2 инстанса)", "atk", _na(4), "cryo", "normal", [
+                occ(8, ON),
+            ]),
+            stellar_conduct("5-й удар — SC", "atk", _na(5) * SC_SHARE[5], "cryo", [
+                occ(2, ON,ELEGY),
+                occ(2, ON, WRIO_C1,NOBLE, TTDS_HALF, TTDS_FULL),
+            ], kind="normal"),
+            stellar_conduct("Luster: Vaulting Fist — SC", "atk", CA_MV * SC_SHARE["ca"], "cryo", [
+                occ(2, ON, WRIO_C1,ELEGY, TTDS_HALF, TTDS_FULL),
+                occ(2, ON, WRIO_C1),
+            ], kind="charged"),
+        ),
+        constellation_sources={
+            # C6 включает C2 — сосульки считаются от множителей C2
+            6: (
+                stellar_conduct("C6: сосулька 5-го удара — SC", "atk",
+                                _na(5) * SC_SHARE_C2[5] * C6_ICICLE, "cryo", [
+                    occ(2, ON),
+                    occ(2, ON, WRIO_C1,NOBLE, TTDS_HALF, TTDS_FULL),
+                ], kind="icicle"),
+                stellar_conduct("C6: сосулька Luster — SC", "atk",
+                                CA_MV * SC_SHARE_C2["ca"] * C6_ICICLE, "cryo", [
+                    occ(3, ON, WRIO_C1,NOBLE,ELEGY, TTDS_HALF, TTDS_FULL),
+                    occ(1, ON,),
+                ], kind="icicle"),
             ),
         },
     ),
 }
-
-def wrio_loops_combo(loops: int = 4, tail: int = 3, tags=(ON,),
-                     polar_stacks: int = WRIO_POLAR_STACKS):
-    """Ризли: loops × (N5 CA) + хвост из `tail` обычных атак (N1..N{tail}).
-
-    C1: 5-й удар получает бонус, только если перед ним была Luster
-    (все круги, кроме первого); Luster — всегда после 5-го удара.
-    Хвост идёт после последней Luster: 5-го удара в нём нет, бонуса C1 нет.
-    """
-    tags = tuple(tags)
-    c1 = tags + (WRIO_C1,)
-
-    def n_hits(n: int) -> float:
-        return loops + (1 if tail >= n else 0)
-
-    five = [occ(1, *tags)] + ([occ(loops - 1, *c1)] if loops > 1 else [])
-    luster = [occ(loops, *c1)]
-    return with_rotation(
-        WRIO_KIT,
-        sources=(
-            elemental("1-й удар", "atk", _na(1), "cryo", "normal", [occ(n_hits(1), *tags)]),
-            elemental("2-й удар", "atk", _na(2), "cryo", "normal", [occ(n_hits(2), *tags)]),
-            stellar_conduct("3-й удар — SC", "atk", _na(3) * SC_SHARE[3], "cryo",
-                            [occ(n_hits(3), *tags)], kind="normal", polar_stacks=polar_stacks),
-            elemental("4-й удар (2 инстанса)", "atk", _na(4), "cryo", "normal",
-                      [occ(2 * n_hits(4), *tags)]),
-            stellar_conduct("5-й удар — SC", "atk", _na(5) * SC_SHARE[5], "cryo",
-                            five, kind="normal", polar_stacks=polar_stacks),
-            stellar_conduct("Luster: Vaulting Fist — SC", "atk", CA_MV * SC_SHARE["ca"], "cryo",
-                            luster, kind="charged", polar_stacks=polar_stacks),
-        ),
-        constellation_sources={
-            # C6 включает C2 — сосульки считаются от множителей C2
-            6: (
-                stellar_conduct("C6: сосулька 5-го удара — SC", "atk",
-                                _na(5) * SC_SHARE_C2[5] * C6_ICICLE, "cryo",
-                                five, kind="icicle", polar_stacks=polar_stacks),
-                stellar_conduct("C6: сосулька Luster — SC", "atk",
-                                CA_MV * SC_SHARE_C2["ca"] * C6_ICICLE, "cryo",
-                                luster, kind="icicle", polar_stacks=polar_stacks),
-            ),
-        },
-    )
-
-
-#: 4 × (N5 CA) + N3, 14 с (без Николь — окна Theosis нет)
-WRIO_COMBO_DICT["sc_4n5ca_n3"] = wrio_loops_combo(4, 3)
 WRIO_4N5CA_N3_TIME = 14.0

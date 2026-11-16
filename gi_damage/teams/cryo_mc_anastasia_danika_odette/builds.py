@@ -8,7 +8,7 @@
 cryo_mc_odette_sucrose_alyosha: N2 P N2 N2 C N2 Q N2 N2 (9.2 с).
 C6 Крио ГГ (окно FROSTGLOW, 15 с после взрыва): ротация ~17.6 с, окно
 перекрывает почти всю её, поэтому все удары остальных — с FROSTGLOW.
-An Unfinished Requiem: +1 стак Polestar всем ударам SC отряда (polar_shift()).
+An Unfinished Requiem: стаки Polestar — polar_always у Анастасии (Team.polar_plan()).
 C2 Даники (danika_c=2): стаки — Крио ГГ 10 (у него 7 ударов SC), остальные по 7.
 
 Артефакты: Анастасия — Звёздный сет, Даника — Сердце горна (полная АТК), Одетта — Звёздный сет, Крио ГГ — Разочарование.
@@ -27,12 +27,12 @@ from ...core.utilits import merge_dicts
 from ...data.artifacts import *
 from ...data.artifacts_presets import *
 from ...data.tags import *
-from ...data.characters.cryo_mc import CMC_COMBO_DICT, CMC_SC_DD_TIME
+from ...data.characters.cryo_mc import CMC_COMBO_DICT, CMC_SC_DD_TIME, CMC_SC_DD_E_TIME
 from ...data.characters.odette import (odette_burst_buffs, ODETTE_BURST_TIME,
                                        ODETTE_COMBO_DICT, ODETTE_BURST_SOURCES)
 from ...data.characters.danika import (DANIKA_COMBO_DICT, C2_ACTIVE_STACKS,
                                        C2_OTHER_STACKS, tag_stellar_conduct_hits, add_tags)
-from ...data.characters.anastasia import anastasia_support, polar_shift, CROWN_HITS
+from ...data.characters.anastasia import anastasia_support, CROWN_HITS,ANASTASIA_COMBO_DICT
 from ...data.weapons import *
 
 TEAM_BUFFS = (
@@ -41,19 +41,21 @@ TEAM_BUFFS = (
 )
 
 #: Время каждого персонажа в ротации (секунды)
-TIMES = {"Крио ГГ": CMC_SC_DD_TIME+0.4, "Анастасия": 3.0, "Даника": 3.0, "Одетта": 2.4}
+TIMES = {"Крио ГГ": CMC_SC_DD_E_TIME, "Анастасия": 3.5, "Даника": 3.25, "Одетта": 2.4}
 
-ROTATION = "Даника EQ/Анастасия EQ/Одетта EE/Крио ГГ N2 P N2 N2 C N2 Q N2 N2"
+ROTATION = "Даника EQ/Анастасия EQ/Одетта EQE/Крио ГГ N2 N2 C Q N2"
 
 MAIN_ATK = {S.ATK_PCT: 0.466 * 2, S.CRIT_VALUE: 0.622}       # АТК/АТК/крит
 MAIN_EM = {S.BASE_EM: 187.0 * 2, S.CRIT_VALUE: 0.622}        # МС/МС/крит
-FULL_ATK = {S.ATK_PCT: 0.466 * 3}                            # АТК/АТК/АТК (Даника)
+#: Даника — единственный электро в отряде: часы на ВЭ вместо АТК
+#: (штраф по требованию энергии) — АТК/АТК/ВЭ.
+DANIKA_MAIN_ER = {S.ATK_PCT: 0.466 * 2}
 
 #: Комбо с +1 стаком Polestar (Requiem Анастасии)
-CMC = polar_shift(CMC_COMBO_DICT["cmc_sc_dd_combo"])
-ANASTASIA = polar_shift(anastasia_support("sc", [occ(CROWN_HITS, OFF)]))
-DANIKA = polar_shift(DANIKA_COMBO_DICT["support_eq"])
-ODETTE = polar_shift(ODETTE_COMBO_DICT["odette_ssc_combo"])
+CMC = CMC_COMBO_DICT["cmc_sc_dd_combo"]
+ANASTASIA = ANASTASIA_COMBO_DICT['support_sc_short']
+DANIKA = DANIKA_COMBO_DICT["support_eq"]
+ODETTE = ODETTE_COMBO_DICT["odette_ssc_short_combo_cryo_mc"]
 
 
 def enemy() -> Enemy:
@@ -83,7 +85,7 @@ def cryo_mc_build(constellation: int = 6, weapon=EXAIPHANES.at(5), artifacts=(DI
         time=TIMES["Крио ГГ"],
     ), danika_c2_hits)
 
-def anastasia_build(constellation: int = 0, weapon=ARTEMISIA, artifacts=(STELLAR_SET,),
+def anastasia_build(constellation: int = 0, weapon=BREEZEBORNE_BOW.at(1), artifacts=(STELLAR_SET,),
                     main_stats=MAIN_ATK, danika_c2_hits: int = 0,
                     extra_buffs: Sequence[Buff] = ()) -> Build:
     return _c2(_frostglow(Build(
@@ -97,8 +99,8 @@ def anastasia_build(constellation: int = 0, weapon=ARTEMISIA, artifacts=(STELLAR
     )), danika_c2_hits)
 
 
-def danika_build(constellation: int = 0, weapon=ATONEMENT, artifacts=(HEART_OF_FORGE,),
-                 main_stats=FULL_ATK, extra_buffs: Sequence[Buff] = ()) -> Build:
+def danika_build(constellation: int = 0, weapon=FAV_GREATSWORD, artifacts=(HEART_OF_FORGE,),
+                 main_stats=DANIKA_MAIN_ER, extra_buffs: Sequence[Buff] = ()) -> Build:
     return _c2(_frostglow(Build(
         character=DANIKA,
         constellation=constellation,
@@ -131,8 +133,8 @@ def odette_build(constellation: int = 0, weapon=SILVER_LIGHT, artifacts=(STELLAR
 
 def make_team(name: str, cmc_c: int = 6, cmc_weapon=EXAIPHANES.at(5),
               cmc_artifacts=(DISENCHANTMENT,),
-              anastasia_c: int = 0, anastasia_weapon=ARTEMISIA, anastasia_artifacts=(MILLELITH,),
-              danika_c: int = 0, danika_weapon=ATONEMENT, danika_artifacts=(HEART_OF_FORGE,),
+              anastasia_c: int = 0, anastasia_weapon=BREEZEBORNE_BOW.at(1), anastasia_artifacts=(HEART_OF_FORGE,),
+              danika_c: int = 0, danika_weapon=FAV_GREATSWORD, danika_artifacts=(MILLELITH,),
               odette_c: int = 0, odette_weapon=SILVER_LIGHT, odette_artifacts=(STELLAR_SET,)) -> Team:
     c2 = danika_c >= 2
     return Team(
@@ -142,7 +144,7 @@ def make_team(name: str, cmc_c: int = 6, cmc_weapon=EXAIPHANES.at(5),
                           danika_c2_hits=C2_ACTIVE_STACKS if c2 else 0),
             anastasia_build(anastasia_c, anastasia_weapon, anastasia_artifacts, danika_c2_hits=C2_OTHER_STACKS if c2 else 0),
             danika_build(danika_c, danika_weapon, danika_artifacts),
-            odette_build(odette_c, odette_weapon, odette_artifacts, danika_c2_hits=C2_OTHER_STACKS if c2 else 0),
+            odette_build(odette_c, odette_weapon, odette_artifacts, danika_c2_hits=C2_OTHER_STACKS if c2 else 0,use_burst=True),
         ],
         enemy=enemy(),
         buffs=TEAM_BUFFS,
@@ -152,10 +154,10 @@ def make_team(name: str, cmc_c: int = 6, cmc_weapon=EXAIPHANES.at(5),
 
 
 def team_name(cmc_c: int = 6, cmc_weapon=EXAIPHANES.at(5),
-              anastasia_c: int = 0, anastasia_weapon=ARTEMISIA,
-              danika_c: int = 0, danika_weapon=ATONEMENT,
+              anastasia_c: int = 0, anastasia_weapon=BREEZEBORNE_BOW.at(1),
+              danika_c: int = 0, danika_weapon=FAV_GREATSWORD,
               odette_c: int = 0, odette_weapon=SILVER_LIGHT) -> str:
-    _dw = (f" ({danika_weapon.name})" if danika_weapon.name != ATONEMENT.name else "")
+    _dw = (f" ({danika_weapon.name})" if danika_weapon.name != FAV_GREATSWORD.name else "")
     return (f"C{cmc_c}R{cmc_weapon.refinement} Крио ГГ, "
             + f"C{anastasia_c}R{anastasia_weapon.refinement} Анастасия" + ", "
             + f"C{danika_c}R{danika_weapon.refinement} Даника{_dw}" + ", "

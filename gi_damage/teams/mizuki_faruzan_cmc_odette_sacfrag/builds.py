@@ -83,7 +83,7 @@ def mizuki_build(constellation: int, weapon, artifacts, extra_buffs: Sequence[Bu
     )
 
 
-def cryo_mc_build(constellation: int, artifacts, weapon=EXAIPHANES, extra_buffs: Sequence[Buff] = ()) -> Build:
+def cryo_mc_build(constellation: int, artifacts, weapon=EXAIPHANES.at(5), extra_buffs: Sequence[Buff] = ()) -> Build:
     return Build(
         character=CMC_COMBO_DICT["cmc_ssw_mizuki_combo"],
         constellation=constellation,
@@ -149,15 +149,15 @@ def reactions(in_dreamdrifter: bool = True):
     d = (DREAM,) if in_dreamdrifter else ()
     return (
         # Мидзуки на поле -> её реакции всегда внутри окна
-        ssw_anemo("Мидзуки", 2, *d,BREEZEBORNE,FROSTGLOW, name="SSW анемо (Мидзуки)"),
-        ssw_anemo("Мидзуки", 8, INST,BREEZEBORNE,FROSTGLOW, *d, name="SSW анемо (Мидзуки, Инструктор)"),
+        ssw_anemo("Мидзуки", 2, *d,FROSTGLOW, name="SSW анемо (Мидзуки)"),
+        ssw_anemo("Мидзуки", 8, INST,FROSTGLOW, *d, name="SSW анемо (Мидзуки, Инструктор)"),
         # Фарузан триггерит со своего поля — Мидзуки в этот момент НЕ в Дрейфе.
         # Если по факту иначе, добавьте сюда *d.
-        ssw_anemo("Фарузан", 4, INST,BREEZEBORNE,FROSTGLOW, *d, name="SSW анемо (Фарузан, Инструктор)"),
-        ssw_anemo("Фарузан", 3, INST,BREEZEBORNE,FROSTGLOW, name="SSW анемо (Фарузан, Инструктор)"),
+        ssw_anemo("Фарузан", 4, INST,FROSTGLOW, *d, name="SSW анемо (Фарузан, Инструктор)"),
+        ssw_anemo("Фарузан", 3, INST,FROSTGLOW, name="SSW анемо (Фарузан, Инструктор)"),
         # Детонации вихря: проверьте, попадают ли они в окно.
-        ssw_vortex(3, 3, INST,BREEZEBORNE,FROSTGLOW,VV_CRYO, *d, name="SSW вихрь ×3 стака"),
-        ssw_vortex(3, 1, INST,BREEZEBORNE,FROSTGLOW,VV_CRYO, name="SSW вихрь ×3 стака")
+        ssw_vortex(3, 3, INST,FROSTGLOW,VV_CRYO, *d, name="SSW вихрь ×3 стака"),
+        ssw_vortex(3, 1, INST,FROSTGLOW,VV_CRYO, name="SSW вихрь ×3 стака")
     )
 
 
@@ -189,8 +189,7 @@ def make_team(name: str, mizuki_c: int, mizuki_weapon, odette_c, odette_weapon, 
 
 def all_teams() -> Dict[str, Team]:
     variants = (
-                ("Мидзуки C0 (Церемон), C0 Одетта (Серебряный свет R5), C6R5 Крио ГГ, С6R0 Фарузан", 0, SACFRAG.at(5), 0, SILVER_LIGHT,(NIGHT_SKY.at(2),AUBADE.at(2)),VIRIDESCENT,FAV_BOW, (MILLELITH,),6),
-                    ("Мидзуки C2 (Церемон), C0 Одетта (Серебряный свет R5), C6R5 Крио ГГ, С6R0 Фарузан", 2, SACFRAG.at(5), 0, SILVER_LIGHT,(NIGHT_SKY.at(2),AUBADE.at(2)),VIRIDESCENT,FAV_BOW, (MILLELITH,),6),
+                    ("Мидзуки C2 (Церемон), C0 Одетта (Серебряный свет R5), C6R5 Крио ГГ, С6R0 Фарузан", 2, SACFRAG.at(5), 0, SILVER_LIGHT, (NIGHT_SKY.at(2),AUBADE.at(2)), VIRIDESCENT, FAV_BOW, (MILLELITH,), 6),
 )
     return {name: make_team(name, c, mizuki_w, c_odette, odette_w, mizuki_art, faruzan_art,faruzan_w,
                             cmc_art, c_cmc) for name, c, mizuki_w, c_odette, odette_w, mizuki_art, faruzan_art, faruzan_w, cmc_art, c_cmc in variants}

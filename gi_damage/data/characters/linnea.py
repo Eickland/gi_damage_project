@@ -41,10 +41,6 @@ PUMMELER_MV, PUMMELER_MV_C3 = 1.728, 2.04
 HAMMER_MV, HAMMER_MV_C3 = 1.80, 2.125
 CRUSH_MV, CRUSH_MV_C3 = 7.20, 8.50        # Million Ton Crush (ultra_power)
 
-PUMMELER_HITS = 16
-PUMMELER_HITS_ULTRA = 8
-HAMMER_HITS = 4
-
 A1_GEO_RES = 0.15 + 0.15       # −15% и ещё −15% (Ascendant Gleam)
 A4_EM_PER_DEF = 0.05           # +МС активному = 5% ЗЩ Линеи
 MOONSIGN_PER_100_DEF = 0.007
@@ -152,19 +148,19 @@ LINNEA_COMBO_DICT = {
         LINNEA_KIT,
         sources=(
             elemental("Люми: Pound-Pound Pummeler", "def", PUMMELER_MV, "geo", "skill",
-                      [occ(PUMMELER_HITS, OFF)]),
+                      [occ(16, OFF)]),
             lunar_crystallize("Луми: Heavy Overdrive Hammer (LC)", "def", HAMMER_MV,
-                              [occ(HAMMER_HITS, OFF, FIELD_CATALOG)], kind="skill"),
+                              [occ(4, OFF, FIELD_CATALOG)], kind="skill"),
         ),
     ),
     "ultra_power": with_rotation(
         LINNEA_KIT,
         sources=(
             elemental("Луми: Pound-Pound Pummeler", "def", PUMMELER_MV, "geo", "skill",
-                      [occ(PUMMELER_HITS_ULTRA, OFF)]),
+                      [occ(8, OFF)]),
             # Своё имя: иначе патч C3 для Hammer подменит mv на 212.5%
             lunar_crystallize(CRUSH_NAME, "def", CRUSH_MV,
-                              [occ(1, ON, FIELD_CATALOG,AUBADE_SPECIAL)], kind="skill",
+                              [occ(1, ON, FIELD_CATALOG, AUBADE_SPECIAL)], kind="skill",
                               extra_tags=(CRUSH_TAG,)),
         ),
     ),

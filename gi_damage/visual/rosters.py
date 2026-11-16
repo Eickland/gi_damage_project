@@ -114,8 +114,9 @@ def _cell(name: str, field: str, setup, store: IconStore) -> str:
 # --------------------------------------------------------------------------- #
 def render_roster(results: Sequence, title: str = "", key: str = "dps",
                   ascending: bool = False, store: Optional[IconStore] = None,
-                  index: int = 0, notes: Sequence[str] = ()) -> str:
-    """HTML одной карточки-рейтинга."""
+                  index: int = 0, notes: Sequence[str] = (), base: int = 0) -> str:
+    """HTML одной карточки-рейтинга. base — индекс базового варианта в results
+    (от него считается «% от базы», строка помечена «база»)."""
     store = store or IconStore()
     if not results:
         return f"<section class='rcard'><h2>{html.escape(title)}</h2><p class='rot'>нет вариантов</p></section>"
@@ -130,6 +131,7 @@ def render_roster(results: Sequence, title: str = "", key: str = "dps",
                        key=lambda i: getattr(results[i], key),
                        reverse=not ascending)
         best = max(getattr(r, key) for r in results) or 1.0
+        base_value = (getattr(results[base], key) if 0 <= base < len(results) else 0.0) or 1.0
         head = "".join(
             "<th class='v'>"
             + f"<span class='who'>{store.img('characters', n, 'pic')}</span>"
@@ -144,14 +146,16 @@ def render_roster(results: Sequence, title: str = "", key: str = "dps",
             step = f"{value / prev * 100:.1f}%" if prev else "—"
             prev = value
             is_best = value == best
+            mark = " <span class='basemark'>база</span>" if i == base else ""
             rows.append(
-                f"<tr class='{'best' if is_best else ''}'><td class='rk'>{rank}</td>{cells}"
+                f"<tr class='{'best' if is_best else ''}{' base' if i == base else ''}'>"
+                f"<td class='rk'>{rank}</td>{cells}"
                 f"<td class='num'>{fmt(r.dpr)}</td>"
                 f"<td class='num bar'>{fmt(r.dps)}<i style='width:{value / best * 100:.1f}%'></i></td>"
-                f"<td class='num'>{value / best * 100:.1f}%</td>"
+                f"<td class='num'>{value / base_value * 100:.1f}%{mark}</td>"
                 f"<td class='num'>{step}</td></tr>")
         table = (f"<table class='rt'><thead><tr><th class='rk'>#</th>{head}"
-                 f"<th>DPR</th><th>{key.upper()}</th><th>% от лучшего</th>"
+                 f"<th>DPR</th><th>{key.upper()}</th><th>% от базы</th>"
                  f"<th>% от предыдущего</th></tr></thead><tbody>{''.join(rows)}</tbody></table>")
 
     extra = "".join(f"<li>{html.escape(t)}</li>" for t in notes)
@@ -258,6 +262,8 @@ ROSTER_CSS = """
 .chip{display:inline-block;padding:1px 8px;border-radius:3px;background:#2a2b33;font-weight:700}
 .rt tr.best td{background:#2a1215}
 .rt tr.best td.rk{color:var(--ink);font-weight:700}
+.rt tr.base td{box-shadow:inset 0 1px 0 var(--line),inset 0 -1px 0 var(--line)}
+.basemark{display:inline-block;margin-left:6px;padding:0 5px;border-radius:3px;background:var(--line);color:#111;font-size:10px;font-weight:700;vertical-align:1px}
 .rt td.bar{position:relative}
 .rt td.bar i{position:absolute;left:0;bottom:0;height:3px;background:var(--bar)}
 .rnotes{margin:8px 0 0;padding:0 0 0 18px;font-size:12px;color:var(--mute)}
@@ -297,8 +303,11 @@ def render_page(sections: Sequence, title: str = "Ростеры", columns: int 
         sec_title, results, key, ascending = sec[:4]
         notes = sec[4] if len(sec) > 4 else ()
         kind = sec[5] if len(sec) > 5 else "roster"
-        render = render_swaps if kind == "swap" else render_roster
-        cards.append(render(results, sec_title, key, ascending, store, i, notes))
+        if kind == "swap":
+            cards.append(render_swaps(results, sec_title, key, ascending, store, i, notes))
+        else:
+            base = sec[6] if len(sec) > 6 else 0
+            cards.append(render_roster(results, sec_title, key, ascending, store, i, notes, base))
     return (f'<!doctype html><html lang="ru"><head><meta charset="utf-8">'
             f'<meta name="viewport" content="width=device-width,initial-scale=1">'
             f'<title>{html.escape(title)}</title><style>{CSS}{ROSTER_CSS}</style></head><body>'
@@ -323,16 +332,28 @@ class RosterBook:
 
     def add(self, roster_or_results, title: str, key: str = "dps",
             ascending: bool = True, print_text: bool = True,
-            notes: Sequence[str] = ()) -> List:
+            notes: Sequence[str] = (), base: Optional[int] = None) -> List:
+        """base — индекс базового варианта в results. Не задан: для Roster
+        ищется вариант, совпадающий с базовым отрядом, иначе — первый."""
         results = (roster_or_results.run() if hasattr(roster_or_results, "run")
                    else list(roster_or_results))
+        if base is None:
+            base = 0
+            base_team = getattr(roster_or_results, "base_team", None)
+            if base_team is not None and results:
+                target = getattr(base_team.compute(), key)
+                for j, r in enumerate(results):
+                    if abs(getattr(r, key) - target) <= 1e-9 * max(1.0, abs(target)):
+                        base = j
+                        break
         if print_text:
             from ..core.report import roster_report
             print("========================")
             print(f"=== Ростер: {title} ===")
-            print(roster_report(results, key=key, title=title, ascending=ascending))
+            print(roster_report(results, key=key, title=title, ascending=ascending,
+                                base=base))
             print()
-        self.sections.append((title, results, key, ascending, tuple(notes)))
+        self.sections.append((title, results, key, ascending, tuple(notes), "roster", base))
         return results
 
     def add_swaps(self, results, title: str, key: str = "dps", ascending: bool = True,

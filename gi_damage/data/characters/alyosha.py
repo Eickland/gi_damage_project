@@ -16,6 +16,7 @@ ALYOSHA_KIT = Character(
     element="electro",
     weapon_type="polearm",
     default_field=OFF,
+    polar_always=2.0,   # стаки Polestar отряду
     crit_mode="balance",
     stats={
         S.BASE_ATK: 265.0,
@@ -56,10 +57,10 @@ ALYOSHA_COMBO_DICT = {
     "sc_combo" : with_rotation(
         ALYOSHA_KIT, sources=(
         elemental("Thunderbolt Strike", "atk", 5.161, "electro", "skill",
-                  [occ(1, ON,),]),
+                  [occ(1, ON)]),
         elemental("Fulgurite Hunting Field DMG", "atk", 1.3493, "electro", "burst",
-                  [occ(2, OFF,)]),
+                  [occ(2, OFF)]),
         elemental("Tugarin DMG", "atk", 0.904, "electro", "burst",
-                  [occ(10, OFF,),]),             
+                  [occ(10, OFF)]),             
         ))
 }

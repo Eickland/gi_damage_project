@@ -31,6 +31,9 @@ from .cycle import Phase
 # --------------------------------------------------------------------------- #
 #  Конфигурация расчёта                                                        #
 # --------------------------------------------------------------------------- #
+#: тег «на поле» (см. data/tags.py: ON)
+ON_FIELD = "on_field"
+
 @dataclass
 class Config:
     """Настройки движка.
@@ -206,6 +209,24 @@ class TeamContext:
 
 
 # --------------------------------------------------------------------------- #
+#  Стаки Polestar (звёздный проводник)                                        #
+# --------------------------------------------------------------------------- #
+@dataclass
+class PolarPlan:
+    dd: str
+    always: float          # постоянные стаки отряда
+    dd_stacks: float       # удары ДД на поле
+    pocket: float          # удары из кармана (вне поля)
+    dd_share: float        # доля времени ДД на поле
+
+    def stacks(self, character: str, st) -> float:
+        on_field = ON_FIELD in st
+        if on_field:
+            return self.dd_stacks if character == self.dd else self.always
+        return self.pocket
+
+
+# --------------------------------------------------------------------------- #
 #  Отряд                                                                       #
 # --------------------------------------------------------------------------- #
 @dataclass
@@ -223,6 +244,8 @@ class Team:
     #: если задано — используется вместо суммы времён персонажей
     rotation_time_override: Optional[float] = None
     phases: Sequence[Phase] = field(default_factory=tuple)
+    #: ДД отряда (для стаков Polestar). None — у кого больше всего времени.
+    dd: Optional[str] = None
 
     # ---- вспомогательное --------------------------------------------------- #
     @property
@@ -230,6 +253,13 @@ class Team:
         if self.rotation_time_override is not None:
             return self.rotation_time_override
         return sum(b.time for b in self.builds)
+
+    @property
+    def display_name(self) -> str:
+        """Название для отчётов: R в «CxRy» — пробуждение сигнатурного оружия
+        персонажа, с другим оружием R0 (gi_damage/data/signatures.py)."""
+        from ..data.signatures import display_name
+        return display_name(self.name, self.builds)
 
     def build(self, name: str) -> Build:
         for b in self.builds:
@@ -239,6 +269,29 @@ class Team:
 
     def elements(self) -> Dict[str, str]:
         return {b.name: b.element for b in self.builds}
+
+    def dd_name(self) -> str:
+        """ДД отряда: явно заданный или тот, кто дольше всех на поле."""
+        if self.dd is not None:
+            return self.dd
+        return max(self.builds, key=lambda b: b.time).name
+
+    def polar_plan(self) -> "PolarPlan":
+        """Стаки Polestar для ударов отряда.
+
+        постоянные = сумма polar_always всех персонажей;
+        ДД (удары на поле)       = постоянные + polar_on_field ДД;
+        удары из кармана (вне поля) = постоянные + polar_on_field ДД × доля
+                                       времени ДД на поле в ротации;
+        саппорт на поле (не ДД)  = постоянные.
+        """
+        dd = self.dd_name()
+        always = sum(b.polar_always() for b in self.builds)
+        dd_build = self.build(dd)
+        share = dd_build.time / self.rotation_time if self.rotation_time else 0.0
+        on = dd_build.polar_on_field()
+        return PolarPlan(dd=dd, always=always, dd_stacks=always + on,
+                         pocket=always + on * share, dd_share=share)
 
     # ---- расчёт ------------------------------------------------------------ #
     def compute(self) -> TeamResult:
@@ -262,6 +315,7 @@ class Team:
                           resolver)
 
         results = {b.name: CharacterResult(b.name) for b in self.builds}
+        plan = self.polar_plan()
 
         # --- прямой урон ---------------------------------------------------- #
         for b in self.builds:
@@ -273,8 +327,9 @@ class Team:
                         continue
                     st = occurrence.state
                     stats = resolver.stats(b.name, st)
+                    polar = plan.stacks(b.name, st)
                     value = self._source_damage(src, stats, b, multipliers,
-                                                crit_mode, ctx)
+                                                crit_mode, ctx, polar)
                     results[b.name].hits.append(
                         HitResult(src.name, st, occurrence.count, value))
 
@@ -310,7 +365,7 @@ class Team:
             )
             for b in self.builds
         }
-        return TeamResult(self.name, results, self.rotation_time,
+        return TeamResult(self.display_name, results, self.rotation_time,
                           setup=setup, rotation=self.rotation)
 
     def _merge_phases(self, parts) -> TeamResult:
@@ -333,11 +388,12 @@ class Team:
                                         for ph, res in parts))
                  for n, s in first.items()}
         rotation = " + ".join(f"{ph.count:g}×[{ph.name}]" for ph, _ in parts)
-        return TeamResult(self.name, chars, total_time, setup=setup, rotation=rotation)
+        return TeamResult(self.display_name, chars, total_time, setup=setup, rotation=rotation)
 
     # ---- отдельные формулы ------------------------------------------------- #
     def _source_damage(self, src: DamageSource, stats: Stats, b: Build,
-                       multipliers, crit_mode: str, ctx: TeamContext) -> float:
+                       multipliers, crit_mode: str, ctx: TeamContext,
+                       polar: Optional[float] = None) -> float:
         tags = src.tags()
         # Стат × Множитель (+ доп. слагаемые extra_scaling, напр. «+150% МС»).
         # Дальше в формулы идёт уже готовая база с mv = 1.
@@ -355,7 +411,8 @@ class Team:
             value = stellar_conduct_direct(
                 stat_value, mv, stats, tags, res, crit, elevation,
                 flat_base=src.flat_base + stats.flat_base_dmg(*tags),
-                polar_stacks=src.polar_stacks)
+                polar_stacks=(src.polar_override if src.polar_override is not None
+                              else polar if polar is not None else 1))
         elif src.model in LUNAR_MODELS:
             value = lunar_direct(
                 stat_value, mv, stats, tags, res, crit, elevation,

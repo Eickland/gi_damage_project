@@ -20,6 +20,10 @@ per-team через core.entities.with_rotation(), см. data/teams/*.py.
 Комбо «ДД на поле через звёздный проводник» (cmc_sc_dd_combo), 8.7 с:
     N2 P N2 N2 C N2 Q N2 N2  — 6 × (N1 + N2), высокий удар, спец. заряженная
     атака, взрыв. Удары звёздного проводника (заряженная и взрыв) — 11 стаков.
+
+Комбо «ДД через звёздный проводник, с навыком» (cmc_sc_dd_e_combo), 6.4 с:
+    E N2 N2 C Q N2  — навык (урон применения), 3 × (N1 + N2), спец. заряженная
+    атака, взрыв. Стаки и окна — как в cmc_sc_dd_combo.
 """
 
 from __future__ import annotations
@@ -49,20 +53,20 @@ SPECIAL_CA_MV = (CHARGED_MV[0] + SPECIAL_CA_EXTRA, CHARGED_MV[1] + SPECIAL_CA_EX
 SPEAR_SC_MV, SPEAR_SC_MV_C4 = 0.6616, 0.781
 FROSTGLOW_SC_PER_STACK, FROSTGLOW_SC_PER_STACK_C4 = 0.0331, 0.0391
 FROSTGLOW_STACKS = 8
-SPEAR_HITS = 5
 BURST_SC_MV = SPEAR_SC_MV + FROSTGLOW_STACKS * FROSTGLOW_SC_PER_STACK
 BURST_SC_MV_C4 = SPEAR_SC_MV_C4 + FROSTGLOW_STACKS * FROSTGLOW_SC_PER_STACK_C4
 
-#: Стаки звёздного проводника (polar stacks) для ударов ДД-версии
-CMC_SC_POLAR_STACKS = 11
 
 CMC_SC_DD_TIME = 9.2
+#: Комбо cmc_sc_dd_e_combo: E N2 N2 C Q N2
+CMC_SC_DD_E_TIME = 6.4
 
 CRYO_MC_KIT = Character(
     name="Крио ГГ",
     element="cryo",
     weapon_type="sword",
     default_field=OFF,
+    polar_on_field=4.0,   # стаки Polestar отряду
     crit_mode="balance",
     stats={
         S.BASE_ATK: 212.0 + 7 + 3,
@@ -114,67 +118,102 @@ CRYO_MC_KIT = Character(
     note="",
 )
 
+#: Крио ГГ в ДД-стойке (на поле, звёздный проводник): C2 даёт +120 МС только
+#: себе, а не активному персонажу отряда.
+CRYO_MC_DD_KIT = replace(CRYO_MC_KIT, constellations={
+    **CRYO_MC_KIT.constellations,
+    2: Constellation(
+        number=2,
+        name="C2",
+        buffs=(
+            Buff(S.BASE_EM, 120.0, target=SELF, requires=(ON,),
+                 source="C2 Крио ГГ (ДД): +120 МС себе"),
+        ),
+    ),
+})
+
 CMC_COMBO_DICT = {
     "cmc_ssw_mizuki_combo" : with_rotation(
     CRYO_MC_KIT,
     sources=(
         elemental("Использование навыка (АТК)", "atk", 1.6502, "cryo", "skill",
-                  [occ(1, ON,VV_CRYO)]),
+                  [occ(1, ON, VV_CRYO)]),
         elemental("Навык (АТК)", "atk", 0.3851, "cryo", "skill",
-                  [occ(5, OFF, DREAM,VV_CRYO), occ(3, OFF,VV_CRYO)]),
+                  [occ(5, OFF, DREAM, VV_CRYO,NOBLE),
+                   occ(3, OFF, VV_CRYO)]),
         stellar_swirl("Заряженная атака — SSW, 1", "atk", (1.105) + 1.40,
-                      "cryo", [occ(1, ON, INST,BREEZEBORNE,VODYA_LEAD,VV_CRYO,SEVEN_SACRED,CATS_TAIL)], kind="charged"),
+                      "cryo", [occ(1, ON, INST, VODYA_LEAD, VV_CRYO, SEVEN_SACRED, CATS_TAIL,NOBLE,TTDS_HALF)], kind="charged"),
         stellar_swirl("Заряженная атака — SSW, 2", "atk", (1.428) + 1.40,
-                      "cryo", [occ(1, ON, INST,BREEZEBORNE,VODYA_LEAD,VV_CRYO,SEVEN_SACRED,CATS_TAIL)], kind="charged"),
+                      "cryo", [occ(1, ON, INST, VODYA_LEAD, VV_CRYO, SEVEN_SACRED, CATS_TAIL,NOBLE,TTDS_HALF)], kind="charged"),
         stellar_swirl("Взрыв — SSW", "atk", (0.9924 + 8 * 0.0496), "cryo",
-                      [occ(5, ON, INST,BREEZEBORNE,VODYA_LEAD,VV_CRYO,SEVEN_SACRED,CATS_TAIL)], kind="burst"),
+                      [occ(5, ON, INST, VODYA_LEAD, VV_CRYO, SEVEN_SACRED, CATS_TAIL,NOBLE,TTDS_HALF)], kind="burst"),
     ),
     constellation_patches={
         4: {
-            "Навык (АТК)": lambda s: replace(s, occurrences=[occ(9, OFF, DREAM,VV_CRYO), occ(3, OFF,VV_CRYO)]),
+            "Навык (АТК)": lambda s: replace(s, occurrences=[occ(9, OFF, DREAM, VV_CRYO,NOBLE),
+                                                             occ(3, OFF, VV_CRYO)]),
         },
     },
 ),
+    
     "cmc_ssw_vesna_combo" : with_rotation(
     CRYO_MC_KIT,
     sources=(
         elemental("Использование навыка (АТК)", "atk", 1.6502, "cryo", "skill",
-                  [occ(1, ON,VV_CRYO)]),
+                  [occ(1, ON, VV_CRYO)]),
         elemental("Навык (АТК)", "atk", 0.3851, "cryo", "skill",
-                  [occ(5, OFF,VV_CRYO), occ(3, OFF,VV_CRYO)]),
+                  [occ(5, OFF, VV_CRYO,NOBLE),
+                   occ(3, OFF, VV_CRYO)]),
         stellar_swirl("Заряженная атака — SSW, 1", "atk", (1.105) + 1.40,
-                      "cryo", [occ(1, ON, INST,VV_CRYO)], kind="charged"),
+                      "cryo", [occ(1, ON, INST, VV_CRYO,NOBLE)], kind="charged"),
         stellar_swirl("Заряженная атака — SSW, 2", "atk", (1.428) + 1.40,
-                      "cryo", [occ(1, ON, INST,VV_CRYO)], kind="charged"),
+                      "cryo", [occ(1, ON, INST, VV_CRYO,NOBLE)], kind="charged"),
         stellar_swirl("Взрыв — SSW", "atk", (0.9924 + 8 * 0.0496), "cryo",
-                      [occ(5, ON, INST,VV_CRYO)], kind="burst"),
+                      [occ(5, ON, INST, VV_CRYO,NOBLE)], kind="burst"),
     ),
     constellation_patches={
         4: {
-            "Навык (АТК)": lambda s: replace(s, occurrences=[occ(9, OFF,VV_CRYO), occ(3, OFF,VV_CRYO)]),
+            "Навык (АТК)": lambda s: replace(s, occurrences=[occ(9, OFF, VV_CRYO,NOBLE),
+                                                             occ(3, OFF, VV_CRYO)]),
         },
     },
 ),
     # ДД на поле через звёздный проводник: N2 P N2 N2 C N2 Q N2 N2, 8.7 с.
     # Окна отряда: все удары — под A4 Сахарозы (INST) и Изумрудной тенью (VV_CRYO).
     "cmc_sc_dd_combo": with_rotation(
-    CRYO_MC_KIT,
+    CRYO_MC_DD_KIT,
     sources=(
         elemental("Обычная атака 1 (крио)", "atk", NORMAL_MV[1] + EVERPIERCING_FROST_ATK,
-                  "cryo", "normal", [occ(6, ON, INST, VV_CRYO)]),
+                  "cryo", "normal", [occ(6, ON, INST, VV_CRYO,NOBLE)]),
         elemental("Обычная атака 2 (крио)", "atk", NORMAL_MV[2] + EVERPIERCING_FROST_ATK,
-                  "cryo", "normal", [occ(6, ON, INST, VV_CRYO)]),
+                  "cryo", "normal", [occ(6, ON, INST, VV_CRYO,NOBLE)]),
         elemental("Высокий удар в падении (крио)", "atk", HIGH_PLUNGE_MV + EVERPIERCING_FROST_ATK,
-                  "cryo", "plunge", [occ(1, ON, INST, VV_CRYO)]),
+                  "cryo", "plunge", [occ(1, ON, INST, VV_CRYO,NOBLE)]),
         stellar_conduct("Заряженная атака — SC, 1", "atk", SPECIAL_CA_MV[0], "cryo",
-                        [occ(1, ON, INST, VV_CRYO, TTDS_HALF)], kind="charged",
-                        polar_stacks=CMC_SC_POLAR_STACKS),
+                        [occ(1, ON, INST, VV_CRYO, TTDS_HALF, TTDS_FULL,NOBLE,SEVEN_SACRED,CATS_TAIL)], kind="charged"),
         stellar_conduct("Заряженная атака — SC, 2", "atk", SPECIAL_CA_MV[1], "cryo",
-                        [occ(1, ON, INST, VV_CRYO, TTDS_HALF)], kind="charged",
-                        polar_stacks=CMC_SC_POLAR_STACKS),
+                        [occ(1, ON, INST, VV_CRYO, TTDS_HALF, TTDS_FULL,NOBLE,SEVEN_SACRED,CATS_TAIL)], kind="charged"),
         stellar_conduct("Взрыв — SC", "atk", BURST_SC_MV, "cryo",
-                        [occ(SPEAR_HITS, ON, INST, VV_CRYO, TTDS_HALF)], kind="burst",
-                        polar_stacks=CMC_SC_POLAR_STACKS),
+                        [occ(5, ON, INST, VV_CRYO, TTDS_HALF, TTDS_FULL,NOBLE,SEVEN_SACRED,CATS_TAIL)], kind="burst"),
+    ),
+),
+    # ДД на поле через звёздный проводник, с навыком: E N2 N2 C Q N2, 6.4 с
+    # (CMC_SC_DD_E_TIME). Окна и стаки — как в cmc_sc_dd_combo.
+    "cmc_sc_dd_e_combo": with_rotation(
+    CRYO_MC_DD_KIT,
+    sources=(
+        elemental("Использование навыка (АТК)", "atk", 1.6502, "cryo", "skill",
+                  [occ(1, ON, INST, VV_CRYO)]),
+        elemental("Обычная атака 1 (крио)", "atk", NORMAL_MV[1] + EVERPIERCING_FROST_ATK,
+                  "cryo", "normal", [occ(3, ON, INST, VV_CRYO,NOBLE)]),
+        elemental("Обычная атака 2 (крио)", "atk", NORMAL_MV[2] + EVERPIERCING_FROST_ATK,
+                  "cryo", "normal", [occ(3, ON, INST, VV_CRYO,NOBLE)]),
+        stellar_conduct("Заряженная атака — SC, 1", "atk", SPECIAL_CA_MV[0], "cryo",
+                        [occ(1, ON, INST, VV_CRYO, TTDS_HALF, TTDS_FULL,NOBLE,SEVEN_SACRED,CATS_TAIL, SUCROSE_PASSIVE)], kind="charged"),
+        stellar_conduct("Заряженная атака — SC, 2", "atk", SPECIAL_CA_MV[1], "cryo",
+                        [occ(1, ON, INST, VV_CRYO, TTDS_HALF, TTDS_FULL,NOBLE,SEVEN_SACRED,CATS_TAIL, SUCROSE_PASSIVE)], kind="charged"),
+        stellar_conduct("Взрыв — SC", "atk", BURST_SC_MV, "cryo",
+                        [occ(5, ON, INST, VV_CRYO, TTDS_HALF, TTDS_FULL,NOBLE,SEVEN_SACRED,CATS_TAIL, SUCROSE_PASSIVE)], kind="burst"),
     ),
 ),
 }

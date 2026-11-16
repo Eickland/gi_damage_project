@@ -8,8 +8,8 @@
 cryo_mc_odette_sucrose_alyosha: N2 P N2 N2 C N2 Q N2 N2 (9.2 с).
 C6 Крио ГГ (окно FROSTGLOW, 15 с после взрыва): ротация ~16.1 с, окно
 перекрывает почти всю её, поэтому все удары остальных — с FROSTGLOW.
-An Unfinished Requiem: +1 стак Polestar всем ударам SC отряда (polar_shift()).
-Эпос Мити (окно TTDS_FULL) — на всех ударах Крио ГГ: он идёт сразу после Мити.
+An Unfinished Requiem: стаки Polestar — polar_always у Анастасии (Team.polar_plan()).
+Эпос Мити (половинчатый бафф, ротация < 20.5 с; окно TTDS_FULL/TTDS_HALF) — на всех ударах Крио ГГ: он идёт сразу после Мити.
 
 Артефакты: Анастасия — Звёздный сет, Митя — Миллелит (Эпос R5), Одетта — Звёздный сет, Крио ГГ — Разочарование.
 """
@@ -32,17 +32,17 @@ from ...data.characters.danika import (DANIKA_COMBO_DICT, C2_ACTIVE_STACKS,
                                        C2_OTHER_STACKS, tag_stellar_conduct_hits, add_tags)
 from ...data.characters.danika import (C2_ACTIVE_STACKS, C2_OTHER_STACKS,
                                        tag_stellar_conduct_hits, add_tags)
-from ...data.characters.anastasia import anastasia_support, polar_shift, CROWN_HITS
+from ...data.characters.anastasia import anastasia_support, CROWN_HITS
 from ...data.characters.mitya import MITYA_COMBO_DICT
 from ...data.weapons import *
 
 TEAM_BUFFS = (
-    Buff(S.CRIT_VALUE, 0.30, target=TEAM,
-         source="Крио резонанс: +15% крит. шанса (0.30 крит-вэлью)"),
+    Buff(S.CRIT_VALUE, 0.15, target=TEAM,
+         source="Крио резонанс (ослаблен ×0.5: 2 электро в отряде): +7.5% крит. шанса (0.15 крит-вэлью)"),
 )
 
 #: Время каждого персонажа в ротации (секунды)
-TIMES = {"Крио ГГ": CMC_SC_DD_TIME+1.3, "Анастасия": 3.0, "Митя": 1.5, "Даника": 3}
+TIMES = {"Крио ГГ": CMC_SC_DD_TIME+1.3, "Анастасия": 3.5, "Митя": 1.5, "Даника": 3.25}
 
 ROTATION = "Анастасия EQ/Даника EQ/Митя E/Крио ГГ N2 P N2 N2 C N2 Q N2 N2"
 
@@ -51,9 +51,9 @@ MAIN_EM = {S.BASE_EM: 187.0 * 2, S.CRIT_VALUE: 0.622}        # МС/МС/кри�
 FULL_ATK = {S.ATK_PCT: 0.466 * 3}                            # АТК/АТК/АТК (Даника)
 
 #: Комбо с +1 стаком Polestar (Requiem Анастасии)
-CMC = polar_shift(CMC_COMBO_DICT["cmc_sc_dd_combo"])
-ANASTASIA = polar_shift(anastasia_support("sc", [occ(CROWN_HITS, OFF)]))
-MITYA = polar_shift(MITYA_COMBO_DICT["support_steady"])
+CMC = CMC_COMBO_DICT["cmc_sc_dd_combo"]
+ANASTASIA = anastasia_support("sc", [occ(CROWN_HITS, OFF)])
+MITYA = MITYA_COMBO_DICT["support_steady"]
 DANIKA = DANIKA_COMBO_DICT["support_eq"]
 
 
@@ -82,9 +82,9 @@ def cryo_mc_build(constellation: int = 6, weapon=EXAIPHANES.at(5), artifacts=(DI
         extra_stats=merge_dicts(main_stats, STANDART_SUBSTAT_PRESET),
         extra_buffs=tuple(extra_buffs),
         time=TIMES["Крио ГГ"],
-    ), TTDS_FULL), danika_c2_hits)
+    ), TTDS_FULL, TTDS_HALF), danika_c2_hits)
 
-def anastasia_build(constellation: int = 0, weapon=ARTEMISIA, artifacts=(STELLAR_SET,),
+def anastasia_build(constellation: int = 0, weapon=BREEZEBORNE_BOW.at(1), artifacts=(STELLAR_SET,),
                     main_stats=MAIN_ATK, danika_c2_hits: int = 0,
                     extra_buffs: Sequence[Buff] = ()) -> Build:
     return _c2(_frostglow(Build(
@@ -98,7 +98,7 @@ def anastasia_build(constellation: int = 0, weapon=ARTEMISIA, artifacts=(STELLAR
     )), danika_c2_hits)
 
 
-def mitya_build(constellation: int = 0, weapon=TTDS_FULL_CATALYSATOR, artifacts=(MILLELITH,),
+def mitya_build(constellation: int = 0, weapon=TTDS_HALF_CATALYSATOR, artifacts=(MILLELITH,),
                 main_stats=MAIN_EM, danika_c2_hits: int = 0,
                 extra_buffs: Sequence[Buff] = ()) -> Build:
     return _c2(_frostglow(Build(
@@ -127,8 +127,8 @@ def danika_build(constellation: int = 0, weapon=ATONEMENT, artifacts=(HEART_OF_F
 
 def make_team(name: str, cmc_c: int = 6, cmc_weapon=EXAIPHANES.at(5),
               cmc_artifacts=(DISENCHANTMENT,),
-              anastasia_c: int = 0, anastasia_weapon=ARTEMISIA, anastasia_artifacts=(STELLAR_SET,),
-              mitya_c: int = 0, mitya_weapon=TTDS_FULL_CATALYSATOR, mitya_artifacts=(MILLELITH,),
+              anastasia_c: int = 0, anastasia_weapon=BREEZEBORNE_BOW.at(1), anastasia_artifacts=(DISENCHANTMENT,),
+              mitya_c: int = 0, mitya_weapon=TTDS_HALF_CATALYSATOR, mitya_artifacts=(MILLELITH,),
               odette_c: int = 0, odette_weapon=ATONEMENT, odette_artifacts=(HEART_OF_FORGE,)) -> Team:
     c2 = False
     return Team(
@@ -148,8 +148,8 @@ def make_team(name: str, cmc_c: int = 6, cmc_weapon=EXAIPHANES.at(5),
 
 
 def team_name(cmc_c: int = 6, cmc_weapon=EXAIPHANES.at(5),
-              anastasia_c: int = 0, anastasia_weapon=ARTEMISIA,
-              mitya_c: int = 0, mitya_weapon=TTDS_FULL_CATALYSATOR,
+              anastasia_c: int = 0, anastasia_weapon=BREEZEBORNE_BOW.at(1),
+              mitya_c: int = 0, mitya_weapon=TTDS_HALF_CATALYSATOR,
               odette_c: int = 0, odette_weapon=SILVER_LIGHT) -> str:
     _dw = (f" ({odette_weapon.name})" if odette_weapon.name != ATONEMENT.name else "")
     return (f"C{cmc_c}R{cmc_weapon.refinement} Крио ГГ, "

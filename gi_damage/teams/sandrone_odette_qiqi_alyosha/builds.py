@@ -29,7 +29,7 @@ TEAM_BUFFS = (
 )
 
 #: Время каждого персонажа в ротации (секунды)
-TIMES = {"Сандроне": 14.5, "Алеша": 1.65, "Одетта": 2.4, "Ци Ци": 1.5}
+TIMES = {"Сандроне": 14, "Алеша": 1.9, "Одетта": 2.4, "Ци Ци": 1.5}
 
 ROTATION = "Алеша EQ/Ци Ци E/Одетта EE/Сандроне E CA EQ CA E CA E"
 
@@ -107,16 +107,16 @@ def alyosha_build(constellation: int = 6, weapon=FAV_LANCE, artifacts=(HEART_OF_
 
 def make_team(name: str, sandrone_c: int = 0, sandrone_weapon=TIDAL_SHADOW,
               odette_c: int = 0, odette_weapon=SILVER_LIGHT,
-              mitya_c: int = 0, mitya_weapon=FAV_SWORD,
-              alyosha_c: int = 5, alyosha_weapon=FAV_LANCE,
+              qiqi_c: int = 0, qiqi_weapon=FAV_SWORD,
+              alyosha_c: int = 6, alyosha_weapon=FAV_LANCE,
               sandrone_artifacts=(DISENCHANTMENT,), odette_artifacts=(DISENCHANTMENT,),
-              mitya_artifacts=(MILLELITH,), alyosha_artifacts=(HEART_OF_FORGE,)) -> Team:
+              qiqi_artifacts=(MILLELITH,), alyosha_artifacts=(HEART_OF_FORGE,)) -> Team:
     return Team(
         name=name,
         builds=[
             sandrone_build(sandrone_c, sandrone_weapon, sandrone_artifacts),
             odette_build(odette_c, odette_weapon, odette_artifacts),
-            qiqi_build(mitya_c, mitya_artifacts),
+            qiqi_build(constellation=qiqi_c,weapon=qiqi_weapon, artifacts=qiqi_artifacts),
             alyosha_build(alyosha_c, alyosha_weapon, alyosha_artifacts),
         ],
         enemy=enemy(),

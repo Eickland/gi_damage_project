@@ -2,4 +2,10 @@ __pycache__/
 *.pyc
 .pytest_cache/
 *.html
+*.pdf.invest_cache/
 *.pdf
+_backups/
+.invest_cache/
+.vscode/
+.invest_cache_old/
+.json

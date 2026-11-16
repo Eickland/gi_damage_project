@@ -58,12 +58,24 @@ def base_increase_sc(stats: Stats, *tags: str) -> float:
     """(1 + Бонус базового урона) — «Base DMG Increase%»."""
     return 1.0 + stats.sc_base_inc(*tags)
 
-def stellar_conduct_multiplier(polar_stacks:int = 1):
-    
-    if polar_stacks == 1:
-        return 1
-    else:
-        return 1.5 + (polar_stacks-2)*0.05
+#: Максимум стаков Polestar
+POLAR_MAX_STACKS = 12
+
+
+def stellar_conduct_multiplier(polar_stacks: float = 1):
+    """Множитель звёздного проводника от стаков Polestar.
+
+    1 стак -> 1; 2 -> 1.5; дальше +0.05 за стак, максимум POLAR_MAX_STACKS
+    (12 -> 2.0). Стаки могут быть дробными (среднее по времени для ударов
+    из кармана): формула линейна, между 1 и 2 стаками — линейный переход
+    от 1 к 1.5.
+    """
+    polar_stacks = min(polar_stacks, POLAR_MAX_STACKS)
+    if polar_stacks <= 1:
+        return 1.0
+    if polar_stacks < 2:
+        return 1.0 + 0.5 * (polar_stacks - 1)
+    return 1.5 + (polar_stacks - 2) * 0.05
 
 # --------------------------------------------------------------------------- #
 #  Лунные реакции                                                              #

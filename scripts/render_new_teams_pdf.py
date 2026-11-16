@@ -1,11 +1,18 @@
 #!/usr/bin/env python3
-"""PDF со всеми отрядами с Даникой и Анастасией (все вариации из all_teams()).
+"""PDF со всеми отрядами звёздного проводника и звёздного рассеивания
+(все вариации из all_teams()).
 
-    python -m scripts.render_new_teams_pdf                     # new_teams.pdf (+ .html)
+    python -m scripts.render_new_teams_pdf                     # «звездные команды.pdf» (+ .html)
     python -m scripts.render_new_teams_pdf --out my.pdf --columns 1
     python -m scripts.render_new_teams_pdf --html-only         # только HTML
     python -m scripts.render_new_teams_pdf --one               # по одной команде из отряда (первой)
     python -m scripts.render_new_teams_pdf --pick -1           # … или любой по номеру (-1 — последняя)
+    python -m scripts.render_new_teams_pdf --one --raw         # первая команда как есть, без базовой линии
+
+С --one / --pick команды приводятся к базовой линии (gi_damage/data/baseline.py):
+без сигнатурных оружий и созвездий, оружие Сандроне по составу отряда,
+Анастасия с Артемизией R1 в Разочаровании, Одетта в Звёздном сете
+с Серебряным светом R5. Список изменений печатается и попадает в PDF.
 
 Структура: титульная сводка (все отряды, DPS по группам), дальше —
 по разделу на каждого основного ДД, в разделе — карточки всех вариаций.
@@ -26,6 +33,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from gi_damage.data.baseline import baseline_team
 from gi_damage.visual import IconStore
 from gi_damage.visual.cards import CSS, fmt, render_card
 
@@ -42,17 +50,34 @@ GROUPS = (
         "sandrone_anastasia_danika_mitya",
         "sandrone_anastasia_danika_alyosha",
         "sandrone_odette_yae_anastasia",
-        "sandrone_odette_sucrose_alyosha:swap_teams",
+        "sandrone_odette_sucrose_alyosha",
+        "sandrone_odette_mitya_alyosha",
+        "sandrone_odette_qiqi_alyosha",
+        "sandrone_yae_alyosha_odette",
+        "sandrone_yae_mitya_odette",
+        "sandrone_yae_odette_xilonen",
+        "sandrone_odette_anastasia_alyosha",
+        "sandrone_odette_anastasia_mitya",
     ]),
     ("Сайно", [
         "cyno_danika_yae_odette",
         "cyno_anastasia_danika_odette",
         "cyno_yae_danika_anastasia",
+        "cyno_odette_alyosha_diona",
+        "cyno_odette_yae_alyosha",
+        "cyno_odette_yae_diona",
+        "cyno_yae_odette_valera",
+        "cyno_yae_mitya_odette",
     ]),
     ("Митя (ДД)", [
         "mitya_danika_yae_odette",
         "mitya_anastasia_danika_odette",
         "mitya_anastasia_yae_odette",
+        "mitya_odette_sucrose_valera",
+        "mitya_odette_yae_valera",
+        "mitya_odette_anastasia_valera",
+        "mitya_odette_danika_valera",
+        "mitya_anastasia_yae_valera",
     ]),
     ("Крио ГГ (ДД)", [
         "cryo_mc_yae_danika_odette",
@@ -60,25 +85,49 @@ GROUPS = (
         "cryo_mc_anastasia_mitya_odette",
         "cryo_mc_anastasia_mitya_danika",
         "cryo_mc_anastasia_yae_odette",
+        "cryo_mc_odette_sucrose_alyosha",
+        "cryo_mc_anastasia_odette_alyosha",
+        "cryo_mc_qiqi_danika_odette",
+        "cryo_mc_anastasia_danika_qiqi",
     ]),
     ("Анастасия (ДД)", [
         "anastasia_dd_danika_mitya_odette",
         "anastasia_dd_danika_yae_odette",
         "anastasia_dd_danika_alyosha_odette",
         "anastasia_dd_sucrose_alyosha_diona",
+        "anastasia_dd_qiqi_sucrose_alyosha",
+        "anastasia_dd_qiqi_odette_alyosha",
+        "anastasia_dd_diona_odette_alyosha",
     ]),
     ("Ризли", [
         "wriothesley_anastasia_danika_odette",
+        "wriothesley_yae_danika_odette",
+        "wriothesley_anastasia_odette_mitya",
+        "wriothesley_odette_mitya_nicole",
+        "wriothesley_odette_yae_nicole",
     ]),
     ("Весна", [
         "vesna_anastasia_vodya_odette",
         "vesna_anastasia_odette_faruzan",
         "vesna_anastasia_cmc_vodya",
+        "vesna_faruzan_diona_cmc",
+        "vesna_faruzan_odette_cmc",
+        "vesna_faruzan_odette_vodya",
+        "vesna_vodya_odette_cmc",
     ]),
     ("Мидзуки", [
         "mizuki_anastasia_vodya_odette",
         "mizuki_anastasia_vodya_cmc",
         "mizuki_anastasia_odette_faruzan_sacfrag",
+        "mizuki_diona_cmc_faruzan",
+        "mizuki_faruzan_cmc_odette",
+        "mizuki_faruzan_cmc_odette_sacfrag",
+        "mizuki_faruzan_diona_odette",
+        "mizuki_faruzan_diona_odette_sacfrag",
+        "mizuki_faruzan_qiqi_odette",
+        "mizuki_qiqi_cmc_faruzan",
+        "mizuki_sucrose_cmc_odette",
+        "mizuki_vodya_odette_cmc",
     ]),
 )
 
@@ -126,27 +175,42 @@ def pick_teams(teams: dict, pick: int | None = None) -> dict:
     return {name: team}
 
 
-def collect(pick: int | None = None):
-    """[(группа, [(папка, [TeamResult...]), ...]), ...]
+def collect(pick: int | None = None, baseline: bool = False):
+    """([(группа, [(папка, [TeamResult...]), ...]), ...], {имя команды: [изменения]})
 
     pick — см. pick_teams(): None = все вариации, 0 = по одной (первой).
     Отбор идёт до расчёта, так что с pick скрипт работает быстрее.
+    baseline — привести каждую команду к базовой линии (baseline_team()).
     """
-    out = []
+    out, changes = [], {}
     for title, folders in GROUPS:
         items = []
         for entry in folders:
             folder, _, func = entry.partition(":")
-            module = importlib.import_module(f"gi_damage.teams.{folder}.builds")
-            teams = pick_teams(getattr(module, func or "all_teams")(), pick)
-            results = [team.compute() for team in teams.values()]
+            try:
+                module = importlib.import_module(f"gi_damage.teams.{folder}.builds")
+                teams = pick_teams(getattr(module, func or "all_teams")(), pick)
+                results = []
+                for team in teams.values():
+                    if baseline:
+                        team, ch = baseline_team(team)
+                        changes[team.display_name] = ch
+                    results.append(team.compute())
+            except Exception as exc:  # отряд не собирается — пропускаем, остальные считаем
+                print(f"  {entry}: ПРОПУЩЕН — {type(exc).__name__}: {exc}")
+                continue
             items.append((entry, results))
             print(f"  {entry}: {len(results)} вар.")
-        out.append((title, items))
-    return out
+            if baseline:
+                for r in results:
+                    for c in changes[r.team_name]:
+                        print(f"      - {c}")
+        if items:
+            out.append((title, items))
+    return out, changes
 
 
-def render(groups, columns: int, title: str) -> str:
+def render(groups, columns: int, title: str, changes: dict | None = None) -> str:
     store = IconStore()
     best = max(r.dps for _, items in groups for _, rs in items for r in rs) or 1.0
     total = sum(len(rs) for _, items in groups for _, rs in items)
@@ -166,7 +230,8 @@ def render(groups, columns: int, title: str) -> str:
              f"Внутри разделов — по убыванию DPS.</p>"
              f"<table class='summary'><thead><tr><th>Отряд</th><th></th>"
              f"<th style='text-align:right'>DPS</th><th style='text-align:right'>Ротация</th>"
-             f"</tr></thead><tbody>{''.join(rows)}</tbody></table></div>")
+             f"</tr></thead><tbody>{''.join(rows)}</tbody></table>"
+             "</div>")
 
     sections = []
     index = 0
@@ -186,6 +251,26 @@ def render(groups, columns: int, title: str) -> str:
     return (f"<!doctype html><html lang='ru'><head><meta charset='utf-8'>"
             f"<title>{html.escape(title)}</title><style>{css}</style></head><body>"
             f"{cover}{''.join(sections)}</body></html>")
+
+
+def render_changes(groups, changes: dict | None) -> str:
+    """Таблица «что изменено ради базовой линии» (пусто без baseline)."""
+    if not changes:
+        return ""
+    rows = []
+    for gtitle, items in groups:
+        for _, rs in items:
+            for r in rs:
+                ch = changes.get(r.team_name) or ["без изменений"]
+                rows.append(f"<tr><td>{html.escape(r.team_name)}</td>"
+                            f"<td>{'<br>'.join(html.escape(c) for c in ch)}</td></tr>")
+    return ("<h1 style='font-size:20px'>Приведение к базовой линии</h1>"
+            "<p class='meta'>Без сигн и созвездий (кроме C6 Алеша, C6 Валера, C1 Яэ, C1 Ризли, "
+            "C1 Сайно, C2 Мидзуки, C6 Фарузан, C6 Диона, C6 Сахароза; Крио ГГ — C6R5). Сандроне: Клинок искупления при 2+ электро, иначе Тень волны "
+            "при хиле (Ци Ци / Алеша / Диона), иначе Магический супермеч. Анастасия с Артемизией — "
+            "R1 и Разочарование; Одетта — Разочарование (проводник) или 2+2 на АТК (рассеивание) и Серебряный свет R5.</p>"
+            "<table class='summary'><thead><tr><th>Отряд</th><th>Изменения</th></tr></thead>"
+            f"<tbody>{''.join(rows)}</tbody></table>")
 
 
 def to_pdf(html_path: Path, pdf_path: Path) -> Path:
@@ -211,9 +296,11 @@ def to_pdf(html_path: Path, pdf_path: Path) -> Path:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--out", default="new_teams.pdf")
+    ap.add_argument("--out", default="звездные команды.pdf")
     ap.add_argument("--columns", type=int, default=2)
-    ap.add_argument("--title", default="Отряды с Даникой и Анастасией")
+    ap.add_argument("--title", default=None)
+    ap.add_argument("--raw", action="store_true",
+                    help="с --one/--pick: брать команду как есть, без базовой линии")
     ap.add_argument("--html-only", action="store_true", help="не печатать PDF")
     sel = ap.add_mutually_exclusive_group()
     sel.add_argument("--one", action="store_const", const=0, dest="pick",
@@ -224,10 +311,13 @@ def main() -> int:
     args = ap.parse_args()
 
     print("Считаю отряды:")
-    groups = collect(args.pick)
+    baseline = args.pick is not None and not args.raw
+    title = args.title or ("Отряды на базовой линии" if baseline
+                           else "Звёздные команды")
+    groups, changes = collect(args.pick, baseline)
     pdf_path = Path(args.out)
     html_path = pdf_path.with_suffix(".html")
-    html_path.write_text(render(groups, args.columns, args.title), encoding="utf-8")
+    html_path.write_text(render(groups, args.columns, title, changes), encoding="utf-8")
     print(f"HTML: {html_path.resolve()}")
     if args.html_only:
         return 0

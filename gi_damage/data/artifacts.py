@@ -120,8 +120,10 @@ DISENCHANTMENT = ArtifactSet(
     buffs_by_pieces={
         4: (Buff(S.SC_BONUS, 0.40, target=SELF,
          source="Разочарование 4ч:+40% урона звёздного проводника"),
-            Buff(S.CRIT_VALUE, 0.32, target=SELF,
-         source="Разочарование 4ч:+16% крит шанса носителю"))
+            Buff(S.CRIT_VALUE,
+                 lambda ctx: 0.32 if ctx.team_has_model("stellar_conduct") else 0.0,
+                 target=SELF,
+         source="Разочарование 4ч:+16% крит шанса носителю (только в отрядах звёздного проводника)"))
         },
     note="",
 )
@@ -210,8 +212,8 @@ STELLAR_SET = ArtifactSet(
         2: {S.ATK_PCT: 0.18},
     },
     buffs_by_pieces={
-        4: (Buff(S.CRIT_VALUE, 0.40 * 2, target=SELF,
-                 source="Звёздный сет 4ч: +40% крит. шанса носителю"),),
+        4: (Buff("crit_value.cryo", 0.40 * 2, target=SELF,
+                 source="Звёздный сет 4ч: +40% крит. шанса носителю (работает и вне поля)"),),
     },
     note="Название набора пока неизвестно.",
 )

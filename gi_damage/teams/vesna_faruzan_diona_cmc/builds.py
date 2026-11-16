@@ -66,7 +66,7 @@ TEAM_BUFFS = (
 )
 
 #: Время каждого персонажа в ротации (секунды)
-TIMES = {"Весна": 12.5, "Крио ГГ": 3.65, "Диона": 2.2, "Фарузан": 2.7}
+TIMES = {"Весна": 12.5, "Крио ГГ": 3.65, "Диона": 2.3, "Фарузан": 2.7}
 
 ROTATION = "Faruzan EQ /CMC E Q CA/ Диона EQ/Vesna (N1CE)2 QE (N1CE)2"
 
@@ -100,7 +100,7 @@ def vesna_build(constellation: int, weapon, artifacts, extra_buffs: Sequence[Buf
     )
 
 
-def cryo_mc_build(constellation: int, artifacts, weapon=EXAIPHANES, extra_buffs: Sequence[Buff] = ()) -> Build:
+def cryo_mc_build(constellation: int, artifacts, weapon=EXAIPHANES.at(5), extra_buffs: Sequence[Buff] = ()) -> Build:
     return Build(
         character=CMC_COMBO_DICT["cmc_ssw_mizuki_combo"],
         constellation=constellation,
@@ -149,12 +149,12 @@ def reactions():
     """События звёздного рассеивания за одну ротацию.
     """
     return (
-        ssw_anemo("Весна", 7,BREEZEBORNE,FROSTGLOW, name="SSW анемо (Весна)"),
+        ssw_anemo("Весна", 7,FROSTGLOW, name="SSW анемо (Весна)"),
         
-        ssw_anemo("Фарузан", 7,BREEZEBORNE,FROSTGLOW, name="SSW анемо (Фарузан, Инструктор)"),
+        ssw_anemo("Фарузан", 7,FROSTGLOW, name="SSW анемо (Фарузан, Инструктор)"),
         
         # Детонации вихря
-        ssw_vortex(2, 4, INST,BREEZEBORNE,FROSTGLOW,VV_CRYO, name="SSW вихрь ×3 стака"),
+        ssw_vortex(2, 4, INST,FROSTGLOW,VV_CRYO, name="SSW вихрь ×3 стака"),
     )
 
 
@@ -162,7 +162,7 @@ def reactions():
 #  Отряды                                                                     #
 # =========================================================================== #
 def make_team(name: str, vesna_c: int, vesna_weapon, diona_weapon,diona_artifacts, vesna_artifacts = SCARLET_PROOF, faruzan_artifacts = MILLELITH,
-              faruzan_weapon = FAV_BOW, cmc_c=4, cmc_arts=HEART_OF_FORGE) -> Team:
+              faruzan_weapon = FAV_BOW, cmc_c=6, cmc_arts=HEART_OF_FORGE) -> Team:
     """Собрать отряд. vesna_c — созвездие Мидзуки (0, 1 или 2).
 
     Ничего «отрядного» по условию здесь не добавляется, поэтому перебор
@@ -187,13 +187,13 @@ def make_team(name: str, vesna_c: int, vesna_weapon, diona_weapon,diona_artifact
 
 def all_teams() -> Dict[str, Team]:
     variants = (
-        ("Весна C0R0, С6R0 диона, C4R3 Крио ГГ, С6R0 Фарузан", 0, EMBERWELL.at(5), FAV_BOW.at(5),NOBLESSE,SCARLET_PROOF,MILLELITH,FAV_BOW,4,HEART_OF_FORGE),
-        ("Весна C0R0, С6R1 диона, C4R3 Крио ГГ, С6R0 Фарузан", 0, BOUGH.at(1), BREEZEBORNE_BOW.at(1),NOBLESSE,SCARLET_PROOF,MILLELITH,FAV_BOW,4,HEART_OF_FORGE),
-        ("Весна C1R0, С6R5 диона, C4R3 Крио ГГ, С6R0 Фарузан", 1, BOUGH.at(5), BREEZEBORNE_BOW.at(5),NOBLESSE,SCARLET_PROOF,MILLELITH,FAV_BOW,4,HEART_OF_FORGE),
-        ("Весна C0R1, С6R3 диона, C4R3 Крио ГГ, С6R0 Фарузан", 0, CHRYSALIS, BREEZEBORNE_BOW.at(3),NOBLESSE,SCARLET_PROOF,MILLELITH,FAV_BOW,4,HEART_OF_FORGE),
-        ("Весна C1R1, С6R3 диона, C4R3 Крио ГГ, С6R0 Фарузан", 1, CHRYSALIS, BREEZEBORNE_BOW.at(3),NOBLESSE,SCARLET_PROOF,MILLELITH,FAV_BOW,4,HEART_OF_FORGE),
-        ("Весна C2R1, С6R3 диона, C4R3 Крио ГГ, С6R0 Фарузан", 2, CHRYSALIS, BREEZEBORNE_BOW.at(3),NOBLESSE,SCARLET_PROOF,MILLELITH,FAV_BOW,4,HEART_OF_FORGE),
-        ("Весна C6R1, С6R3 диона, C4R3 Крио ГГ, С6R0 Фарузан", 6, CHRYSALIS, BREEZEBORNE_BOW.at(3),NOBLESSE,SCARLET_PROOF,MILLELITH,FAV_BOW,4,HEART_OF_FORGE),
+        ("Весна C0R0, С6R0 диона, C6R5 Крио ГГ, С6R0 Фарузан", 0, EMBERWELL.at(5), FAV_BOW.at(5), NOBLESSE, SCARLET_PROOF, MILLELITH, FAV_BOW, 6, HEART_OF_FORGE),
+        ("Весна C0R0, С6R1 диона, C6R5 Крио ГГ, С6R0 Фарузан", 0, BOUGH.at(1), BREEZEBORNE_BOW.at(1), NOBLESSE, SCARLET_PROOF, MILLELITH, FAV_BOW, 6, HEART_OF_FORGE),
+        ("Весна C1R0, С6R5 диона, C6R5 Крио ГГ, С6R0 Фарузан", 1, BOUGH.at(5), BREEZEBORNE_BOW.at(5), NOBLESSE, SCARLET_PROOF, MILLELITH, FAV_BOW, 6, HEART_OF_FORGE),
+        ("Весна C0R1, С6R3 диона, C6R5 Крио ГГ, С6R0 Фарузан", 0, CHRYSALIS, BREEZEBORNE_BOW.at(3), NOBLESSE, SCARLET_PROOF, MILLELITH, FAV_BOW, 6, HEART_OF_FORGE),
+        ("Весна C1R1, С6R3 диона, C6R5 Крио ГГ, С6R0 Фарузан", 1, CHRYSALIS, BREEZEBORNE_BOW.at(3), NOBLESSE, SCARLET_PROOF, MILLELITH, FAV_BOW, 6, HEART_OF_FORGE),
+        ("Весна C2R1, С6R3 диона, C6R5 Крио ГГ, С6R0 Фарузан", 2, CHRYSALIS, BREEZEBORNE_BOW.at(3), NOBLESSE, SCARLET_PROOF, MILLELITH, FAV_BOW, 6, HEART_OF_FORGE),
+        ("Весна C6R1, С6R3 диона, C6R5 Крио ГГ, С6R0 Фарузан", 6, CHRYSALIS, BREEZEBORNE_BOW.at(3), NOBLESSE, SCARLET_PROOF, MILLELITH, FAV_BOW, 6, HEART_OF_FORGE),
 
 
     )

@@ -27,7 +27,7 @@ from ...data.weapons import *
 TEAM_BUFFS: tuple = ()
 
 #: Время каждого персонажа в ротации (секунды)
-TIMES = {"Сайно": 15.0, "Алеша": 1.65, "Одетта": 2.4, "Яэ Мико": 2.4}
+TIMES = {"Сайно": 15.0, "Алеша": 1.9, "Одетта": 2.4, "Яэ Мико": 2.4}
 
 ROTATION = "Одетта EE/Яэ EEE/Алеша EQ/Сайно QE (N2 CA N4 E)×3"
 
@@ -112,10 +112,10 @@ def alyosha_build(constellation: int = 6, weapon=FAV_LANCE, artifacts=(NOBLESSE,
     )
 
 
-def make_team(name: str, cyno_c: int = 2, cyno_weapon=SCARLET_SANDS.at(2),
+def make_team(name: str, cyno_c: int = 1, cyno_weapon=DEATHMATCH.at(1),
               odette_c: int = 0, odette_weapon=SILVER_LIGHT,
-              yae_c: int = 2, yae_weapon=KAGURA,
-              alyosha_c: int = 6, alyosha_weapon=ELEGY_BOW,
+              yae_c: int = 1, yae_weapon=ECHOES,
+              alyosha_c: int = 6, alyosha_weapon=FAV_LANCE,
               cyno_artifacts=(DISENCHANTMENT,), odette_artifacts=(HEART_OF_FORGE,),
               yae_artifacts=(DISENCHANTMENT,), alyosha_artifacts=(NOBLESSE,),
               cyno_main_stats=None, yae_main_stats=YAE_MAIN) -> Team:

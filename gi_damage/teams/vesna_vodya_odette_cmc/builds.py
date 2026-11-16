@@ -160,9 +160,9 @@ def reactions():
     """
     return (
         # Мидзуки на поле -> её реакции всегда внутри окна
-        ssw_anemo("Весна", 2, INST, VODYA_LEAD,BREEZEBORNE,FROSTGLOW, name="SSW анемо (Весна, Весна)"),
-        ssw_anemo("Весна", 6, INST, VODYA_LEAD,VODYA_CHORUS,BREEZEBORNE,FROSTGLOW, name="SSW анемо (Весна, Инструктор)"),
-        ssw_vortex(2, 3, INST,BREEZEBORNE,FROSTGLOW,VV_CRYO, name="SSW вихрь ×3 стака"),
+        ssw_anemo("Весна", 2, INST, VODYA_LEAD,FROSTGLOW, name="SSW анемо (Весна, Весна)"),
+        ssw_anemo("Весна", 6, INST, VODYA_LEAD,VODYA_CHORUS,FROSTGLOW, name="SSW анемо (Весна, Инструктор)"),
+        ssw_vortex(2, 3, INST,FROSTGLOW,VV_CRYO, name="SSW вихрь ×3 стака"),
     )
 
 
@@ -170,7 +170,7 @@ def reactions():
 #  Отряды                                                                     #
 # =========================================================================== #
 def make_team(name: str, vesna_c: int, vesna_weapon, odette_c, odette_weapon, vesna_artifacts = SCARLET_PROOF, vodya_artifacts = (MILLELITH,),
-              vodya_weapon = TTDS_HALF_CATALYSATOR, vodya_c = 0, cmc_c=4,cmc_arts=(HEART_OF_FORGE.at(2),SCARLET_PROOF.at(2))) -> Team:
+              vodya_weapon = TTDS_HALF_CATALYSATOR, vodya_c = 0, cmc_c=6,cmc_arts=(HEART_OF_FORGE.at(2),SCARLET_PROOF.at(2))) -> Team:
     """Собрать отряд. mizuki_c — созвездие Мидзуки (0, 1 или 2).
 
     Ничего «отрядного» по условию здесь не добавляется, поэтому перебор
@@ -195,10 +195,8 @@ def make_team(name: str, vesna_c: int, vesna_weapon, odette_c, odette_weapon, ve
 
 def all_teams() -> Dict[str, Team]:
     variants = (
-        ("Весна C0R1, C2R1 Одетта, C6R5 Крио ГГ, С0R0 Водяница", 0, CHRYSALIS, 2, FROSTFEATHER,SCARLET_PROOF,(MILLELITH,),TTDS_HALF_CATALYSATOR,0,6,(NOBLESSE,)),
-        ("Весна C1R1, C2R1 Одетта, C4R3 Крио ГГ, С0R0 Водяница", 1, CHRYSALIS, 2, FROSTFEATHER,SCARLET_PROOF,(MILLELITH,),TTDS_HALF_CATALYSATOR,0,4,(NOBLESSE,)),
-        ("Весна C0R1, C2R1 Одетта, C4R3 Крио ГГ, С0R1 Водяница", 0, CHRYSALIS, 2, FROSTFEATHER,SCARLET_PROOF,(MILLELITH,),MAELSTROM,0,4,(NOBLESSE,)),
-        ("Весна C0R0, C0R0 Одетта, C4R3 Крио ГГ, С0R0 Водяница", 0, CHRYSALIS, 2, FROSTFEATHER,SCARLET_PROOF,(MILLELITH,),TTDS_HALF_CATALYSATOR,0,4,(NOBLESSE,)),
+        ("Весна C0R0, C0R0 Одетта, C6R5 Крио ГГ, С0R0 Водяница", 0, EMBERWELL, 0, SILVER_LIGHT, SCARLET_PROOF, (MILLELITH,), TTDS_HALF_CATALYSATOR, 0, 6, (NOBLESSE,)),
+        ("Весна C0R1, C2R1 Одетта, C6R5 Крио ГГ, С0R0 Водяница", 0, CHRYSALIS, 2, FROSTFEATHER, SCARLET_PROOF, (MILLELITH,), TTDS_HALF_CATALYSATOR, 0, 6, (NOBLESSE,)),
 
 
     )

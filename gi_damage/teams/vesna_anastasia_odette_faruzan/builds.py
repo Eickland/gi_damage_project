@@ -38,7 +38,7 @@ TEAM_BUFFS = (
 )
 
 #: Время каждого персонажа в ротации (секунды)
-TIMES = {"Весна": 11.5, "Анастасия": 3.0, "Одетта": 2.4, "Фарузан": 2.1}
+TIMES = {"Весна": 11.5, "Анастасия": 3.5, "Одетта": 2.4, "Фарузан": 1.6}
 
 ROTATION = "Faruzan EQ/Odette EE/Анастасия EQ/Vesna E sEsE N3CsE Q sE N3CsE"
 
@@ -46,7 +46,7 @@ MAIN_ATK = {S.ATK_PCT: 0.466 * 2, S.CRIT_VALUE: 0.622}       # АТК/АТК/к�
 
 #: Атаки короны в окне Напевов ветра / Изумрудной тени Фарузан
 CROWN_IN_WINDOW = 6
-ANASTASIA = anastasia_support("ssw", [occ(CROWN_IN_WINDOW, OFF, BREEZEBORNE, VV_CRYO),
+ANASTASIA = anastasia_support("ssw", [occ(CROWN_IN_WINDOW, OFF, VV_CRYO),
                                       occ(CROWN_HITS - CROWN_IN_WINDOW, OFF)])
 
 
@@ -67,7 +67,7 @@ def vesna_build(constellation: int = 0, weapon=CHRYSALIS.at(1), artifacts=SCARLE
     )
 
 
-def anastasia_build(constellation: int = 0, weapon=ARTEMISIA, artifacts=(STELLAR_SET,),
+def anastasia_build(constellation: int = 0, weapon=BREEZEBORNE_BOW.at(1), artifacts=(MILLELITH,),
                     main_stats=MAIN_ATK, extra_buffs: Sequence[Buff] = ()) -> Build:
     return Build(
         character=ANASTASIA,
@@ -80,7 +80,7 @@ def anastasia_build(constellation: int = 0, weapon=ARTEMISIA, artifacts=(STELLAR
     )
 
 
-def odette_build(constellation: int = 0, weapon=SILVER_LIGHT, artifacts=(HEART_OF_FORGE,),
+def odette_build(constellation: int = 0, weapon=SILVER_LIGHT, artifacts=(STELLAR_SET,),
                  use_burst: bool | None = None,
                  extra_buffs: Sequence[Buff] = ()) -> Build:
     """use_burst=None — авто: до C4 не применяем, с C4 применяем."""
@@ -116,10 +116,10 @@ def faruzan_build(weapon=BREEZEBORNE_BOW.at(1), artifacts: ArtifactSet = VIRIDES
 def reactions():
     """События SSW за ротацию: как в vesna_faruzan_odette_cmc + Requiem Анастасии."""
     return requiem_reactions((
-        ssw_anemo("Весна", 7, BREEZEBORNE, name="SSW анемо (Весна)"),
-        ssw_anemo("Фарузан", 7, BREEZEBORNE, name="SSW анемо (Фарузан, Инструктор)"),
-        ssw_vortex(2, 4, INST, BREEZEBORNE, VV_CRYO, name="SSW вихрь ×3 стака"),
-        requiem_vortex(INST, BREEZEBORNE, VV_CRYO),
+        ssw_anemo("Весна", 7, name="SSW анемо (Весна)"),
+        ssw_anemo("Фарузан", 7, name="SSW анемо (Фарузан, Инструктор)"),
+        ssw_vortex(2, 4, INST, VV_CRYO, name="SSW вихрь ×3 стака"),
+        requiem_vortex(INST, VV_CRYO),
     ))
 
 
@@ -127,8 +127,8 @@ def make_team(name: str, vesna_c: int = 0, vesna_weapon=CHRYSALIS.at(1),
               odette_c: int = 0, odette_weapon=SILVER_LIGHT,
               vesna_artifacts=SCARLET_PROOF, faruzan_artifacts=VIRIDESCENT,
               faruzan_weapon=FAV_BOW.at(5),
-              anastasia_c: int = 0, anastasia_weapon=BREEZEBORNE_BOW,
-              anastasia_artifacts=(STELLAR_SET,)) -> Team:
+              anastasia_c: int = 0, anastasia_weapon=BREEZEBORNE_BOW.at(1),
+              anastasia_artifacts=(HEART_OF_FORGE,)) -> Team:
     return Team(
         name=name,
         builds=[
@@ -148,7 +148,7 @@ def make_team(name: str, vesna_c: int = 0, vesna_weapon=CHRYSALIS.at(1),
 #: Те же вариации, что у vesna_faruzan_odette_cmc (Крио ГГ -> Анастасия C0)
 VARIANTS = (
     ("Весна C0R0, C0R0 Одетта, C0R1 Анастасия, С6R0 Фарузан",
-     dict(vesna_weapon=BOUGH.at(1), faruzan_weapon=FAV_BOW)),
+     dict(vesna_weapon=EMBERWELL, faruzan_weapon=FAV_BOW)),
     ("Весна C0R1, C0R0 Одетта, C0R1 Анастасия, С6R1 Фарузан",
      dict(vesna_weapon=CHRYSALIS.at(1), faruzan_weapon=FAV_BOW.at(1))),
     ("Весна C1R1, C0R0 Одетта, C0R1 Анастасия, С6R1 Фарузан",

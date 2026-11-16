@@ -53,16 +53,11 @@ RIPPLE_MV, RIPPLE_MV_C3 = 0.1685, 0.1989
 INTERFERENCE_MV, INTERFERENCE_MV_C3 = 0.1588, 0.1875              # кристаллизация
 INTERFERENCE_CHARGED_MV, INTERFERENCE_CHARGED_MV_C3 = 0.0847, 0.10  # заряд
 INTERFERENCE_BLOOM_MV, INTERFERENCE_BLOOM_MV_C3 = 0.0253, 0.0299    # бутоны, × 5
-INTERFERENCE_BLOOM_HITS = 5
 MOONDEW_CLEANSE_MV = 0.0272         # заряженная атака Moondew Cleanse, × 3 (лунные бутоны)
-MOONDEW_CLEANSE_HITS = 3
 MOONDEW_CLEANSE_TIME = 0.5          # +0.5 с к ротации
 BURST_MV, BURST_MV_C5 = 0.5803, 0.6851
 DOMAIN_LUNAR_BONUS, DOMAIN_LUNAR_BONUS_C5 = 0.40, 0.49
 
-RIPPLE_HITS = 10
-INTERFERENCE_HITS = 3          # C0, раз в 6 с
-C2_EXTRA_INTERFERENCE = 1
 
 A1_CRIT_RATE = 0.05 * 3        # Lunacy: +5% КШ × 3
 MOONDRIFT_EXTRA = 0.33         # A4: шанс доп. атаки каждого Moondrift (кристаллизация)
@@ -193,100 +188,127 @@ def _reaction_constellation_buffs(c2_stat: str, c2_ratio: float, c2_label: str,
     }
 
 
-def _support_combo(make_interference, label: str, hits_per_trigger: int,
-                   main_tags=(OFF,), c1_tags=(ON,),
-                   main_occs=None, c1_occs=None, c2_occs=None):
-    """Комбо саппорта: одинаковые удары, разный тип Gravity Interference.
-
-    make_interference(name, mv, occurrences, **kw) — lunar_crystallize / lunar_charged /
-    lunar_bloom; hits_per_trigger — инстансов за одно срабатывание (бутоны — 5).
-    main_occs / c1_occs / c2_occs — свои списки вхождений вместо стандартных
-    (когда удары одного срабатывания попадают в разные окна отряда).
-    """
-    n = hits_per_trigger
-    if main_occs is None:
-        main_occs = [occ(INTERFERENCE_HITS * n, *main_tags)]
-    if c1_occs is None:
-        c1_occs = [occ(n, *c1_tags)]
-    if c2_occs is None:
-        c2_occs = [occ(C2_EXTRA_INTERFERENCE * n, OFF)]
-    return (
-        (
-            elemental("Навык", "hp", SKILL_MV, "hydro", "skill", [occ(1, ON)]),
-            elemental("Gravity Ripple", "hp", RIPPLE_MV, "hydro", "skill",
-                      [occ(RIPPLE_HITS, OFF)]),
-            make_interference(f"Gravity Interference ({label})", main_occs),
-            elemental("Взрыв стихии", "hp", BURST_MV, "hydro", "burst", [occ(1, ON)]),
-        ),
-        {
-            1: (make_interference(f"C1: Gravity Interference при E ({label})",
-                                  c1_occs, extra_tags=(INTERFERENCE_C1,)),),
-            2: (make_interference(f"C2: доп. Gravity Interference ({label})", c2_occs),),
-        },
-    )
-
-
-# Лунная кристаллизация. Окна отряда Цзы Бай: 3 обычных срабатывания тратят
-# Field Catalog Линеи (C1), удар от C1 (с поля) — Nightingale's Song Иллуги.
-_LC_SOURCES, _LC_CONST_SOURCES = _support_combo(
-    lambda name, occs, **kw: lunar_crystallize(name, "hp", INTERFERENCE_MV, occs,
-                                               kind="skill", **kw),
-    "LC", 1, main_tags=(OFF, FIELD_CATALOG), c1_tags=(ON, NIGHTINGALE))
-
-_CHARGED_SOURCES, _CHARGED_CONST_SOURCES = _support_combo(
-    lambda name, occs, **kw: lunar_charged(name, "hp", INTERFERENCE_CHARGED_MV, occs,
-                                           kind="skill", **kw),
-    "заряд", 1)
-
-_BLOOM_SOURCES, _BLOOM_CONST_SOURCES = _support_combo(
-    lambda name, occs, **kw: lunar_bloom(name, "hp", INTERFERENCE_BLOOM_MV, occs,
-                                         kind="skill", **kw),
-    "бутоны", INTERFERENCE_BLOOM_HITS)
-
-# Лунные бутоны в отряде Нефер / Лаума / Сахароза (ротация E Q CA, +0.5 с):
-#   одно срабатывание (5 ударов) — под Сахарозой и Инструктором (INST);
-#   18 стаков Pale Hymn Лаумы — на удары бутонов Колумбины: 15 основных
-#   Gravity Interference + 3 удара заряженной атаки Moondew Cleanse
-#   (она — с поля, без Сахарозы и Инструктора); удары от C1 стаков не получают.
-_BLOOM_LAUMA_SOURCES, _BLOOM_LAUMA_CONST_SOURCES = _support_combo(
-    lambda name, occs, **kw: lunar_bloom(name, "hp", INTERFERENCE_BLOOM_MV, occs,
-                                         kind="skill", **kw),
-    "бутоны", INTERFERENCE_BLOOM_HITS,
-    main_occs=[occ(INTERFERENCE_BLOOM_HITS, OFF, INST, PALE_HYMN),
-               occ((INTERFERENCE_HITS - 1) * INTERFERENCE_BLOOM_HITS, OFF, PALE_HYMN)],
-    c1_occs=[occ(INTERFERENCE_BLOOM_HITS, ON)],
-)
-_BLOOM_LAUMA_SOURCES = _BLOOM_LAUMA_SOURCES + (
-    lunar_bloom("Moondew Cleanse (бутоны)", "hp", MOONDEW_CLEANSE_MV,
-                [occ(MOONDEW_CLEANSE_HITS, ON, PALE_HYMN)], kind="charged"),
-)
-
+#: Каждая строка occ(N, теги...) — N ударов в этом наборе окон; одинаковые
+#: удары с разными баффами идут строками подряд. Gravity Interference: 3
+#: срабатывания за ротацию (раз в 6 с), у бутонов — по 5 инстансов; C1 —
+#: ещё одно при E (с поля), C2 — ещё одно вне поля.
 COLUMBINA_COMBO_DICT = {
+    # Лунная кристаллизация. Окна отряда Цзы Бай: 3 обычных срабатывания тратят
+    # Field Catalog Линеи (C1), удар от C1 (с поля) — Nightingale's Song Иллуги.
     "lc_support": with_rotation(
         COLUMBINA_KIT,
-        sources=_LC_SOURCES,
-        constellation_sources=_LC_CONST_SOURCES,
+        sources=(
+            elemental("Навык", "hp", SKILL_MV, "hydro", "skill", [
+                occ(1, ON),
+            ]),
+            elemental("Gravity Ripple", "hp", RIPPLE_MV, "hydro", "skill", [
+                occ(10, OFF),
+            ]),
+            lunar_crystallize("Gravity Interference (LC)", "hp", INTERFERENCE_MV, [
+                occ(3, OFF, FIELD_CATALOG),
+            ], kind="skill"),
+            elemental("Взрыв стихии", "hp", BURST_MV, "hydro", "burst", [
+                occ(1, ON),
+            ]),
+        ),
+        constellation_sources={
+            1: (lunar_crystallize("C1: Gravity Interference при E (LC)", "hp", INTERFERENCE_MV, [
+                    occ(1, ON, NIGHTINGALE),
+                ], kind="skill", extra_tags=(INTERFERENCE_C1,)),),
+            2: (lunar_crystallize("C2: доп. Gravity Interference (LC)", "hp", INTERFERENCE_MV, [
+                    occ(1, OFF),
+                ], kind="skill"),),
+        },
         constellation_extra_buffs=_reaction_constellation_buffs(
             S.FLAT_DEF, C2_DEF_PER_HP, "ЗЩ", C4_FLAT_HP, ("geo", "hydro")),
     ),
     "lcharged_support": with_rotation(
         COLUMBINA_KIT,
-        sources=_CHARGED_SOURCES,
-        constellation_sources=_CHARGED_CONST_SOURCES,
+        sources=(
+            elemental("Навык", "hp", SKILL_MV, "hydro", "skill", [
+                occ(1, ON),
+            ]),
+            elemental("Gravity Ripple", "hp", RIPPLE_MV, "hydro", "skill", [
+                occ(10, OFF),
+            ]),
+            lunar_charged("Gravity Interference (заряд)", "hp", INTERFERENCE_CHARGED_MV, [
+                occ(3, OFF),
+            ], kind="skill"),
+            elemental("Взрыв стихии", "hp", BURST_MV, "hydro", "burst", [
+                occ(1, ON),
+            ]),
+        ),
+        constellation_sources={
+            1: (lunar_charged("C1: Gravity Interference при E (заряд)", "hp", INTERFERENCE_CHARGED_MV, [
+                    occ(1, ON),
+                ], kind="skill", extra_tags=(INTERFERENCE_C1,)),),
+            2: (lunar_charged("C2: доп. Gravity Interference (заряд)", "hp", INTERFERENCE_CHARGED_MV, [
+                    occ(1, OFF),
+                ], kind="skill"),),
+        },
         constellation_extra_buffs=_reaction_constellation_buffs(
             S.FLAT_ATK, C2_ATK_PER_HP, "АТК", C4_FLAT_HP, ("electro", "hydro")),
     ),
     "lbloom_support": with_rotation(
         COLUMBINA_KIT,
-        sources=_BLOOM_SOURCES,
-        constellation_sources=_BLOOM_CONST_SOURCES,
+        sources=(
+            elemental("Навык", "hp", SKILL_MV, "hydro", "skill", [
+                occ(1, ON),
+            ]),
+            elemental("Gravity Ripple", "hp", RIPPLE_MV, "hydro", "skill", [
+                occ(10, OFF),
+            ]),
+            lunar_bloom("Gravity Interference (бутоны)", "hp", INTERFERENCE_BLOOM_MV, [
+                occ(15, OFF),
+            ], kind="skill"),
+            elemental("Взрыв стихии", "hp", BURST_MV, "hydro", "burst", [
+                occ(1, ON),
+            ]),
+        ),
+        constellation_sources={
+            1: (lunar_bloom("C1: Gravity Interference при E (бутоны)", "hp", INTERFERENCE_BLOOM_MV, [
+                    occ(5, ON),
+                ], kind="skill", extra_tags=(INTERFERENCE_C1,)),),
+            2: (lunar_bloom("C2: доп. Gravity Interference (бутоны)", "hp", INTERFERENCE_BLOOM_MV, [
+                    occ(5, OFF),
+                ], kind="skill"),),
+        },
         constellation_extra_buffs=_reaction_constellation_buffs(
             S.FLAT_EM, C2_EM_PER_HP, "МС", C4_FLAT_HP_BLOOM, ("dendro", "hydro")),
     ),
+    # Лунные бутоны в отряде Нефер / Лаума / Сахароза (ротация E Q CA, +0.5 с):
+    #   одно срабатывание (5 ударов) — под Сахарозой и Инструктором (INST);
+    #   18 стаков Pale Hymn Лаумы — на удары бутонов Колумбины: 15 основных
+    #   Gravity Interference + 3 удара заряженной атаки Moondew Cleanse
+    #   (она — с поля, без Сахарозы и Инструктора); удары от C1 стаков не получают.
     "lbloom_nefer_lauma": with_rotation(
         COLUMBINA_KIT,
-        sources=_BLOOM_LAUMA_SOURCES,
-        constellation_sources=_BLOOM_LAUMA_CONST_SOURCES,
+        sources=(
+            elemental("Навык", "hp", SKILL_MV, "hydro", "skill", [
+                occ(1, ON),
+            ]),
+            elemental("Gravity Ripple", "hp", RIPPLE_MV, "hydro", "skill", [
+                occ(10, OFF),
+            ]),
+            lunar_bloom("Gravity Interference (бутоны)", "hp", INTERFERENCE_BLOOM_MV, [
+                occ(5, OFF, INST, PALE_HYMN),
+                occ(10, OFF, PALE_HYMN),
+            ], kind="skill"),
+            elemental("Взрыв стихии", "hp", BURST_MV, "hydro", "burst", [
+                occ(1, ON),
+            ]),
+            lunar_bloom("Moondew Cleanse (бутоны)", "hp", MOONDEW_CLEANSE_MV, [
+                occ(3, ON, PALE_HYMN),
+            ], kind="charged"),
+        ),
+        constellation_sources={
+            1: (lunar_bloom("C1: Gravity Interference при E (бутоны)", "hp", INTERFERENCE_BLOOM_MV, [
+                    occ(5, ON),
+                ], kind="skill", extra_tags=(INTERFERENCE_C1,)),),
+            2: (lunar_bloom("C2: доп. Gravity Interference (бутоны)", "hp", INTERFERENCE_BLOOM_MV, [
+                    occ(5, OFF),
+                ], kind="skill"),),
+        },
         constellation_extra_buffs=_reaction_constellation_buffs(
             S.FLAT_EM, C2_EM_PER_HP, "МС", C4_FLAT_HP_BLOOM, ("dendro", "hydro")),
     ),

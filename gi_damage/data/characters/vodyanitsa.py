@@ -158,21 +158,29 @@ SC_MODE_CONSTELLATION_BUFFS = {
     ),
 }
 
-_VODYA_SOURCES = (
-    elemental("Использование навыка", "hp", 0.589, "hydro", "skill", [occ(1, ON,)]),
-    elemental("Навык, Horn of Spring", "hp", 0.589, "hydro", "skill", [occ(5, OFF,),]),
-)
-
 VODYA_COMBO_DICT = {
-    "off_field" : with_rotation(VODYANITSA_KIT,    
-            sources=(elemental("Использование навыка", "hp", 0.589, "hydro", "skill",
-                  [occ(1, ON,)]),
-        elemental("Навык, Horn of Spring", "hp", 0.589, "hydro", "skill",
-                  [occ(5, OFF,),]),),),
+    "off_field": with_rotation(
+        VODYANITSA_KIT,
+        sources=(
+            elemental("Использование навыка", "hp", 0.589, "hydro", "skill", [
+                occ(1, ON),
+            ]),
+            elemental("Навык, Horn of Spring", "hp", 0.589, "hydro", "skill", [
+                occ(5, OFF),
+            ]),
+        ),
+    ),
     # Отряды без вихря (в т.ч. звёздного проводника): те же удары + баффы режима без вихря
     "sc_off_field": with_rotation(
         VODYANITSA_KIT,
-        sources=_VODYA_SOURCES,
+        sources=(
+            elemental("Использование навыка", "hp", 0.589, "hydro", "skill", [
+                occ(1, ON),
+            ]),
+            elemental("Навык, Horn of Spring", "hp", 0.589, "hydro", "skill", [
+                occ(5, OFF),
+            ]),
+        ),
         extra_buffs=SC_MODE_BUFFS,
         constellation_extra_buffs=SC_MODE_CONSTELLATION_BUFFS,
     ),

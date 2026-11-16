@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
 """
+Ростеры отряда mitya_danika_yae_odette: созвездия, оружие и артефакты каждого
+персонажа (gi_damage/visual/standard_rosters.py).
+
 Запуск:  python -m gi_damage.teams.mitya_danika_yae_odette.rosters
          python -m gi_damage.teams.mitya_danika_yae_odette.rosters --details
+         python -m gi_damage.teams.mitya_danika_yae_odette.rosters --out файл.html
+HTML по умолчанию — rosters.html в папке отряда.
 """
 
 from __future__ import annotations
@@ -9,33 +14,14 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
-from gi_damage.core.report import hit_details, source_breakdown, team_summary
-from gi_damage.teams.mitya_danika_yae_odette.builds import all_teams
-from gi_damage.visual.rosters import RosterBook
+from gi_damage.teams.mitya_danika_yae_odette import builds
+from gi_damage.visual.standard_rosters import run_standard
 
 
 def main(argv: list[str]) -> int:
-    details = "--details" in argv
-    book = RosterBook()
-
-    results = []
-    for team in all_teams().values():
-        result = team.compute()
-        results.append(result)
-        print(team_summary(result))
-        if details:
-            print(source_breakdown(result))
-            print()
-            print(hit_details(result))
-            print()
-
-    # C2 Даники меняет удары союзников (стаки), поэтому сравниваем целые отряды
-    book.add(results, "Созвездия Даники", ascending=True)
-
-    book.save("rosters.html")
-    return 0
+    return run_standard(builds, argv)
 
 
 if __name__ == "__main__":

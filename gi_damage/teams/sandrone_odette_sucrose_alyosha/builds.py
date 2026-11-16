@@ -23,7 +23,7 @@ TEAM_BUFFS = (
 )
 
 #: Время каждого персонажа в ротации (секунды)
-TIMES = {"Сандроне": 14.5, "Алеша": 1.65, "Одетта": 2.4, "Сахароза": 2.95}
+TIMES = {"Сандроне": 14, "Алеша": 1.9, "Одетта": 2.4, "Сахароза": 2.95}
 
 ROTATION = "Алеша EQ/Одетта EE/Сахароза Ed(Q)/Сандроне E CA EQ CA/Сахароза Ed/Сандроне E CA E"
 
@@ -119,10 +119,9 @@ def make_team(name: str, sandrone_c: int, sandrone_weapon, odette_c, odette_weap
 
 def all_teams() -> Dict[str, Team]:
     variants = (
-        ("C0R0 Сандроне, C0R0 Одетта, Сахароза, С2R0 Алеша", 0, TIDAL_SHADOW, 0, SILVER_LIGHT,(DISENCHANTMENT,),(HEART_OF_FORGE,),FAV_LANCE,2,(VIRIDESCENT,),(MILLELITH,)),
-        ("C0R0 Сандроне, C0R0 Одетта, Сахароза, С6R0 Алеша", 0, TIDAL_SHADOW, 0, SILVER_LIGHT,(DISENCHANTMENT,),(HEART_OF_FORGE,),FAV_LANCE,6,(VIRIDESCENT,),(MILLELITH,)),
-        ("C0R1 Сандроне, C0R0 Одетта, Сахароза, С6R0 Алеша", 0, TEASPOON, 0, SILVER_LIGHT,(DISENCHANTMENT,),(HEART_OF_FORGE,),FAV_LANCE,6,(VIRIDESCENT,),(MILLELITH,)),
-        ("C0R0 Сандроне, C2R1 Одетта, Сахароза, С6R0 Алеша", 0, THOUSAND_SUNS, 2, FROSTFEATHER,(DISENCHANTMENT,),(HEART_OF_FORGE,),FAV_LANCE,6,(VIRIDESCENT,),(DISENCHANTMENT,)),
+        ("C0R0 Сандроне, C0R0 Одетта, Сахароза, С6R0 Алеша", 0, TIDAL_SHADOW, 0, SILVER_LIGHT,(DISENCHANTMENT,),(HEART_OF_FORGE,),FAV_LANCE,6,(VIRIDESCENT,),(STELLAR_SET,)),
+        ("C0R0 (Тысяча Солнц) Сандроне, C2R1 Одетта, Сахароза, С6R0 Алеша", 0, THOUSAND_SUNS, 2, FROSTFEATHER,(DISENCHANTMENT,),(HEART_OF_FORGE,),FAV_LANCE,6,(VIRIDESCENT,),(STELLAR_SET,)),
+        ("C0R1 Сандроне, C2R0 Одетта, Сахароза, С6R0 Алеша", 0, TEASPOON, 2, SILVER_LIGHT,(DISENCHANTMENT,),(HEART_OF_FORGE,),FAV_LANCE,6,(VIRIDESCENT,),(STELLAR_SET,)),
 
 
 
@@ -141,11 +140,11 @@ from dataclasses import replace as _replace
 
 from ...core.sources import occ as _occ
 from ...data.characters.danika import DANIKA_COMBO_DICT
-from ...data.characters.anastasia import anastasia_support, polar_shift, CROWN_HITS
+from ...data.characters.anastasia import anastasia_support, CROWN_HITS
 
 SWAP_OPTIONS = ("Сахароза", "Даника", "Анастасия")
 
-SWAP_TIMES = {"Даника": 3.0, "Анастасия": 3.0}
+SWAP_TIMES = {"Даника": 3.25, "Анастасия": 3.5}
 
 SWAP_ROTATION = {
     "Сахароза": ROTATION,
@@ -156,13 +155,20 @@ SWAP_ROTATION = {
 #: База ростера замен
 SWAP_BASE = dict(
     sandrone_c=0, sandrone_weapon=TIDAL_SHADOW, sandrone_artifacts=(DISENCHANTMENT,),
-    odette_c=0, odette_weapon=SILVER_LIGHT.at(1), odette_artifacts=(STELLAR_SET,),
+    odette_c=2, odette_weapon=FROSTFEATHER.at(1), odette_artifacts=(STELLAR_SET,),
     alyosha_c=6, alyosha_weapon=FAV_LANCE, alyosha_artifacts=(HEART_OF_FORGE,),
     sucrose_weapon=TTDS_FULL_CATALYSATOR, sucrose_artifacts=(VIRIDESCENT,),
 )
 
 FULL_ATK = {S.ATK_PCT: 0.466 * 3}                      # АТК/АТК/АТК (Даника)
 MAIN_ATK = {S.ATK_PCT: 0.466 * 2, S.CRIT_VALUE: 0.622}  # АТК/АТК/крит
+
+
+#: Крио резонанс при 2 электро в отряде (замена на Данику) — ослаблен ×0.5
+TEAM_BUFFS_2_ELECTRO = (
+    Buff(S.CRIT_VALUE, 0.15, target=TEAM,
+         source="Крио резонанс (ослаблен ×0.5: 2 электро в отряде): +7.5% крит. шанса (0.15 крит-вэлью)"),
+)
 
 
 def swap_enemy() -> Enemy:
@@ -185,10 +191,10 @@ def danika_build(constellation: int = 0, weapon=ATONEMENT, artifacts=(MILLELITH,
     )
 
 
-def anastasia_build(constellation: int = 0, weapon=ARTEMISIA, artifacts=(DISENCHANTMENT,),
+def anastasia_build(constellation: int = 0, weapon=BREEZEBORNE_BOW.at(1), artifacts=(DISENCHANTMENT,),
                     main_stats=MAIN_ATK, extra_buffs: Sequence[Buff] = ()) -> Build:
     return Build(
-        character=polar_shift(anastasia_support("sc", [_occ(CROWN_HITS, OFF)])),
+        character=anastasia_support("sc", [_occ(CROWN_HITS, OFF)]),
         constellation=constellation,
         weapon=weapon,
         artifacts=artifacts,
@@ -221,9 +227,8 @@ def make_swap_team(fourth: str = "Сахароза", name: str | None = None,
     if fourth == "Сахароза":
         other = sucrose_build(p["sucrose_artifacts"], weapon=p["sucrose_weapon"])
     else:
-        shift = polar_shift if fourth == "Анастасия" else (lambda ch: ch)
-        sandrone = _replace(sandrone, character=shift(SANDRONE_COMBO_DICT["sandrone_sc_combo"]))
-        odette = _replace(odette, character=shift(ODETTE_COMBO_DICT["odette_ssc_combo"]))
+        sandrone = _replace(sandrone, character=SANDRONE_COMBO_DICT["sandrone_sc_combo"])
+        odette = _replace(odette, character=ODETTE_COMBO_DICT["odette_ssc_combo"])
         other = (danika_build(danika_c, danika_weapon) if fourth == "Даника"
                  else anastasia_build(anastasia_c))
 
@@ -231,7 +236,7 @@ def make_swap_team(fourth: str = "Сахароза", name: str | None = None,
         name=name or swap_team_name(fourth, danika_c, anastasia_c, danika_weapon),
         builds=[sandrone, other, odette, alyosha],
         enemy=swap_enemy(),
-        buffs=TEAM_BUFFS,
+        buffs=TEAM_BUFFS_2_ELECTRO if fourth == "Даника" else TEAM_BUFFS,
         rotation=SWAP_ROTATION[fourth],
         config=Config(),
     )

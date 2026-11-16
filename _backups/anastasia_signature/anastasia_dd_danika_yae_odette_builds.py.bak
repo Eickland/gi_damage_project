@@ -41,7 +41,7 @@ TEAM_BUFFS = (
 )
 
 #: Время каждого персонажа в ротации (секунды)
-TIMES = {"Анастасия": DD_TIME, "Даника": 3.0, "Яэ Мико": 2.4, "Одетта": 2.4}
+TIMES = {"Анастасия": DD_TIME, "Даника": 3.25, "Яэ Мико": 2.4, "Одетта": 2.4}
 
 ROTATION = "Одетта EE/Яэ EEE/Даника EQ/Анастасия hEQ (N5 sE)×3"
 ROTATION_SHORT = ROTATION.replace("hEQ (N5 sE)×3", "hEQ N5sE N5sE sE")

@@ -18,15 +18,15 @@
     SC или SSW — по режиму отряда (anastasia_support(mode="sc" | "ssw")).
 
 Баффы
-    * Взрыв: +50% урона звёздных реакций (SC и SSW) всему отряду — постоянно.
+    * Взрыв: +30% урона звёздных реакций (SC и SSW) всему отряду — постоянно.
     * Stellar Benediction: +0.7% базового урона SC и SSW отряду за каждые
       100 АТК Анастасии, максимум 14%.
     * Glory of the Radiant Night: +12% крит. урона отряду. Анастасия после
       взрыва запечатывает себя — её Слава делится на остальных троих
       (+16% им), у самой — только в ударах на поле.
     * An Unfinished Requiem:
-        - SC: +1 стак Polestar ВСЕМ ударам SC отряда — polar_shift() в файлах
-          отрядов (отдельное «комбо» с +1 стаком у каждого персонажа);
+        - SC: +2 стака Polestar отряду всегда (polar_always=2, стаки считает
+          Team.polar_plan());
         - SSW: базовый множитель реакций SSW ×1.15 (requiem_reactions()) и
           +4 вихря 2 уровня (requiem_vortex()).
 
@@ -38,14 +38,16 @@
         и множитель ×3 не применяются.
     C2  Милосердие: +60% крит. урона звёздных реакций отряду; +5% возвышения
         звёздных реакций отряду.
+    C3  Взрыв +3 ур.: To a New World 425.85%, +35.4% урона звёздных реакций,
+        доп. удар короны 23.8%/35.7%, Triumph 473.17%/709.75%; ДД — Evernight
+        662.43%/993.65%, Annihilation 56.78%×5 и 141.95/189.27/236.58% (SC),
+        212.93/283.9/354.87% (SSW).
     C4  Все эффекты Славы ×1.3.
+    C5  Навык +3 ур.: нажатие 251.17%, удержание 334.9%, корона крио 136%,
+        корона 71.4%/107.1%, копьё (крио и SC/SSW) — по таблице C5_SPEAR_*.
     C6  Милосердие: Triumph при выходе следующего персонажа, 250% урона
         (SC 400.8% / SSW 601.2% × 2.5), 1 раз; +10% возвышения звёздных
         реакций отряду.
-
-Допущения
-    * стаки Polestar у ударов SC короны — ANASTASIA_POLAR_STACKS (+1 от Requiem
-      добавляется polar_shift() вместе со всеми).
 """
 
 from __future__ import annotations
@@ -55,7 +57,7 @@ from typing import Sequence
 from ...core.buffs import OTHERS, SELF, TEAM, Buff, temp
 from ...core.entities import Character, Constellation, with_rotation
 from ...core.reactions import REACTION_SSW, ssw_vortex
-from ...core.sources import (STELLAR_CONDUCT, Occurrence, elemental, occ,
+from ...core.sources import (Occurrence, elemental, occ,
                              stellar_conduct, stellar_swirl)
 from ...core.stats import S
 from ..tags import *
@@ -68,12 +70,12 @@ ANASTASIA_NAME = "Анастасия"
 TAP_MV = 2.1276                   # навык нажатием, начальный урон (ур. 10)
 BURST_MV = 3.607                  # «To a New World», начальный урон
 CROWN_CRYO_MV = 1.152             # корона: крио удар (ур. 10)
-CROWN_MV = {"sc": 0.72, "ssw": 1.08}          # корона: второй удар в Radiance (ур. 10)
+CROWN_MV = {"sc": 0.6048, "ssw": 0.9072}      # корона: второй удар в Radiance (ур. 10; бета: 60.48% / 90.72%)
 CROWN_BURST_MV = {"sc": 0.202, "ssw": 0.302}  # корона: доп. удар во время взрыва
 TRIUMPH_MV = {"sc": 4.008, "ssw": 6.012}      # Azure Star Decree — Triumph
 CROWN_HITS = 10
 
-BURST_SG_BONUS = 0.50             # +50% урона звёздных реакций отряду
+BURST_SG_BONUS = 0.30             # +30% урона звёздных реакций отряду (бета; было 50%)
 BASE_INC_PER_100_ATK = 0.007      # +0.7% базового урона за 100 АТК
 BASE_INC_CAP = 0.14
 
@@ -90,15 +92,51 @@ C2_SG_ELEVATION = 0.05            # C2: +5% возвышения звёздны�
 C6_SG_ELEVATION = 0.10            # C6: +10% возвышения звёздных реакций
 C6_TRIUMPH_FACTOR = 2.5           # C6: Triumph на 250% урона
 
-REQUIEM_POLAR = 1                 # Requiem (SC): +1 стак Polestar всем
+# C3: взрыв +3 ур. (оба режима)
+C3_BURST_MV = 4.2585
+C3_BURST_SG_BONUS = 0.354
+C3_CROWN_BURST_MV = {"sc": 0.238, "ssw": 0.357}
+C3_TRIUMPH_MV = {"sc": 4.7317, "ssw": 7.0975}
+C3_DD_BURST_MV = {"sc": 6.6243, "ssw": 9.9365}
+C3_DOOM1_CRYO_MV = 0.5678
+C3_DOOM_SG = {"sc": (1.4195, 1.8927, 2.3658), "ssw": (2.1293, 2.839, 3.5487)}
+# C5: навык +3 ур.
+C5_TAP_MV = 2.5117
+C5_DD_HOLD_MV = 3.349
+C5_CROWN_CRYO_MV = 1.36
+C5_CROWN_MV = {"sc": 0.714, "ssw": 1.071}
+C5_SPEAR_CRYO = {1: 1.3323, 2: 0.698, 3: 1.6947, 4: 0.6251, 5: 0.7529}
+C5_SPEAR_SG = {"sc": {1: 0.8332, 2: 0.873, 3: 1.0598, 4: 1.1562, 5: 1.4108},
+               "ssw": {1: 1.2498, 2: 1.3096, 3: 1.5897, 4: 1.7343, 5: 2.1161}}
+
 REQUIEM_SSW_MULT = 1.15           # Requiem (SSW): базовый множитель реакций ×1.15
 REQUIEM_VORTEX_LEVEL = 2          # Requiem (SSW): вихри сразу 2 уровня
 REQUIEM_VORTEX_HITS = 4           # доп. вихрей 2 уровня за ротацию
 
-#: Стаки Polestar у ударов SC короны (до +1 от Requiem)
-ANASTASIA_POLAR_STACKS = 7
 
 _SG = ("stellar_conduct", "stellar_swirl")
+_LABEL = {"sc": "SC", "ssw": "SSW"}
+
+
+def _mv(v):
+    return lambda src: replace(src, mv=v)
+
+
+def _c3_patches_support():
+    p = {"Взрыв «To a New World» — начальный урон": _mv(C3_BURST_MV)}
+    for m, l in _LABEL.items():
+        p[f"Корона — доп. удар взрыва ({l})"] = _mv(C3_CROWN_BURST_MV[m])
+        p[f"Triumph ({l})"] = _mv(C3_TRIUMPH_MV[m])
+        p[f"C6: Triumph ×250% ({l})"] = _mv(C3_TRIUMPH_MV[m] * 2.5)
+    return p
+
+
+def _c5_patches_support():
+    p = {"Навык нажатием — начальный урон": _mv(C5_TAP_MV),
+         "Корона — крио": _mv(C5_CROWN_CRYO_MV)}
+    for m, l in _LABEL.items():
+        p[f"Корона — {l}"] = _mv(C5_CROWN_MV[m])
+    return p
 
 
 def _anastasia_atk(ctx) -> float:
@@ -148,6 +186,7 @@ ANASTASIA_KIT = Character(
     element="cryo",
     weapon_type="bow",
     default_field=OFF,
+    polar_always=2.0,   # стаки Polestar отряду: An Unfinished Requiem, +2 всегда
     crit_mode="balance",
     stats={
         S.BASE_ATK: 356.0,
@@ -155,9 +194,9 @@ ANASTASIA_KIT = Character(
     },
     buffs=(
         Buff(S.SC_BONUS, BURST_SG_BONUS, target=TEAM,
-             source="To a New World: +50% урона звёздного проводника отряду"),
+             source=f"To a New World: +{BURST_SG_BONUS:.0%} урона звёздного проводника отряду"),
         Buff(S.SSW_BONUS, BURST_SG_BONUS, target=TEAM,
-             source="To a New World: +50% урона звёздного рассеивания отряду"),
+             source=f"To a New World: +{BURST_SG_BONUS:.0%} урона звёздного рассеивания отряду"),
         Buff(S.SC_BASE_INC,
              lambda ctx: min(BASE_INC_CAP, BASE_INC_PER_100_ATK * _anastasia_atk(ctx) / 100.0),
              target=TEAM,
@@ -201,6 +240,15 @@ ANASTASIA_KIT = Character(
                      source="C4: Слава ×1.3 (АТК себе)"),
             ) + _glory_buffs(0.0, _C1_OTHERS * (C4_FACTOR - 1), True, "C4 (Слава ×1.3)"),
         ),
+        3: Constellation(
+            number=3, name="C3",
+            buffs=(Buff(S.SC_BONUS, C3_BURST_SG_BONUS - BURST_SG_BONUS, target=TEAM,
+                        source="C3: To a New World +35.4% урона звёздного проводника отряду"),
+                   Buff(S.SSW_BONUS, C3_BURST_SG_BONUS - BURST_SG_BONUS, target=TEAM,
+                        source="C3: To a New World +35.4% урона звёздного рассеивания отряду")),
+            patches=_c3_patches_support(),
+        ),
+        5: Constellation(number=5, name="C5", patches=_c5_patches_support()),
         6: Constellation(
             number=6, name="C6",
             buffs=_sg_buffs("elevation", C6_SG_ELEVATION,
@@ -213,13 +261,13 @@ ANASTASIA_KIT = Character(
 
 def anastasia_support(mode: str, crown_occ: Sequence[Occurrence],
                       on_tags: Sequence[str] = (ON,), off_tags: Sequence[str] = (OFF,),
-                      triumph_tags: Sequence[str] = (ON,),
-                      polar_stacks: int = ANASTASIA_POLAR_STACKS) -> Character:
+                      triumph_tags: Sequence[str] = (ON,)) -> Character:
     """Анастасия-саппорт под конкретный отряд.
 
     mode      — "sc" (звёздный проводник) или "ssw" (звёздное рассеивание);
     crown_occ — вхождения 10 атак короны (теги окон отряда), например
-                [occ(6, OFF, DREAM), occ(4, OFF)];
+                [occ(6, OFF, DREAM),
+                 occ(4, OFF)];
     on_tags   — теги навыка и взрыва (Анастасия на поле);
     off_tags  — теги Triumph от C6;
     triumph_tags — теги Triumph при выходе на поле после запечатывания.
@@ -227,7 +275,6 @@ def anastasia_support(mode: str, crown_occ: Sequence[Occurrence],
     if mode not in ("sc", "ssw"):
         raise ValueError(f"mode должен быть 'sc' или 'ssw', а не {mode!r}")
     direct = stellar_conduct if mode == "sc" else stellar_swirl
-    extra = {"polar_stacks": polar_stacks} if mode == "sc" else {}
     label = "SC" if mode == "sc" else "SSW"
     crown_occ = list(crown_occ)
     on_tags, off_tags = tuple(on_tags), tuple(off_tags)
@@ -240,17 +287,17 @@ def anastasia_support(mode: str, crown_occ: Sequence[Occurrence],
                       "burst", [occ(1, *on_tags)]),
             elemental("Корона — крио", "atk", CROWN_CRYO_MV, "cryo", "skill", crown_occ),
             direct(f"Корона — {label}", "atk", CROWN_MV[mode], "cryo", crown_occ,
-                   kind="skill", **extra),
+                   kind="skill"),
             direct(f"Корона — доп. удар взрыва ({label})", "atk", CROWN_BURST_MV[mode],
-                   "cryo", crown_occ, kind="burst", **extra),
+                   "cryo", crown_occ, kind="burst"),
             direct(f"Triumph ({label})", "atk", TRIUMPH_MV[mode], "cryo",
-                   [occ(1, *triumph_tags)], kind="skill", **extra),
+                   [occ(1, *triumph_tags)], kind="skill"),
         ),
         constellation_sources={
             6: (
                 direct(f"C6: Triumph ×250% ({label})", "atk",
                        TRIUMPH_MV[mode] * C6_TRIUMPH_FACTOR, "cryo",
-                       [occ(1, *off_tags)], kind="skill", **extra),
+                       [occ(1, *off_tags)], kind="skill"),
             ),
         },
     )
@@ -259,21 +306,6 @@ def anastasia_support(mode: str, crown_occ: Sequence[Occurrence],
 # --------------------------------------------------------------------------- #
 #  An Unfinished Requiem — эффекты на отряд                                    #
 # --------------------------------------------------------------------------- #
-def _shift(src, n: int):
-    return replace(src, polar_stacks=src.polar_stacks + n) if src.model == STELLAR_CONDUCT else src
-
-
-def polar_shift(character: Character, n: int = REQUIEM_POLAR) -> Character:
-    """Копия персонажа (комбо), у которой все удары SC — с +n стаками Polestar.
-
-    Сдвигаются и собственные источники, и источники созвездий; патчи
-    созвездий меняют occurrences / mv и стаки сохраняют.
-    """
-    consts = {k: replace(c, sources=tuple(_shift(s, n) for s in c.sources))
-              for k, c in character.constellations.items()}
-    return replace(character, sources=tuple(_shift(s, n) for s in character.sources),
-                   constellations=consts)
-
 
 def requiem_reactions(events):
     """Базовый множитель реакций SSW ×1.15."""
@@ -289,8 +321,26 @@ def requiem_vortex(*tags: str, count: float = REQUIEM_VORTEX_HITS, **kwargs):
 
 
 ANASTASIA_COMBO_DICT = {
-    "support_sc": anastasia_support("sc", [occ(CROWN_HITS, OFF)]),
-    "support_ssw": anastasia_support("ssw", [occ(CROWN_HITS, OFF)]),
+    # корона — 10 атак вне поля
+    "support_sc": anastasia_support("sc", [
+        occ(6, OFF,NOBLE,VV_CRYO,SUCROSE_PASSIVE,SEVEN_SACRED,DECODING),
+        occ(2, OFF,NOBLE,SEVEN_SACRED),
+        occ(2, OFF),
+    ]),
+    "support_ssw": anastasia_support("ssw", [
+        occ(6, OFF,NOBLE,VV_CRYO,SUCROSE_PASSIVE,SEVEN_SACRED,DECODING),
+        occ(2, OFF,NOBLE,SEVEN_SACRED),
+        occ(2, OFF),
+    ]),
+    # укороченные: корона — 8 атак вместо 10
+    "support_sc_short": anastasia_support("sc", [
+        occ(6, OFF,NOBLE,VV_CRYO,SUCROSE_PASSIVE,SEVEN_SACRED,DECODING),
+        occ(2, OFF,NOBLE,SEVEN_SACRED),
+    ]),
+    "support_ssw_short": anastasia_support("ssw", [
+        occ(6, OFF,NOBLE,VV_CRYO,SUCROSE_PASSIVE,SEVEN_SACRED,DECODING),
+        occ(2, OFF,NOBLE,SEVEN_SACRED),
+    ]),
 }
 
 
@@ -306,7 +356,7 @@ ANASTASIA_COMBO_DICT = {
 #   sE  — Annihilation: 3 стадии по очереди, по одной после каждой N5:
 #         1-я — крио 48.1% × 5 (урон навыка) + SC 120.24% / SSW 180.36%,
 #         2-я — SC 160.32% / SSW 240.48%, 3-я — SC 200.4% / SSW 300.6%.
-# В ДД-режиме нет короны и бафа +50% урона звёздных реакций отряду.
+# В ДД-режиме нет короны и бафа +30% урона звёздных реакций отряду.
 #
 # Слава (A1): Анастасия запечатывает троих — их Слава уходит ей:
 #   себе 4 × 12% КУ, остальным — ничего.
@@ -343,11 +393,26 @@ C6_GLORY_DOOM3 = 2.0                                 # C6 Слава: 3-я ст�
 C6_GLORY_SG_BONUS = 0.20                             # C6 Слава: +20% урона SG себе
 DD_GLORY_UNITS = 4                                   # своя Слава + Слава троих запечатанных
 
-#: Итоговые стаки Polestar у ударов SC в ДД-режиме (с +1 от Requiem):
-#: 9 обычно, 8 — в отряде с Сахарозой. В комбо стоит на 1 меньше,
-#: +1 добавляет polar_shift() в файле отряда.
-DD_POLAR_STACKS = 9
-DD_POLAR_STACKS_SUCROSE = 8
+
+
+def _c3_patches_dd():
+    p = {}
+    for m, l in _LABEL.items():
+        p[f"Взрыв «The Evernight Yields to Dawn» ({l})"] = _mv(C3_DD_BURST_MV[m])
+        for i in range(3):
+            p[f"Annihilation {i + 1} — {l}"] = _mv(C3_DOOM_SG[m][i])
+        p[f"C6: Annihilation 3 ×200% ({l})"] = _mv(C3_DOOM_SG[m][2] * C6_GLORY_DOOM3)
+    p["Annihilation 1 — крио"] = _mv(C3_DOOM1_CRYO_MV)
+    return p
+
+
+def _c5_patches_dd():
+    p = {"Навык удержанием — начальный урон": _mv(C5_DD_HOLD_MV)}
+    for n in range(1, 6):
+        p[f"Копьё {n}-й удар — крио"] = _mv(C5_SPEAR_CRYO[n])
+        for m, l in _LABEL.items():
+            p[f"Копьё {n}-й удар — {l}"] = _mv(C5_SPEAR_SG[m][n])
+    return p
 
 
 def _dd_glory_others(factor: float, tag: str):
@@ -358,6 +423,7 @@ def _dd_glory_others(factor: float, tag: str):
 ANASTASIA_DD_KIT = replace(
     ANASTASIA_KIT,
     default_field=ON,
+    polar_on_field=3.0,    # стаки Polestar: +3 на поле (и +2 всегда от Requiem)
     buffs=(
         # Stellar Benediction — как в саппорт-режиме
         ANASTASIA_KIT.buffs[2],
@@ -379,6 +445,8 @@ ANASTASIA_DD_KIT = replace(
                             "C2: +5% возвышения звёздных реакций отряду"),
             multipliers={"glory_c2": lambda stats: C2_GLORY_MULT},
         ),
+        3: Constellation(number=3, name="C3", patches=_c3_patches_dd()),
+        5: Constellation(number=5, name="C5", patches=_c5_patches_dd()),
         4: Constellation(
             number=4, name="C4",
             buffs=(
@@ -403,7 +471,6 @@ ANASTASIA_DD_KIT = replace(
 
 
 def anastasia_dd(mode: str = "sc", seg_tags: Sequence[Sequence[str]] = ((ON,),) * 4,
-                 polar_stacks: int = DD_POLAR_STACKS - REQUIEM_POLAR,
                  n5: int = DD_LOOPS) -> Character:
     """Анастасия-ДД: hEQ (N5 sE)×3 (n5=3) или hEQ N5sE N5sE sE (n5=2).
 
@@ -413,14 +480,12 @@ def anastasia_dd(mode: str = "sc", seg_tags: Sequence[Sequence[str]] = ((ON,),) 
     mode     — "sc" или "ssw";
     seg_tags — теги 4 отрезков комбо: [hEQ, N5 sE №1, N5 sE №2, N5 sE №3]
                (окна баффов отряда: Эпос, Сахароза, Изумрудная тень, C6 Дионы…);
-    polar_stacks — стаки Polestar в комбо ДО +1 от Requiem.
     """
     if mode not in ("sc", "ssw"):
         raise ValueError(f"mode должен быть 'sc' или 'ssw', а не {mode!r}")
     segs = [tuple(t) for t in seg_tags]
     assert len(segs) == 1 + DD_LOOPS, "нужно 4 набора тегов: hEQ и три N5 sE"
     direct = stellar_conduct if mode == "sc" else stellar_swirl
-    extra = {"polar_stacks": polar_stacks} if mode == "sc" else {}
     label = "SC" if mode == "sc" else "SSW"
     g = ("glory_c2",)
     loops = segs[1:]
@@ -431,29 +496,102 @@ def anastasia_dd(mode: str = "sc", seg_tags: Sequence[Sequence[str]] = ((ON,),) 
         elemental("Навык удержанием — начальный урон", "atk", DD_HOLD_MV, "cryo", "skill",
                   [occ(1, *segs[0])]),
         direct(f"Взрыв «The Evernight Yields to Dawn» ({label})", "atk", DD_BURST_MV[mode],
-               "cryo", [occ(1, *segs[0])], kind="burst", multipliers=g, **extra),
+               "cryo", [occ(1, *segs[0])], kind="burst", multipliers=g),
     ]
     for n in range(1, 6):
         mv, inst = SPEAR_CRYO[n]
         sources.append(elemental(f"Копьё {n}-й удар — крио", "atk", mv, "cryo", "normal",
                                  [occ(inst, *t) for t in spear], multipliers=g))
         sources.append(direct(f"Копьё {n}-й удар — {label}", "atk", SPEAR_SG[mode][n], "cryo",
-                              [occ(1, *t) for t in spear], kind="normal", multipliers=g, **extra))
+                              [occ(1, *t) for t in spear], kind="normal", multipliers=g))
     sources.append(elemental("Annihilation 1 — крио", "atk", DOOM1_CRYO_MV, "cryo", "skill",
                              [occ(DOOM1_CRYO_HITS, *loops[0])], multipliers=g))
     for i, t in enumerate(loops):
         sources.append(direct(f"Annihilation {i + 1} — {label}", "atk", DOOM_SG[mode][i], "cryo",
-                              [occ(1, *t)], kind="skill", multipliers=g, **extra))
+                              [occ(1, *t)], kind="skill", multipliers=g))
     return with_rotation(
         ANASTASIA_DD_KIT,
         sources=tuple(sources),
         constellation_sources={
             6: (direct(f"C6: Annihilation 3 ×200% ({label})", "atk",
-                       DOOM_SG[mode][2] * C6_GLORY_DOOM3, "cryo", [occ(1, *loops[0])],
-                       kind="skill", multipliers=g, **extra),),
+                       DOOM_SG[mode][2] * C6_GLORY_DOOM3, "cryo", [occ(1, *loops[2])],
+                       kind="skill", multipliers=g),),
         },
     )
 
 
-ANASTASIA_COMBO_DICT["dd_sc"] = anastasia_dd("sc")
-ANASTASIA_COMBO_DICT["dd_sc_short"] = anastasia_dd("sc", n5=2)
+# --------------------------------------------------------------------------- #
+#  ДД-комбо под отряды. Теги — по отрезкам комбо:                              #
+#    0: hEQ (навык удержанием + взрыв)                                        #
+#    1: N5 sE №1 (копьё + Annihilation 1)                                     #
+#    2: N5 sE №2 (копьё + Annihilation 2)                                     #
+#    3: N5 sE №3 (копьё + Annihilation 3; в коротком комбо — только sE)        #
+#  Каждая строка — окна баффов отряда на этом отрезке.                         #
+# --------------------------------------------------------------------------- #
+
+#: Без временных баффов отряда (Даника/Алеша/Одетта, Даника/Яэ/Одетта)
+ANASTASIA_COMBO_DICT["dd_sc"] = anastasia_dd("sc", (
+    (ON,NOBLE,CATS_TAIL,SEVEN_SACRED,INST,TTDS_FULL,TTDS_HALF,VV_CRYO, SUCROSE_PASSIVE),
+    (ON,NOBLE,CATS_TAIL,SEVEN_SACRED,INST,TTDS_FULL,TTDS_HALF,VV_CRYO, SUCROSE_PASSIVE),
+    (ON,NOBLE,CATS_TAIL,SEVEN_SACRED,TTDS_FULL,TTDS_HALF,VV_CRYO),
+    (ON,CATS_TAIL,SEVEN_SACRED),
+))
+ANASTASIA_COMBO_DICT["dd_sc_short"] = anastasia_dd("sc", (
+    (ON,NOBLE,CATS_TAIL,SEVEN_SACRED,INST,TTDS_FULL,TTDS_HALF,VV_CRYO, SUCROSE_PASSIVE),
+    (ON,NOBLE,CATS_TAIL,SEVEN_SACRED,INST,TTDS_FULL,TTDS_HALF,VV_CRYO, SUCROSE_PASSIVE),
+    (ON,NOBLE,CATS_TAIL,SEVEN_SACRED,TTDS_FULL,TTDS_HALF,VV_CRYO),
+    (ON,CATS_TAIL,SEVEN_SACRED),
+), n5=2)
+
+#: Отряд Даника / Митя / Одетта: Эпос Мити на первых трёх отрезках
+_SEG_MITYA = (
+    (ON, TTDS_FULL, TTDS_HALF),
+    (ON, TTDS_FULL, TTDS_HALF),
+    (ON, TTDS_FULL, TTDS_HALF),
+    (ON,),
+)
+ANASTASIA_COMBO_DICT["dd_sc_mitya"] = anastasia_dd("sc", _SEG_MITYA)
+ANASTASIA_COMBO_DICT["dd_sc_mitya_short"] = anastasia_dd("sc", _SEG_MITYA, n5=2)
+
+#: Отряд Сахароза / Алеша / Диона: окна Сахарозы (Инструктор, A1/A4, Эпос) —
+#: на hEQ и первой N5 sE; Изумрудная тень и Диона — до третьей N5 sE
+_SEG_SUCROSE_DIONA = (
+    (ON, INST, SUCROSE_PASSIVE, TTDS_FULL, TTDS_HALF, VV_CRYO, CATS_TAIL),
+    (ON, INST, SUCROSE_PASSIVE, TTDS_FULL, TTDS_HALF, VV_CRYO, CATS_TAIL),
+    (ON, VV_CRYO, CATS_TAIL),
+    (ON,),
+)
+ANASTASIA_COMBO_DICT["dd_sc_sucrose_diona"] = anastasia_dd("sc", _SEG_SUCROSE_DIONA)
+ANASTASIA_COMBO_DICT["dd_sc_sucrose_diona_short"] = anastasia_dd("sc", _SEG_SUCROSE_DIONA, n5=2)
+
+#: Отряд Ци Ци / Одетта / Алеша: окно Ци Ци (SEVEN_SACRED) — до третьей N5 sE.
+#: Бафф Ци Ци — урон звёздного рассеивания, на проводник Анастасии не влияет.
+_SEG_QIQI = (
+    (ON, SEVEN_SACRED),
+    (ON, SEVEN_SACRED),
+    (ON, SEVEN_SACRED),
+    (ON,),
+)
+ANASTASIA_COMBO_DICT["dd_sc_qiqi"] = anastasia_dd("sc", _SEG_QIQI)
+ANASTASIA_COMBO_DICT["dd_sc_qiqi_short"] = anastasia_dd("sc", _SEG_QIQI, n5=2)
+
+#: Отряд Ци Ци / Сахароза / Алеша: окна Сахарозы — hEQ и первая N5 sE;
+#: Изумрудная тень и Ци Ци — до третьей N5 sE
+_SEG_SUCROSE_QIQI = (
+    (ON, INST, SUCROSE_PASSIVE, TTDS_FULL, TTDS_HALF, VV_CRYO, SEVEN_SACRED),
+    (ON, INST, SUCROSE_PASSIVE, TTDS_FULL, TTDS_HALF, VV_CRYO, SEVEN_SACRED),
+    (ON, VV_CRYO, SEVEN_SACRED),
+    (ON,),
+)
+ANASTASIA_COMBO_DICT["dd_sc_sucrose_qiqi"] = anastasia_dd("sc", _SEG_SUCROSE_QIQI)
+ANASTASIA_COMBO_DICT["dd_sc_sucrose_qiqi_short"] = anastasia_dd("sc", _SEG_SUCROSE_QIQI, n5=2)
+
+#: Отряд Диона / Одетта / Алеша: C6 Дионы (CATS_TAIL) — до третьей N5 sE
+_SEG_DIONA = (
+    (ON, CATS_TAIL),
+    (ON, CATS_TAIL),
+    (ON, CATS_TAIL),
+    (ON,),
+)
+ANASTASIA_COMBO_DICT["dd_sc_diona"] = anastasia_dd("sc", _SEG_DIONA)
+ANASTASIA_COMBO_DICT["dd_sc_diona_short"] = anastasia_dd("sc", _SEG_DIONA, n5=2)

@@ -38,7 +38,7 @@ TEAM_BUFFS = (
 )
 
 #: Время каждого персонажа в ротации (секунды)
-TIMES = {"Мидзуки": 10.9, "Анастасия": 3.0, "Одетта": 2.4, "Водяница": 1.7}
+TIMES = {"Мидзуки": 10, "Анастасия": 3.5, "Одетта": 2.4, "Водяница": 1.6}
 
 ROTATION = "Анастасия EQ/Водяница E/Odette EE/Midzuki EQ"
 
@@ -71,7 +71,7 @@ def mizuki_build(constellation: int = 2, weapon=WANDERER_SONG.at(5), artifacts=(
     )
 
 
-def anastasia_build(constellation: int = 0, weapon=ARTEMISIA, artifacts=(STELLAR_SET,),
+def anastasia_build(constellation: int = 0, weapon=BREEZEBORNE_BOW.at(1), artifacts=(STELLAR_SET,),
                     main_stats=MAIN_ATK, extra_buffs: Sequence[Buff] = ()) -> Build:
     return Build(
         character=ANASTASIA,
@@ -84,7 +84,7 @@ def anastasia_build(constellation: int = 0, weapon=ARTEMISIA, artifacts=(STELLAR
     )
 
 
-def odette_build(constellation: int = 0, weapon=SILVER_LIGHT, artifacts=(HEART_OF_FORGE,),
+def odette_build(constellation: int = 0, weapon=SILVER_LIGHT, artifacts=(STELLAR_SET,),
                  use_burst: bool | None = None,
                  extra_buffs: Sequence[Buff] = ()) -> Build:
     """use_burst=None — авто: до C4 не применяем, с C4 применяем."""
@@ -121,21 +121,21 @@ def reactions(in_dreamdrifter: bool = True):
     теперь у Анастасии) + Requiem Анастасии."""
     d = (DREAM,) if in_dreamdrifter else ()
     return requiem_reactions((
-        ssw_anemo("Мидзуки", 1, *d, BREEZEBORNE, trigger_tags=(VODYA_LEAD,),
+        ssw_anemo("Мидзуки", 1, *d, trigger_tags=(VODYA_LEAD,),
                   name="SSW анемо (Мидзуки)"),
-        ssw_anemo("Мидзуки", 10, *d, BREEZEBORNE, trigger_tags=(VODYA_LEAD,),
+        ssw_anemo("Мидзуки", 10, *d, trigger_tags=(VODYA_LEAD,),
                   char_tags={"Анастасия": (VODYA_CHORUS,)}, name="SSW анемо (Мидзуки)"),
-        ssw_vortex(3, 3, *d, BREEZEBORNE, VV_CRYO, name="SSW вихрь ×3 стака"),
-        requiem_vortex(*d, BREEZEBORNE, VV_CRYO),
+        ssw_vortex(3, 3, *d, VV_CRYO, name="SSW вихрь ×3 стака"),
+        requiem_vortex(*d, VV_CRYO),
     ))
 
 
 def make_team(name: str, mizuki_c: int = 2, mizuki_weapon=WANDERER_SONG.at(5),
               odette_c: int = 0, odette_weapon=SILVER_LIGHT,
-              mizuki_artifacts=(VIRIDESCENT,), vodya_artifacts=(MILLELITH,),
+              mizuki_artifacts=(GILDED,), vodya_artifacts=(MILLELITH,),
               vodya_weapon=TTDS_HALF_CATALYSATOR, vodya_c: int = 0,
-              anastasia_c: int = 1, anastasia_weapon=BREEZEBORNE_BOW,
-              anastasia_artifacts=(STELLAR_SET,)) -> Team:
+              anastasia_c: int = 0, anastasia_weapon=BREEZEBORNE_BOW.at(1),
+              anastasia_artifacts=(HEART_OF_FORGE,)) -> Team:
     return Team(
         name=name,
         builds=[
@@ -154,12 +154,13 @@ def make_team(name: str, mizuki_c: int = 2, mizuki_weapon=WANDERER_SONG.at(5),
 
 #: Первые вариации отряда с Крио ГГ (без него)
 VARIANTS = (
-    ("Мидзуки C2, C0 Одетта, C0R1 Анастасия, С0R0 Водяница (Мил)",
-     dict(mizuki_c=2, mizuki_artifacts=(VIRIDESCENT,),anastasia_c=1)),
-    ("Мидзуки C2, C0 Одетта, C0R1 Анастасия, С0R0 Водяница (Мил)",
-     dict(mizuki_c=2, mizuki_artifacts=(VIRIDESCENT,))),
+    ("Мидзуки C2, C0 Одетта, C0R0 Анастасия, С0R0 Водяница (Мил)",
+     dict(mizuki_c=2, mizuki_artifacts=(GILDED,),anastasia_c=0)),
     ("Мидзуки C2, C0 Одетта, C0R1 Анастасия, С0R0 Водяница (2+2)",
      dict(mizuki_c=2, vodya_artifacts=(MILLELITH.at(2), VOURUKASHA.at(2)))),
+    ("Мидзуки C2, C0 Одетта, C0R1 Анастасия, С0R0 Водяница ",
+     dict(mizuki_c=6, vodya_artifacts=(MILLELITH,),mizuki_weapon=SUNNY_MORNING_SLEEP_IN,anastasia_c=2,anastasia_weapon=SILVER_RADIANCE,
+          odette_c=2,odette_weapon=FROSTFEATHER,vodya_weapon=MAELSTROM,vodya_c=2)),
 )
 
 BASE_NAME = VARIANTS[1][0]

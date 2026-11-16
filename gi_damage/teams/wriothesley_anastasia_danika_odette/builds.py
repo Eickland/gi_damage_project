@@ -5,7 +5,7 @@
 Реакций, наносящих урон, нет. Резонанс — крио (3 крио + 1 электро).
 
 Анастасия — саппорт (Милосердие): корона 10 атак вне поля, Triumph.
-An Unfinished Requiem: +1 стак Polestar всем ударам SC отряда (polar_shift()).
+An Unfinished Requiem: стаки Polestar — polar_always у Анастасии (Team.polar_plan()).
 
 Артефакты: Анастасия — Звёздный сет, Даника — Сердце горна,
 остальные — Разочарование (у Одетты не Сердце горна, чтобы не было двух
@@ -33,7 +33,7 @@ from ...data.characters.odette import (odette_burst_buffs, ODETTE_BURST_TIME,
                                        ODETTE_COMBO_DICT, ODETTE_BURST_SOURCES)
 from ...data.characters.danika import (DANIKA_COMBO_DICT, C2_ACTIVE_STACKS,
                                        C2_OTHER_STACKS, tag_stellar_conduct_hits)
-from ...data.characters.anastasia import anastasia_support, polar_shift, CROWN_HITS
+from ...data.characters.anastasia import anastasia_support, CROWN_HITS
 from ...data.weapons import *
 
 TEAM_BUFFS = (
@@ -42,18 +42,20 @@ TEAM_BUFFS = (
 )
 
 #: Время каждого персонажа в ротации (секунды)
-TIMES = {"Ризли": WRIO_4N5CA_N3_TIME, "Анастасия": 3.0, "Даника": 3.0, "Одетта": 2.4}
+TIMES = {"Ризли": WRIO_4N5CA_N3_TIME, "Анастасия": 3.5, "Даника": 3.25, "Одетта": 2.4}
 
 ROTATION = "Одетта EE/Даника EQ/Анастасия EQ/Ризли 4×(N5 CA) N3"
 
 MAIN_ATK = {S.ATK_PCT: 0.466 * 2, S.CRIT_VALUE: 0.622}       # АТК/АТК/крит
-FULL_ATK = {S.ATK_PCT: 0.466 * 3}                            # АТК/АТК/АТК (Даника)
+#: Даника — единственный электро в отряде: часы на ВЭ вместо АТК
+#: (штраф по требованию энергии) — АТК/АТК/ВЭ.
+DANIKA_MAIN_ER = {S.ATK_PCT: 0.466 * 2}
 
 #: Комбо с +1 стаком Polestar (Requiem Анастасии)
-WRIO = polar_shift(WRIO_COMBO_DICT["sc_4n5ca_n3"])
-ODETTE = polar_shift(ODETTE_COMBO_DICT["odette_ssc_combo"])
-DANIKA = polar_shift(DANIKA_COMBO_DICT["support_eq"])
-ANASTASIA = polar_shift(anastasia_support("sc", [occ(CROWN_HITS, OFF)]))
+WRIO = WRIO_COMBO_DICT["sc_4n5ca_n3"]
+ODETTE = ODETTE_COMBO_DICT["odette_ssc_combo"]
+DANIKA = DANIKA_COMBO_DICT["support_eq"]
+ANASTASIA = anastasia_support("sc", [occ(CROWN_HITS, OFF)])
 
 
 def enemy() -> Enemy:
@@ -79,7 +81,7 @@ def wriothesley_build(constellation: int = 1, weapon=WANDERER_SONG_CRYO.at(5),
     ), danika_c2_hits)
 
 
-def anastasia_build(constellation: int = 0, weapon=ARTEMISIA, artifacts=(STELLAR_SET,),
+def anastasia_build(constellation: int = 0, weapon=BREEZEBORNE_BOW.at(1), artifacts=(STELLAR_SET,),
                     main_stats=MAIN_ATK, danika_c2_hits: int = 0,
                     extra_buffs: Sequence[Buff] = ()) -> Build:
     return _c2(Build(
@@ -93,8 +95,8 @@ def anastasia_build(constellation: int = 0, weapon=ARTEMISIA, artifacts=(STELLAR
     ), danika_c2_hits)
 
 
-def danika_build(constellation: int = 0, weapon=ATONEMENT, artifacts=(HEART_OF_FORGE,),
-                 main_stats=FULL_ATK, extra_buffs: Sequence[Buff] = ()) -> Build:
+def danika_build(constellation: int = 0, weapon=FAV_GREATSWORD, artifacts=(HEART_OF_FORGE,),
+                 main_stats=DANIKA_MAIN_ER, extra_buffs: Sequence[Buff] = ()) -> Build:
     return _c2(Build(
         character=DANIKA,
         constellation=constellation,
@@ -126,11 +128,11 @@ def odette_build(constellation: int = 0, weapon=SILVER_LIGHT, artifacts=(DISENCH
 
 
 def make_team(name: str, wrio_c: int = 1, wrio_weapon=WANDERER_SONG_CRYO.at(5),
-              anastasia_c: int = 0, anastasia_weapon=ARTEMISIA,
-              danika_c: int = 0, danika_weapon=ATONEMENT,
+              anastasia_c: int = 0, anastasia_weapon=BREEZEBORNE_BOW.at(1),
+              danika_c: int = 0, danika_weapon=FAV_GREATSWORD,
               odette_c: int = 0, odette_weapon=SILVER_LIGHT,
-              wrio_artifacts=(DISENCHANTMENT,), anastasia_artifacts=(STELLAR_SET,),
-              danika_artifacts=(HEART_OF_FORGE,), odette_artifacts=(DISENCHANTMENT,)) -> Team:
+              wrio_artifacts=(STELLAR_SET,), anastasia_artifacts=(HEART_OF_FORGE,),
+              danika_artifacts=(MILLELITH,), odette_artifacts=(STELLAR_SET,)) -> Team:
     c2 = danika_c >= 2
     return Team(
         name=name,
@@ -151,10 +153,10 @@ def make_team(name: str, wrio_c: int = 1, wrio_weapon=WANDERER_SONG_CRYO.at(5),
 
 
 def team_name(wrio_c: int = 1, wrio_weapon=WANDERER_SONG_CRYO.at(5),
-              anastasia_c: int = 0, anastasia_weapon=ARTEMISIA,
-              danika_c: int = 0, danika_weapon=ATONEMENT,
+              anastasia_c: int = 0, anastasia_weapon=BREEZEBORNE_BOW.at(1),
+              danika_c: int = 0, danika_weapon=FAV_GREATSWORD,
               odette_c: int = 0, odette_weapon=SILVER_LIGHT) -> str:
-    _dw = (f" ({danika_weapon.name})" if danika_weapon.name != ATONEMENT.name else "")
+    _dw = (f" ({danika_weapon.name})" if danika_weapon.name != FAV_GREATSWORD.name else "")
     return (f"C{wrio_c}R{wrio_weapon.refinement} Ризли, "
             f"C{anastasia_c}R{anastasia_weapon.refinement} Анастасия, "
             f"C{danika_c}R{danika_weapon.refinement} Даника{_dw}, "

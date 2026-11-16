@@ -26,7 +26,7 @@ from ...core.sources import occ
 from ...core.stats import S
 from ...core.utilits import merge_dicts
 from ...data.artifacts import *
-from ...data.artifacts_presets import STANDART_SUBSTAT_PRESET
+from ...data.artifacts_presets import STANDART_SUBSTAT_PRESET,HIGH_SUBSTAT_PRESET
 from ...data.tags import *
 from ...data.characters.cryo_mc import CMC_COMBO_DICT
 from ...data.characters.vodyanitsa import VODYA_COMBO_DICT
@@ -44,7 +44,7 @@ TEAM_BUFFS = (
 )
 
 #: Время каждого персонажа в ротации (секунды)
-TIMES = {"Весна": 11.5, "Анастасия": 3.0, "Крио ГГ": 3.65, "Водяница": 1.6}
+TIMES = {"Весна": 11.5, "Анастасия": 3.5, "Крио ГГ": 3.65, "Водяница": 1.6}
 
 ROTATION = "Анастасия EQ/CMC E Q CA/Водяница E/Vesna combo"
 
@@ -52,7 +52,7 @@ MAIN_ATK = {S.ATK_PCT: 0.466 * 2, S.CRIT_VALUE: 0.622}       # АТК/АТК/к�
 
 #: Корона: 6 атак из 10 — после взрыва Крио ГГ (Знать + C6), 4 — до него
 CROWN_IN_WINDOW = 6
-ANASTASIA = anastasia_support("ssw", [occ(CROWN_IN_WINDOW, OFF, NOBLE, FROSTGLOW, BREEZEBORNE),
+ANASTASIA = anastasia_support("ssw", [occ(CROWN_IN_WINDOW, OFF, NOBLE, FROSTGLOW),
                                       occ(CROWN_HITS - CROWN_IN_WINDOW, OFF)])
 
 
@@ -91,13 +91,13 @@ def vesna_build(constellation: int = 0, weapon=CHRYSALIS, artifacts=SCARLET_PROO
         constellation=constellation,
         weapon=weapon,
         artifacts=(artifacts,),
-        extra_stats=merge_dicts(MAIN_ATK, STANDART_SUBSTAT_PRESET),
+        extra_stats=merge_dicts(MAIN_ATK, HIGH_SUBSTAT_PRESET),
         extra_buffs=tuple(extra_buffs),
         time=vesna_time(VESNA_BASE_TIME["burst"], constellation),
     )
 
 
-def anastasia_build(constellation: int = 0, weapon=ARTEMISIA, artifacts=(HEART_OF_FORGE,),
+def anastasia_build(constellation: int = 0, weapon=BREEZEBORNE_BOW.at(1), artifacts=(HEART_OF_FORGE,),
                     main_stats=MAIN_ATK, extra_buffs: Sequence[Buff] = ()) -> Build:
     return Build(
         character=ANASTASIA,
@@ -140,19 +140,19 @@ def reactions():
     """События SSW за ротацию: как в vesna_vodya_odette_cmc (с C6 Крио ГГ)
     + Requiem Анастасии."""
     return requiem_reactions((
-        ssw_anemo("Весна", 2, INST, VODYA_LEAD, BREEZEBORNE, FROSTGLOW, name="SSW анемо (Весна, Весна)"),
-        ssw_anemo("Весна", 6, INST, VODYA_LEAD, VODYA_CHORUS, BREEZEBORNE, FROSTGLOW,
+        ssw_anemo("Весна", 2, INST, VODYA_LEAD, FROSTGLOW, name="SSW анемо (Весна, Весна)"),
+        ssw_anemo("Весна", 6, INST, VODYA_LEAD, VODYA_CHORUS, FROSTGLOW,
                   name="SSW анемо (Весна, Инструктор)"),
-        ssw_vortex(2, 3, INST, BREEZEBORNE, FROSTGLOW, VV_CRYO, name="SSW вихрь ×3 стака"),
-        requiem_vortex(INST, BREEZEBORNE, FROSTGLOW, VV_CRYO),
+        ssw_vortex(2, 3, INST, FROSTGLOW, VV_CRYO, name="SSW вихрь ×3 стака"),
+        requiem_vortex(INST, FROSTGLOW, VV_CRYO),
     ))
 
 
-def make_team(name: str, vesna_c: int = 0, vesna_weapon=BOUGH,
+def make_team(name: str, vesna_c: int = 0, vesna_weapon=EMBERWELL,
               cmc_c: int = 6, cmc_weapon=EXAIPHANES.at(5), cmc_artifacts=(NOBLESSE,),
               vesna_artifacts=SCARLET_PROOF, vodya_artifacts=(MILLELITH,),
-              vodya_weapon=MAELSTROM, vodya_c: int = 0,
-              anastasia_c: int = 0, anastasia_weapon=SILVER_RADIANCE,
+              vodya_weapon=TTDS_HALF_CATALYSATOR, vodya_c: int = 0,
+              anastasia_c: int = 0, anastasia_weapon=BREEZEBORNE_BOW.at(1),
               anastasia_artifacts=(HEART_OF_FORGE,)) -> Team:
     return Team(
         name=name,
@@ -173,10 +173,8 @@ def make_team(name: str, vesna_c: int = 0, vesna_weapon=BOUGH,
 
 #: Вариации (как первые две у отряда с Одеттой)
 VARIANTS = (
-    ("Весна C0R1, C0R1 Анастасия (СГ), C6R5 Крио ГГ (Знать), С0R1 Водяница",
-     dict(vesna_weapon=CHRYSALIS,)),
-    ("Весна C0R1, C0R3 Анастасия (Напевы ветра, СГ), C6R5 Крио ГГ (Знать), С0R1 Водяница",
-     dict(vesna_weapon=CHRYSALIS, anastasia_weapon=BREEZEBORNE_BOW.at(3))),
+    ("Весна C0R0, C0R0 Анастасия, C6R5 Крио ГГ, С0R0 Водяница",
+     dict(vesna_weapon=EMBERWELL,vodya_weapon=TTDS_HALF_CATALYSATOR,anastasia_weapon=BREEZEBORNE_BOW.at(1))),
 )
 
 BASE_NAME = VARIANTS[0][0]

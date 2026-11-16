@@ -32,12 +32,12 @@ from ...data.characters.danika import (DANIKA_COMBO_DICT, C2_ACTIVE_STACKS,
 from ...data.weapons import *
 
 TEAM_BUFFS = (
-    Buff(S.CRIT_VALUE, 0.30, target=TEAM,
-         source="Крио резонанс: +15% крит. шанса (0.30 крит-вэлью)"),
+    Buff(S.CRIT_VALUE, 0.15, target=TEAM,
+         source="Крио резонанс (ослаблен ×0.5: 2 электро в отряде): +7.5% крит. шанса (0.15 крит-вэлью)"),
 )
 
 #: Время каждого персонажа в ротации (секунды)
-TIMES = {"Сандроне": 14.5, "Даника": 3, "Одетта": 2.4, "Яэ Мико": 2.4}
+TIMES = {"Сандроне": 14, "Даника": 3.25, "Одетта": 2.4, "Яэ Мико": 2.4}
 
 ROTATION = "Даника EQ/Одетта EE/Яэ EEE/Сандроне E CA EQ CA E CA E"
 
@@ -118,8 +118,8 @@ def make_team(name: str, sandrone_c: int = 0, sandrone_weapon=ATONEMENT,
               odette_c: int = 0, odette_weapon=SILVER_LIGHT,
               yae_c: int = 1, yae_weapon=ECHOES.at(5),
               danika_c: int = 0, danika_weapon=ATONEMENT,
-              sandrone_artifacts=(DISENCHANTMENT,), odette_artifacts=(HEART_OF_FORGE,),
-              yae_artifacts=(DISENCHANTMENT,), danika_artifacts=(MILLELITH,)) -> Team:
+              sandrone_artifacts=(DISENCHANTMENT,), odette_artifacts=(STELLAR_SET,),
+              yae_artifacts=(HEART_OF_FORGE,), danika_artifacts=(MILLELITH,)) -> Team:
     c2 = danika_c >= 2
     return Team(
         name=name,
@@ -153,8 +153,7 @@ def team_name(sandrone_c: int = 0, sandrone_weapon=ATONEMENT, odette_c: int = 0,
 VARIANTS = (
     {"danika_c": 0},
     {"danika_c": 1},
-    {"danika_c": 2},
-            {"danika_c": 0, "danika_weapon": SPRING_TIDE},  # Даника с сигной (Весенний прилив R1)
+    {"odette_c": 1,},
 )
 
 BASE_NAME = team_name()

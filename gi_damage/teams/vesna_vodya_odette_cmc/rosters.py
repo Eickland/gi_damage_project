@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
 """
+Ростеры отряда vesna_vodya_odette_cmc: созвездия, оружие и артефакты каждого
+персонажа (gi_damage/visual/standard_rosters.py).
 
-Запуск:  python -m gi_damage.teams.vesna_vodya_odette_cmc.rosters            (режим по формуле)
-         python -m gi_damage.teams.vesna_vodya_odette_cmc.rosters --details   (разбивка по ударам)
+Запуск:  python -m gi_damage.teams.vesna_vodya_odette_cmc.rosters
+         python -m gi_damage.teams.vesna_vodya_odette_cmc.rosters --details
+         python -m gi_damage.teams.vesna_vodya_odette_cmc.rosters --out файл.html
+HTML по умолчанию — rosters.html в папке отряда.
 """
 
 from __future__ import annotations
@@ -10,138 +14,15 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
-from gi_damage.core.report import (compare, hit_details, source_breakdown,
-                                   team_summary)
-from gi_damage.core.roster import Roster, Variation
-from gi_damage.data.weapons import *
-from gi_damage.data.artifacts import *
-from gi_damage.teams.vesna_vodya_odette_cmc.builds import all_teams, make_team, vodya_build, vesna_build,odette_build
-from gi_damage.core.report import roster_report
+from gi_damage.teams.vesna_vodya_odette_cmc import builds
+from gi_damage.visual.standard_rosters import run_standard
 
-from dataclasses import replace
-    
-SHOW_ALL_TEAMS = True
 
 def main(argv: list[str]) -> int:
-    details = "--details" in argv
+    return run_standard(builds, argv)
 
-    print("Стандарты")
-
-    teams = all_teams()
-    results = []
-    for team in teams.values():
-        result = team.compute()
-        results.append(result)
-        print(team_summary(result))
-        if details:
-            print(source_breakdown(result))
-            print()
-            print(hit_details(result))
-            print()
-
-    if SHOW_ALL_TEAMS:
-        print("=== Сравнение отрядов ===")
-        print(compare(results))
-        print()
-    # ------------------------------------------------------------------ #
-    #  Пример 1: перебор оружия Мидзуки                                    #
-    # ------------------------------------------------------------------ #
-
-    base = make_team("Весна C2", 2, CHRYSALIS, 2, FROSTFEATHER, SCARLET_PROOF, MILLELITH, MAELSTROM,6)
-    
-    
-    roster = Roster(base, [Variation(slot="Весна",
-                                     weapons=[EMBERWELL.at(5),
-                                              LOW_BASE_CRIT_STATSTICK,
-                                              HIGH_BASE_CRIT_STATSTICK,
-                                              CHRYSALIS.at(1),
-                                              CHRYSALIS.at(3),
-                                              CHRYSALIS.at(5),
-                                              FROSTFEATHER.at(1),
-                                              FROSTFEATHER.at(3),
-                                              FROSTFEATHER.at(5),
-                                              BOUGH.at(1),
-                                              BOUGH.at(3),
-                                              BOUGH.at(5),
-                                              MID_BASE_CRIT_STATSTICK])])
-    print("========================")
-    print("=== Ростер: оружие Весна (C0) ===")
-    print(roster_report(roster.run(), title="оружие Весна (C0)", ascending=True))
-    print()
-    
-    roster6 = Roster(base, [Variation(slot="Одетта",
-                                     weapons=[SILVER_LIGHT.at(5),
-                                              AZURELIGHT.at(1),
-                                              FROSTFEATHER.at(1),
-                                              FROSTFEATHER.at(3),
-                                              FROSTFEATHER.at(5),
-                                              FINALE.at(5),
-                                              LOW_BASE_CRIT_STATSTICK,
-                                              MID_BASE_CRIT_STATSTICK,
-                                              HIGH_BASE_CRIT_STATSTICK,
-                                              HARBINGER.at(5),
-                                              BOUGH.at(1),
-                                              BOUGH.at(3),
-                                              BOUGH.at(5)])])
-    print("========================")
-    print("=== Ростер: оружие Одетта (C0) ===")
-    print(roster_report(roster6.run(), title="оружие Одетта (C0)", ascending=True))
-    print()
-    
-    roster7 = Roster(base, [Variation(slot="Водяница",
-                                     weapons=[TTDS_HALF_CATALYSATOR,
-                                              MAELSTROM.at(1),
-                                              MAELSTROM.at(2),
-                                              MAELSTROM.at(3),
-                                              MAELSTROM.at(4),
-                                              MAELSTROM.at(5),])])
-    print("========================")
-    print("=== Ростер: оружие Водяница ===")
-    print(roster_report(roster7.run(), title="оружие Водяница", ascending=True))
-    print()
-
-    # ------------------------------------------------------------------ #
-    #  Пример 2: созвездия Мидзуки × оружие                                #
-    # ------------------------------------------------------------------ #
-
-    roster2 = Roster(base, [
-        Variation(slot="Весна", constellations=[0, 1, 2, 3,4,5, 6]),
-    ],)
-    print("========================")
-    print("=== Ростер: созвездия Весна ===")
-    print(roster_report(roster2.run(), title="созвездия Весна", ascending=True))
-    
-    roster3 = Roster(base, [
-        Variation(slot="Крио ГГ", constellations=[0, 2, 3, 5, 6]),
-    ])
-    print("========================")
-    print("=== Ростер: созвездия Крио ГГ ===")
-    print(roster_report(roster3.run(), title="созвездия Крио ГГ", ascending=True))
-    
-    roster4 = Roster(base, [
-        Variation(slot="Одетта", builds=[odette_build(constellation=c) for c in (0, 1, 2,3, 4,5, 6)]),
-    ])
-    print("========================")
-    print("=== Ростер: созвездия Одетта ===")
-    print(roster_report(roster4.run(), title="созвездия Одетта", ascending=True))
-
-    roster9 = Roster(base, [
-        Variation(slot="Водяница", builds=[vodya_build(constellation=c) for c in (0, 1, 2,3, 4, 6)]),
-    ])
-    print("========================")
-    print("=== Ростер: созвездия Водяница ===")
-    print(roster_report(roster9.run(), title="созвездия Водяница", ascending=True))
-
-    roster50 = Roster(base, [
-        Variation(slot="Весна", artifact_sets=[(VIRIDESCENT,), (SCARLET_PROOF,HEART_OF_FORGE), (SCARLET_PROOF,),(NIGHT_SKY.at(2),AUBADE.at(2)),]),
-    ])
-    print("========================")
-    print("=== Ростер: наборы артефактов Весны ===")
-    print(roster_report(roster50.run(), title="наборы артефактов Весны", ascending=True)) 
-    
-    return 0
 
 if __name__ == "__main__":
     raise SystemExit(main(sys.argv[1:]))

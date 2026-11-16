@@ -21,9 +21,6 @@ INST = "instructor"
 #: 15с усиление звзедного урона от Крио ГГ
 FROSTGLOW = "frostglow"
 
-# 12с увеличение урона звзедных реакций от лука
-BREEZEBORNE = "breezeborne"
-
 # --- Весна: состояние «Armed for Action» ------------------------------------ #
 ARMED = "armed_for_action"
 
@@ -131,7 +128,7 @@ DANIKA_C2 = "danika_c2"
 #: (чтобы бафф «12.5% АТК отряду» не считал сам себя).
 DANIKA_SNAPSHOT = "danika_snapshot"
 
-__all__ = ["ON", "OFF", "INST", "DREAM", "FROSTGLOW", "BREEZEBORNE",
+__all__ = ["ON", "OFF", "INST", "DREAM", "FROSTGLOW",
            "ARMED", "DA1", "DA2", "DA3", "DA4", "DA5", "DA6","VODYA_LEAD","VODYA_CHORUS","TTDS_HALF","VV_CRYO","VV_PYRO"
            ,"VV_HYDRO","VV_ELECTRO","CATS_TAIL","SEVEN_SACRED","MIZUKI_C1","DECODING","TTDS_FULL","SANDRONE_CA_STACKS_1","SANDRONE_CA_STACKS_2","SANDRONE_CA_STACKS_3",
            "NOBLE","PACTSWORN","TOGETHER_WE_RISE","SESSHOU_SAKURA","STARSAME","ELEGY","OFFENSIVE_DIRECTIVE","WRIO_C1","THEOSIS","VODYA_LEAD_ELEM",

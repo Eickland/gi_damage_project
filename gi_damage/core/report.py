@@ -86,7 +86,8 @@ def _setup_fields(result: TeamResult) -> Dict[str, str]:
 
 
 def roster_report(results: Sequence[TeamResult], key: str = "dps",
-                  title: str = "", ascending: bool = False) -> str:
+                  title: str = "", ascending: bool = False,
+                  base: int = 0) -> str:
     """Отчёт по перебору: что осталось постоянным и что дало какой результат.
 
     Постоянные и переменные части определяются автоматически — сравнением
@@ -96,7 +97,8 @@ def roster_report(results: Sequence[TeamResult], key: str = "dps",
     ascending — True: от худшего к лучшему (по умолчанию наоборот)
 
     Колонка «% от предыдущего» — отношение к строке НАД текущей, то есть
-    размер шага между соседними вариантами. «% от лучшего» — к максимуму.
+    размер шага между соседними вариантами. «% от базы» — к варианту, который
+    стоит в отряде базово (results[base]); он помечен «*».
     """
     if not results:
         return "(нет вариантов)"
@@ -141,7 +143,7 @@ def roster_report(results: Sequence[TeamResult], key: str = "dps",
         order = sorted(range(len(results)),
                        key=lambda i: getattr(results[i], key),
                        reverse=not ascending)
-        best = max(getattr(r, key) for r in results)
+        base_value = getattr(results[base], key) if 0 <= base < len(results) else 0.0
         worst = min(getattr(r, key) for r in results)
         rows = []
         previous = None
@@ -150,13 +152,13 @@ def roster_report(results: Sequence[TeamResult], key: str = "dps",
             value = getattr(r, key)
             step = f"{value / previous * 100:.1f}%" if previous else "—"
             previous = value
-            rows.append([str(rank)] + [t.get(k, "—") for k in varying]
+            rows.append([f"{rank}{'*' if i == base else ''}"] + [t.get(k, "—") for k in varying]
                         + [fmt(r.dpr), fmt(r.dps),
-                           f"{value / best * 100:.1f}%" if best else "—",
+                           f"{value / base_value * 100:.1f}%" if base_value else "—",
                            f"{value / worst * 100:.1f}%" if worst else "—",
                            step])
         headers = ["#"] + [header(k) for k in varying] + [
-            "DPR", "DPS", "% от лучшего", "% от худшего", "% от предыдущего"]
+            "DPR", "DPS", "% от базы", "% от худшего", "% от предыдущего"]
         align = "r" + "l" * len(varying) + "rrrrr"
         out.append(table(rows, headers, align=align))
 

@@ -27,7 +27,7 @@ from ...data.weapons import *
 TEAM_BUFFS: tuple = ()
 
 #: Время каждого персонажа в ротации (секунды)
-TIMES = {"Сайно": 15.0, "Диона": 1.65, "Одетта": 2.4, "Яэ Мико": 2.4}
+TIMES = {"Сайно": 15.0, "Диона": 2.3, "Одетта": 2.4, "Яэ Мико": 2.4}
 
 ROTATION = "Одетта EE/Яэ EEE/Диона EQ/Сайно QE (N2 CA N4 E)×3"
 
@@ -112,7 +112,7 @@ def diona_build(constellation: int = 6, weapon=FAV_BOW.at(5), artifacts=(NOBLESS
 
 def make_team(name: str, cyno_c: int = 1, cyno_weapon=DEATHMATCH.at(1),
               odette_c: int = 0, odette_weapon=SILVER_LIGHT,
-              yae_c: int = 1, yae_weapon=WINTER.at(1),
+              yae_c: int = 1, yae_weapon=ECHOES.at(5),
               diona_c: int = 6, diona_weapon=FAV_BOW,
               cyno_artifacts=(DISENCHANTMENT,), odette_artifacts=(HEART_OF_FORGE,),
               yae_artifacts=(DISENCHANTMENT,), diona_artifacts=(NOBLESSE,),

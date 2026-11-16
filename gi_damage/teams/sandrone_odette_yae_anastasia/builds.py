@@ -6,10 +6,9 @@
 Ротация ~22.3 с — у Яэ длинное комбо.
 
 Анастасия — саппорт (Милосердие): корона 10 атак вне поля, Triumph.
-An Unfinished Requiem: +1 стак Polestar всем ударам SC отряда (polar_shift()).
+An Unfinished Requiem: стаки Polestar — polar_always у Анастасии (Team.polar_plan()).
 
-Напевы ветра Анастасии (окно BREEZEBORNE): в комбо Сандроне оно уже стоит
-на всех ударах SC, кроме последней заряженной атаки и последнего навыка.
+Напевы ветра Анастасии: постоянный бафф урона звёздных реакций всему отряду.
 
 Артефакты: Сандроне — Разочарование, Одетта — Звёздный сет, Яэ — Сердце
 горна, Анастасия — Миллелит.
@@ -32,7 +31,7 @@ from ...data.characters.sandrone import SANDRONE_COMBO_DICT
 from ...data.characters.odette import (odette_burst_buffs, ODETTE_BURST_TIME,
                                        ODETTE_COMBO_DICT, ODETTE_BURST_SOURCES)
 from ...data.characters.yae import YAE_COMBO_DICT
-from ...data.characters.anastasia import anastasia_support, polar_shift, CROWN_HITS
+from ...data.characters.anastasia import anastasia_support, CROWN_HITS
 from ...data.weapons import *
 
 TEAM_BUFFS = (
@@ -41,17 +40,17 @@ TEAM_BUFFS = (
 )
 
 #: Время каждого персонажа в ротации (секунды)
-TIMES = {"Сандроне": 14.5, "Одетта": 2.4, "Яэ Мико": 2.4, "Анастасия": 3.0}
+TIMES = {"Сандроне": 14, "Одетта": 2.4, "Яэ Мико": 2.4, "Анастасия": 3.5}
 
 ROTATION = "Анастасия EQ/Одетта EE/Яэ EEE/Сандроне E CA EQ CA E CA E"
 
 MAIN_ATK = {S.ATK_PCT: 0.466 * 2, S.CRIT_VALUE: 0.622}       # АТК/АТК/крит
 
 #: Комбо с +1 стаком Polestar (Requiem Анастасии)
-SANDRONE = polar_shift(SANDRONE_COMBO_DICT["sandrone_sc_combo"])
-ODETTE = polar_shift(ODETTE_COMBO_DICT["odette_ssc_combo"])
-YAE = polar_shift(YAE_COMBO_DICT["yae_sc_long_combo"])
-ANASTASIA = polar_shift(anastasia_support("sc", [occ(CROWN_HITS, OFF)]))
+SANDRONE = SANDRONE_COMBO_DICT["sandrone_sc_combo"]
+ODETTE = ODETTE_COMBO_DICT["odette_ssc_combo"]
+YAE = YAE_COMBO_DICT["yae_sc_short_combo"]
+ANASTASIA = anastasia_support("sc", [occ(CROWN_HITS, OFF)])
 
 
 def enemy() -> Enemy:
@@ -120,7 +119,7 @@ def anastasia_build(constellation: int = 0, weapon=BREEZEBORNE_BOW.at(1), artifa
 def make_team(name: str, sandrone_c: int = 0, sandrone_weapon=ATONEMENT,
               odette_c: int = 0, odette_weapon=SILVER_LIGHT,
               yae_c: int = 1, yae_weapon=ECHOES.at(5),
-              anastasia_c: int = 0, anastasia_weapon=ARTEMISIA.at(1),
+              anastasia_c: int = 0, anastasia_weapon=BREEZEBORNE_BOW.at(1),
               sandrone_artifacts=(DISENCHANTMENT,), odette_artifacts=(STELLAR_SET,),
               yae_artifacts=(HEART_OF_FORGE,), anastasia_artifacts=(MILLELITH,)) -> Team:
     return Team(
@@ -150,10 +149,9 @@ def team_name(sandrone_c: int = 0, sandrone_weapon=ATONEMENT,
             f"C{anastasia_c}{a}")
 
 
-#: Анастасия: C0R0, C0 с сигной, C1R0, C2R0 (R0 = Напевы ветра R1)
+#: Анастасия: C0R0, C1R0, C2R0 (R0 = Напевы ветра R1)
 VARIANTS = (
     {"anastasia_c": 0},
-    {"anastasia_c": 0, "anastasia_weapon": SILVER_RADIANCE},
     {"anastasia_c": 1},
     {"anastasia_c": 2},
 )
@@ -164,6 +162,6 @@ BASE_NAME = team_name()
 def all_teams() -> Dict[str, Team]:
     out: Dict[str, Team] = {}
     for kw in VARIANTS:
-        name = team_name(**kw)
-        out[name] = make_team(name, **kw)
+        name = team_name(**kw) # pyright: ignore[reportArgumentType]
+        out[name] = make_team(name, **kw) # pyright: ignore[reportArgumentType]
     return out

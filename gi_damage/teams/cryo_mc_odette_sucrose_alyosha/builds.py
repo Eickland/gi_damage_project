@@ -110,9 +110,9 @@ def alyosha_build(constellation: int = 6, weapon=FAV_LANCE, artifacts=(HEART_OF_
 
 
 def make_team(name: str, cmc_c: int = 6, cmc_weapon=EXAIPHANES.at(5),
-              odette_c: int = 2, odette_weapon=FROSTFEATHER,
+              odette_c: int = 0, odette_weapon=SILVER_LIGHT,
               alyosha_c: int = 6, alyosha_weapon=FAV_LANCE,
-              sucrose_weapon=CODEX_FAVONIUS.at(5),
+              sucrose_weapon=TTDS_HALF_CATALYSATOR.at(5),
               cmc_artifacts=(DISENCHANTMENT,), odette_artifacts=(DISENCHANTMENT,),
               sucrose_artifacts=(VIRIDESCENT,), alyosha_artifacts=(HEART_OF_FORGE,),
               cmc_main_stats=CMC_MAIN_ATK) -> Team:

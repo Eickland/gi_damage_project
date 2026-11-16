@@ -16,12 +16,15 @@ QIQI_KIT = Character(
     element="cryo",
     weapon_type="sword",
     default_field=OFF,
+    polar_always=1.8,   # стаки Polestar отряду
     crit_mode="balance",
     stats={
         S.BASE_ATK: 287.0,
         S.CRIT_VALUE: 0.6,
     },
     buffs = (temp(S.SSW_BONUS, 0.5, requires=(SEVEN_SACRED,), target=TEAM,
+                    source="Ци ци, +50% урона к звездным реакциям команде"),
+        temp(S.SC_BONUS, 0.5, requires=(SEVEN_SACRED,), target=TEAM,
                     source="Ци ци, +50% урона к звездным реакциям команде"),),
     sources=(),
     note="",
@@ -31,8 +34,9 @@ QIQI_COMBO_DICT = {
     "off_field" : with_rotation(
         QIQI_KIT, sources=(
         elemental("Использование навыка", "atk", 1.728, "cryo", "skill",
-                  [occ(1, ON,),]),
+                  [occ(1, ON)]),
         elemental("Herald of Frost", "atk", 0.648, "cryo", "skill",
-                  [occ(4, OFF,), occ(6, OFF, DREAM)]),             
+                  [occ(4, OFF),
+                   occ(6, OFF, DREAM)]),             
         ))
 }

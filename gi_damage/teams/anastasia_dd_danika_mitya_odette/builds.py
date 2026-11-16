@@ -7,9 +7,9 @@
 Реакций, наносящих урон, нет. Резонанс — крио.
 
 Окна баффов на отрезках комбо Анастасии [hEQ, N5 sE, N5 sE, N5 sE]:
-    Эпос Мити (TTDS_FULL) — hEQ, N5 sE, N5 sE.
-An Unfinished Requiem: +1 стак Polestar всем ударам SC отряда (polar_shift());
-у ударов Анастасии итого 9 стаков.
+    Эпос Мити (TTDS_FULL/TTDS_HALF) — hEQ, N5 sE, N5 sE; в коротком комбо (ротация
+    < 20.5 с) у Мити половинчатый Эпос.
+An Unfinished Requiem: стаки Polestar — polar_always у Анастасии (Team.polar_plan()).
 
 Артефакты: Анастасия — Звёздный сет, Даника — Сердце горна (полная АТК), Митя — Миллелит (Эпос R5), Одетта — Разочарование.
 C2 Даники (danika_c=2): стаки — Анастасия 10, остальные по 7.
@@ -28,7 +28,7 @@ from ...data.artifacts import *
 from ...data.artifacts_presets import *
 from ...data.tags import *
 from ...data.characters.danika import C2_ACTIVE_STACKS, C2_OTHER_STACKS, tag_stellar_conduct_hits
-from ...data.characters.anastasia import anastasia_dd, polar_shift, DD_TIME, DD_TIME_SHORT, DD_POLAR_STACKS
+from ...data.characters.anastasia import ANASTASIA_COMBO_DICT, DD_TIME, DD_TIME_SHORT
 from ...data.characters.danika import DANIKA_COMBO_DICT
 from ...data.characters.mitya import MITYA_COMBO_DICT
 from ...data.characters.odette import (odette_burst_buffs, ODETTE_BURST_TIME,
@@ -36,12 +36,12 @@ from ...data.characters.odette import (odette_burst_buffs, ODETTE_BURST_TIME,
 from ...data.weapons import *
 
 TEAM_BUFFS = (
-    Buff(S.CRIT_VALUE, 0.30, target=TEAM,
-         source="Крио резонанс: +15% крит. шанса (0.30 крит-вэлью)"),
+    Buff(S.CRIT_VALUE, 0.15, target=TEAM,
+         source="Крио резонанс (ослаблен ×0.5: 2 электро в отряде): +7.5% крит. шанса (0.15 крит-вэлью)"),
 )
 
 #: Время каждого персонажа в ротации (секунды)
-TIMES = {"Анастасия": DD_TIME, "Даника": 3.0, "Митя": 1.5, "Одетта": 2.4}
+TIMES = {"Анастасия": DD_TIME_SHORT, "Даника": 3.25, "Митя": 1.5, "Одетта": 2.4}
 
 ROTATION = "Одетта EE/Даника EQ/Митя E/Анастасия hEQ (N5 sE)×3"
 ROTATION_SHORT = ROTATION.replace("hEQ (N5 sE)×3", "hEQ N5sE N5sE sE")
@@ -50,15 +50,13 @@ MAIN_ATK = {S.ATK_PCT: 0.466 * 2, S.CRIT_VALUE: 0.622}       # АТК/АТК/к�
 MAIN_EM = {S.BASE_EM: 187.0 * 2, S.CRIT_VALUE: 0.622}        # МС/МС/крит
 FULL_ATK = {S.ATK_PCT: 0.466 * 3}                            # АТК/АТК/АТК (Даника)
 
-#: Теги отрезков комбо Анастасии: hEQ, N5 sE №1, №2, №3
-SEG_TAGS = ((ON, TTDS_FULL), (ON, TTDS_FULL), (ON, TTDS_FULL), (ON,))
 
 #: Комбо с +1 стаком Polestar (Requiem Анастасии): полное и короткое
-ANASTASIA = polar_shift(anastasia_dd("sc", SEG_TAGS, polar_stacks=DD_POLAR_STACKS - 1))
-ANASTASIA_SHORT = polar_shift(anastasia_dd("sc", SEG_TAGS, polar_stacks=DD_POLAR_STACKS - 1, n5=2))
-DANIKA = polar_shift(DANIKA_COMBO_DICT["support_eq"])
-MITYA = polar_shift(MITYA_COMBO_DICT["support_steady"])
-ODETTE = polar_shift(ODETTE_COMBO_DICT["odette_ssc_combo"])
+ANASTASIA = ANASTASIA_COMBO_DICT["dd_sc_mitya"]
+ANASTASIA_SHORT = ANASTASIA_COMBO_DICT["dd_sc_mitya_short"]
+DANIKA = DANIKA_COMBO_DICT["support_eq"]
+MITYA = MITYA_COMBO_DICT["support_steady"]
+ODETTE = ODETTE_COMBO_DICT["odette_ssc_combo"]
 
 
 def enemy() -> Enemy:
@@ -70,8 +68,8 @@ def _c2(build: Build, hits: int) -> Build:
     return tag_stellar_conduct_hits(build, DANIKA_C2, hits)
 
 
-def anastasia_build(constellation: int = 0, weapon=ARTEMISIA, artifacts=(STELLAR_SET,),
-                    main_stats=MAIN_ATK, danika_c2_hits: int = 0, short: bool = False,
+def anastasia_build(constellation: int = 0, weapon=ARTEMISIA, artifacts=(DISENCHANTMENT,),
+                    main_stats=MAIN_ATK, danika_c2_hits: int = 0, short: bool = True,
                     extra_buffs: Sequence[Buff] = ()) -> Build:
     """short=True — короткое комбо hEQ N5sE N5sE sE (13.2 с)."""
     return _c2(Build(
@@ -132,7 +130,7 @@ def odette_build(constellation: int = 0, weapon=SILVER_LIGHT, artifacts=(DISENCH
 
 
 def make_team(name: str, anastasia_c: int = 0, anastasia_weapon=ARTEMISIA,
-              anastasia_artifacts=(STELLAR_SET,), short: bool = False,
+              anastasia_artifacts=(DISENCHANTMENT,), short: bool = True,
               danika_c: int = 0, danika_weapon=ATONEMENT, danika_artifacts=(HEART_OF_FORGE,),
               mitya_c: int = 0, mitya_weapon=TTDS_FULL_CATALYSATOR, mitya_artifacts=(MILLELITH,),
               odette_c: int = 0, odette_weapon=SILVER_LIGHT, odette_artifacts=(DISENCHANTMENT,)) -> Team:
@@ -167,7 +165,7 @@ def team_name(anastasia_c: int = 0, anastasia_weapon=ARTEMISIA, short: bool = Fa
             + f"C{odette_c}R{odette_weapon.refinement} Одетта")
 
 
-VARIANTS = ({"danika_c": 0}, {"danika_c": 1}, {"danika_c": 2}, {"danika_c": 0, "short": True}, {"danika_c": 1, "short": True}, {"danika_c": 2, "short": True},
+VARIANTS = ({"danika_c": 0}, {"danika_c": 1}, {"danika_c": 2}, {"danika_c": 0, "short": True, "mitya_weapon": TTDS_HALF_CATALYSATOR}, {"danika_c": 1, "short": True, "mitya_weapon": TTDS_HALF_CATALYSATOR}, {"danika_c": 2, "short": True, "mitya_weapon": TTDS_HALF_CATALYSATOR},
             {"danika_c": 0, "anastasia_weapon": SILVER_RADIANCE},
             {"danika_c": 0, "danika_weapon": SPRING_TIDE},  # Даника с сигной (Весенний прилив R1)
 )  # сигна Анастасии

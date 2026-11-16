@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
 """
+Ростеры отряда mizuki_anastasia_odette_faruzan_sacfrag: созвездия, оружие и артефакты каждого
+персонажа (gi_damage/visual/standard_rosters.py).
+
 Запуск:  python -m gi_damage.teams.mizuki_anastasia_odette_faruzan_sacfrag.rosters
          python -m gi_damage.teams.mizuki_anastasia_odette_faruzan_sacfrag.rosters --details
+         python -m gi_damage.teams.mizuki_anastasia_odette_faruzan_sacfrag.rosters --out файл.html
+HTML по умолчанию — rosters.html в папке отряда.
 """
 
 from __future__ import annotations
@@ -9,35 +14,18 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
-from gi_damage.core.report import hit_details, source_breakdown, team_summary
-from gi_damage.teams.mizuki_anastasia_odette_faruzan_sacfrag.builds import all_teams, make_team
-from gi_damage.visual.rosters import RosterBook
+from gi_damage.teams.mizuki_anastasia_odette_faruzan_sacfrag import builds
+from gi_damage.visual.standard_rosters import run_standard
 
-ANASTASIA_CONSTELLATIONS = (0, 1, 2, 4, 6)
+
+#: Не строить: оружие Мидзуки (в отряде всегда Церемон)
+SKIP = {("Мидзуки", "weapon")}
 
 
 def main(argv: list[str]) -> int:
-    details = "--details" in argv
-    book = RosterBook()
-
-    for team in all_teams().values():
-        result = team.compute()
-        print(team_summary(result))
-        if details:
-            print(source_breakdown(result))
-            print()
-            print(hit_details(result))
-            print()
-
-    # Созвездия Анастасии меняют баффы всего отряда — сравниваем целые отряды
-    book.add([make_team(f"C{c} Анастасия", anastasia_c=c).compute()
-              for c in ANASTASIA_CONSTELLATIONS],
-             "Созвездия Анастасии", ascending=True)
-
-    book.save("rosters.html")
-    return 0
+    return run_standard(builds, argv, skip=SKIP)
 
 
 if __name__ == "__main__":

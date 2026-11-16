@@ -114,7 +114,7 @@ def valera_build(constellation: int = 0, weapon=FINALE, artifacts=(NOBLESSE,),
 def make_team(name: str, cyno_c: int = 1, cyno_weapon=DEATHMATCH.at(1),
               odette_c: int = 0, odette_weapon=SILVER_LIGHT,
               yae_c: int = 1, yae_weapon=ECHOES,
-              valera_c: int = 0, valera_weapon=FINALE,
+              valera_c: int = 6, valera_weapon=FINALE,
               cyno_artifacts=(DISENCHANTMENT,), odette_artifacts=(HEART_OF_FORGE,),
               yae_artifacts=(DISENCHANTMENT,), valera_artifacts=(NOBLESSE,),
               cyno_main_stats=None, yae_main_stats=YAE_MAIN) -> Team:

@@ -48,7 +48,7 @@ TEAM_BUFFS = (
 MIN_ROTATION = 19.0
 #: Время Мидзуки в исходной ротации sacfrag (с Крио ГГ)
 MIZUKI_BASE_TIME = 10.25
-OTHERS_TIMES = {"Анастасия": 3.0, "Одетта": 2.4, "Фарузан": 2.7}
+OTHERS_TIMES = {"Анастасия": 3.5, "Одетта": 2.4, "Фарузан": 2.7}
 
 
 def mizuki_time() -> float:
@@ -88,7 +88,7 @@ def mizuki_build(constellation: int = 0, weapon=SACFRAG.at(5),
     )
 
 
-def anastasia_build(constellation: int = 0, weapon=ARTEMISIA, artifacts=(STELLAR_SET,),
+def anastasia_build(constellation: int = 0, weapon=BREEZEBORNE_BOW.at(1), artifacts=(STELLAR_SET,),
                     main_stats=MAIN_ATK, extra_buffs: Sequence[Buff] = ()) -> Build:
     return Build(
         character=ANASTASIA,
@@ -101,7 +101,7 @@ def anastasia_build(constellation: int = 0, weapon=ARTEMISIA, artifacts=(STELLAR
     )
 
 
-def odette_build(constellation: int = 0, weapon=SILVER_LIGHT, artifacts=(HEART_OF_FORGE,),
+def odette_build(constellation: int = 0, weapon=SILVER_LIGHT, artifacts=(STELLAR_SET,),
                  use_burst: bool | None = None,
                  extra_buffs: Sequence[Buff] = ()) -> Build:
     """use_burst=None — авто: до C4 не применяем, с C4 применяем."""
@@ -139,22 +139,22 @@ def reactions(in_dreamdrifter: bool = True):
     (без окна C6 Крио ГГ) + Requiem Анастасии."""
     d = (DREAM,) if in_dreamdrifter else ()
     return requiem_reactions((
-        ssw_anemo("Мидзуки", 2, *d, BREEZEBORNE, name="SSW анемо (Мидзуки)"),
-        ssw_anemo("Мидзуки", 8, INST, BREEZEBORNE, *d, name="SSW анемо (Мидзуки, Инструктор)"),
-        ssw_anemo("Фарузан", 4, INST, BREEZEBORNE, *d, name="SSW анемо (Фарузан, Инструктор)"),
-        ssw_anemo("Фарузан", 3, INST, BREEZEBORNE, name="SSW анемо (Фарузан, Инструктор)"),
-        ssw_vortex(3, 3, INST, BREEZEBORNE, VV_CRYO, *d, name="SSW вихрь ×3 стака"),
-        ssw_vortex(3, 1, INST, BREEZEBORNE, VV_CRYO, name="SSW вихрь ×3 стака"),
-        requiem_vortex(INST, BREEZEBORNE, VV_CRYO, *d),
+        ssw_anemo("Мидзуки", 2, *d, name="SSW анемо (Мидзуки)"),
+        ssw_anemo("Мидзуки", 8, INST, *d, name="SSW анемо (Мидзуки, Инструктор)"),
+        ssw_anemo("Фарузан", 4, INST, *d, name="SSW анемо (Фарузан, Инструктор)"),
+        ssw_anemo("Фарузан", 3, INST, name="SSW анемо (Фарузан, Инструктор)"),
+        ssw_vortex(3, 3, INST, VV_CRYO, *d, name="SSW вихрь ×3 стака"),
+        ssw_vortex(3, 1, INST, VV_CRYO, name="SSW вихрь ×3 стака"),
+        requiem_vortex(INST, VV_CRYO, *d),
     ))
 
 
-def make_team(name: str, mizuki_c: int = 0, mizuki_weapon=SACFRAG.at(5),
+def make_team(name: str, mizuki_c: int = 2, mizuki_weapon=SACFRAG.at(5),
               odette_c: int = 0, odette_weapon=SILVER_LIGHT,
               mizuki_artifacts=(NIGHT_SKY.at(2), AUBADE.at(2)),
               faruzan_artifacts=VIRIDESCENT, faruzan_weapon=FAV_BOW,
-              anastasia_c: int = 0, anastasia_weapon=ARTEMISIA,
-              anastasia_artifacts=(STELLAR_SET,)) -> Team:
+              anastasia_c: int = 0, anastasia_weapon=BREEZEBORNE_BOW.at(1),
+              anastasia_artifacts=(HEART_OF_FORGE,)) -> Team:
     return Team(
         name=name,
         builds=[
@@ -173,8 +173,6 @@ def make_team(name: str, mizuki_c: int = 0, mizuki_weapon=SACFRAG.at(5),
 
 #: Те же вариации, что у mizuki_faruzan_cmc_odette_sacfrag (Крио ГГ -> Анастасия C0)
 VARIANTS = (
-    ("Мидзуки C0 (Церемон), C0 Одетта (Серебряный свет R5), C0R1 Анастасия, С6R0 Фарузан",
-     dict(mizuki_c=0)),
     ("Мидзуки C2 (Церемон), C0 Одетта (Серебряный свет R5), C0R1 Анастасия, С6R0 Фарузан",
      dict(mizuki_c=2)),
 )

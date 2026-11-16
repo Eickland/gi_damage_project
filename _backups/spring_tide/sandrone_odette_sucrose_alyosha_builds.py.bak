@@ -23,7 +23,7 @@ TEAM_BUFFS = (
 )
 
 #: Время каждого персонажа в ротации (секунды)
-TIMES = {"Сандроне": 14.5, "Алеша": 1.65, "Одетта": 2.4, "Сахароза": 2.95}
+TIMES = {"Сандроне": 14, "Алеша": 1.65, "Одетта": 2.4, "Сахароза": 2.95}
 
 ROTATION = "Алеша EQ/Одетта EE/Сахароза Ed(Q)/Сандроне E CA EQ CA/Сахароза Ed/Сандроне E CA E"
 
@@ -145,7 +145,7 @@ from ...data.characters.anastasia import anastasia_support, polar_shift, CROWN_H
 
 SWAP_OPTIONS = ("Сахароза", "Даника", "Анастасия")
 
-SWAP_TIMES = {"Даника": 3.0, "Анастасия": 3.0}
+SWAP_TIMES = {"Даника": 3.25, "Анастасия": 3.5}
 
 SWAP_ROTATION = {
     "Сахароза": ROTATION,

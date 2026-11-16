@@ -36,7 +36,6 @@ MORTAR_MV = 4.1256            # Direct-Fire Mortar: Point-Blank Bombardment
 SKILL_MV = 2.988              # Active Defense: Bastion Charge
 BURST_MV = 0.0                # TODO: урон взрыва при применении (не дан)
 BURST_SHELL_MV = 0.0          # TODO: урон снарядов Thunderburst Shell (не дан)
-BURST_SHELL_HITS = 6          # раз в 3.5 с
 
 OD_STACKS = 15                # стаков Offensive Directive
 OD_ELECTRO_ATK = 0.4378       # вне Radiance: +43.78% АТК Валеры (для справки)
@@ -67,6 +66,7 @@ VALERA_KIT = Character(
     element="electro",
     weapon_type="sword",
     default_field=OFF,
+    polar_always=1.33,   # стаки Polestar отряду
     crit_mode="balance",
     stats={
         S.BASE_ATK: 255.0,
@@ -107,21 +107,19 @@ VALERA_KIT = Character(
     note="Чистый саппорт.",
 )
 
-_VALERA_TAGS = (ON, NOBLE)
-
 VALERA_COMBO_DICT = {
     # E Q CA (особая заряженная атака), 2.4 с; снаряды взрыва — вне поля.
     "support_eq_ca": with_rotation(
         VALERA_KIT,
         sources=(
             elemental("Навык", "atk", SKILL_MV, "electro", "skill",
-                      [occ(1, *_VALERA_TAGS)]),
+                      [occ(1, ON, NOBLE)]),
             elemental("Взрыв стихии", "atk", BURST_MV, "electro", "burst",
-                      [occ(1, *_VALERA_TAGS)]),
+                      [occ(1, ON, NOBLE)]),
             elemental("Особая заряженная атака (мортира)", "atk", MORTAR_MV, "electro",
-                      "charged", [occ(1, *_VALERA_TAGS)], extra_tags=(VALERA_C6,)),
+                      "charged", [occ(1, ON, NOBLE)], extra_tags=(VALERA_C6,)),
             elemental("Снаряды Thunderburst Shell", "atk", BURST_SHELL_MV, "electro",
-                      "burst", [occ(BURST_SHELL_HITS, OFF, NOBLE)], extra_tags=(VALERA_C6,)),
+                      "burst", [occ(6, OFF, NOBLE)], extra_tags=(VALERA_C6,)),
         ),
     ),
 }

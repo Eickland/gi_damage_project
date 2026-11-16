@@ -4,9 +4,10 @@
 
 База: 350 базовой АТК, 0.6 крит-вэлью, +28.8% АТК (возвышение).
 
-Взрыв стихии
-    * 2 удара звёздного проводника: 134.6% и 155.9% АТК
-    * 3 электро удара по 21.3% АТК
+Взрыв стихии (5 ударов)
+    * 1-й удар: электро 134.9% + звёздный проводник 79.8%
+    * 2–4-й удары: электро 21.3%
+    * 5-й удар: электро 156.2% + звёздный проводник 119.6%
     * +12.5% АТК Даники всему отряду (плоская АТК), максимум 500.
       C1 усиливает бонус на 80%: 22.5% АТК, максимум 900.
 Навык
@@ -16,6 +17,12 @@
     1) −30% крио и электро сопротивления цели
     2) +14% базового урона звёздного проводника отряду
     3) +60% АТК себе
+C3  Взрыв +3 ур.: 158.92%+93.96% / 25.09% / 184.01%+140.88%;
+    бонус АТК 14.75% (макс. 590), с C1 ×1.8.
+C5  Навык +3 ур.: применение 90.85%, SC 144.16% (электро удары 80.6% —
+    допущение, ×1.178).
+C6  Якорь: +20% урона SC отряду; Горничная-защитница (саппорт):
+    +10% урона SC активному персонажу за каждые 1000 АТК Даники (макс. 40%).
 C2
     Удары звёздного проводника получают доп. базовый урон = 100% АТК Даники.
     Стаков: 10 активному персонажу, 7 остальным. Бафф работает только в
@@ -26,7 +33,6 @@ C2
   * все баффы постоянные (взрыв покрывает ротацию);
   * бонус АТК от взрыва считается от АТК Даники на поле в момент применения
     и сам себя не учитывает (служебный тег DANIKA_SNAPSHOT);
-  * стаки «полярности» у ударов звёздного проводника Даники — DANIKA_POLAR_STACKS;
   * применение навыка и взрыв — на поле, 8 электро ударов и 5 ударов SC
     навыка — вне поля.
 """
@@ -47,14 +53,14 @@ DANIKA_NAME = "Даника"
 # --------------------------------------------------------------------------- #
 #  Множители (в долях)                                                         #
 # --------------------------------------------------------------------------- #
-BURST_SC_MV = (1.346, 1.559)      # 2 удара звёздного проводника
-BURST_ELECTRO_MV = 0.213          # электро удары взрыва
-BURST_ELECTRO_HITS = 3
+#: Взрыв — 5 ударов: 1-й и 5-й — электро + звёздный проводник, 2–4-й — электро.
+#: Множители C0 = данные C3 (ур. 13) / 1.178.
+BURST_HIT_ELECTRO_MV = (1.349, 1.562)   # электро часть 1-го и 5-го удара
+BURST_SC_MV = (0.798, 1.196)            # SC часть 1-го и 5-го удара
+BURST_ELECTRO_MV = 0.213                # 2–4-й удары, электро
 SKILL_CAST_MV = 0.773             # электро, применение навыка
 SKILL_ELECTRO_MV = 0.685          # электро удары навыка
-SKILL_ELECTRO_HITS = 8
 SKILL_SC_MV = 1.221               # удары звёздного проводника навыка
-SKILL_SC_HITS = 1
 
 BURST_ATK_SHARE = 0.125           # +12.5% АТК Даники отряду
 BURST_ATK_CAP = 500.0
@@ -64,14 +70,27 @@ C1_ATK_CAP = 900.0
 
 A1_RES_SHRED = 0.30               # −30% крио и электро сопротивления
 A2_SC_BASE_INC = 0.14             # +14% базового урона звёздного проводника
-A3_ATK_PCT = 0.60                 # +60% АТК себе
+A3_ATK_PCT = 0.20                 # +60% АТК себе
+
+# C3: взрыв +3 уровня
+C3_BURST_HIT_ELECTRO_MV = (1.5892, 1.8401)
+C3_BURST_SC_MV = (0.9396, 1.4088)
+C3_BURST_ELECTRO_MV = 0.2509
+C3_BURST_ATK_SHARE = 0.1475
+C3_BURST_ATK_CAP = 590.0
+# C5: навык +3 уровня
+C5_SKILL_CAST_MV = 0.9085
+C5_SKILL_SC_MV = 1.4416
+C5_SKILL_ELECTRO_MV = 0.806     # не дан — 68.5% × 1.178 (как остальные множители)
+# C6
+C6_SC_BONUS = 0.20              # якорь: +20% урона SC отряду
+C6_ON_FIELD_PER_1000 = 0.10     # Горничная-защитница: +10% урона SC активному за 1000 АТК
+C6_ON_FIELD_CAP = 0.40
 
 C2_ATK_SHARE = 1.00               # доп. базовый урон SC = 100% АТК Даники
 C2_ACTIVE_STACKS = 10             # стаков активному персонажу
 C2_OTHER_STACKS = 7               # стаков остальным
 
-#: Стаки «полярности» для звёздного проводника Даники
-DANIKA_POLAR_STACKS = 7
 
 
 def _snapshot_atk(snapshot_tags: Sequence[str]):
@@ -103,6 +122,38 @@ def c1_atk_buffs(snapshot_tags: Sequence[str] = (ON,)):
     )
 
 
+def c3_atk_buffs(snapshot_tags: Sequence[str] = (ON,)):
+    """C3: бонус взрыва 14.75% (макс. 590); с C1 ×1.8 — разница с C1."""
+    atk = _snapshot_atk(snapshot_tags)
+
+    def delta(ctx) -> float:
+        a = atk(ctx)
+        return (min(C3_BURST_ATK_CAP * C1_FACTOR, C3_BURST_ATK_SHARE * C1_FACTOR * a)
+                - min(C1_ATK_CAP, C1_ATK_SHARE * a))
+
+    return (
+        Buff(S.FLAT_ATK, delta, target=TEAM, excludes=(DANIKA_SNAPSHOT,),
+             source="C3 Даники: бонус АТК взрыва 14.75% (макс. 590), с C1 ×1.8"),
+    )
+
+
+def c6_buffs(stat_tags: Sequence[str] = (OFF,)):
+    st = frozenset(stat_tags)
+    return (
+        Buff(S.SC_BONUS, C6_SC_BONUS, target=TEAM,
+             source="C6 Даники: якорь, +20% урона звёздного проводника отряду"),
+        Buff(S.SC_BONUS,
+             lambda ctx: min(C6_ON_FIELD_CAP,
+                             C6_ON_FIELD_PER_1000 * ctx.stat(DANIKA_NAME, "atk", st) / 1000.0),
+             target=OTHERS, requires=(ON,),
+             source="C6 Даники: +10% урона SC активному за 1000 её АТК (макс. 40%)"),
+    )
+
+
+def _mv(v):
+    return lambda src: replace(src, mv=v)
+
+
 def c2_buffs(stat_tags: Sequence[str] = (OFF,)):
     """C2: доп. базовый урон ударов SC = 100% АТК Даники (в ударах с DANIKA_C2)."""
     st = frozenset(stat_tags)
@@ -119,6 +170,7 @@ DANIKA_KIT = Character(
     element="electro",
     weapon_type="claymore",
     default_field=OFF,
+    polar_always=2.0,   # стаки Polestar отряду
     crit_mode="balance",
     stats={
         S.BASE_ATK: 337.0,
@@ -141,58 +193,99 @@ DANIKA_KIT = Character(
     constellations={
         1: Constellation(number=1, name="C1"),
         2: Constellation(number=2, name="C2"),
+        3: Constellation(number=3, name="C3", patches={
+            "Взрыв — электро, 1-й удар": _mv(C3_BURST_HIT_ELECTRO_MV[0]),
+            "Взрыв — электро, 5-й удар": _mv(C3_BURST_HIT_ELECTRO_MV[1]),
+            "Взрыв — звёздный проводник, 1-й удар": _mv(C3_BURST_SC_MV[0]),
+            "Взрыв — звёздный проводник, 5-й удар": _mv(C3_BURST_SC_MV[1]),
+            "Взрыв — электро удары": _mv(C3_BURST_ELECTRO_MV),
+        }),
+        5: Constellation(number=5, name="C5", patches={
+            "Навык — применение": _mv(C5_SKILL_CAST_MV),
+            "Навык — электро удары": _mv(C5_SKILL_ELECTRO_MV),
+            "Навык — звёздный проводник": _mv(C5_SKILL_SC_MV),
+        }),
     },
     note="Саппорт звёздного проводника.",
 )
 
 
-def danika_rotation(on_tags: Sequence[str] = (ON,), off_tags: Sequence[str] = (OFF,),
-                    snapshot_tags: Sequence[str] | None = None,
-                    c2_stat_tags: Sequence[str] | None = None,
-                    polar_stacks: int = DANIKA_POLAR_STACKS) -> Character:
-    """Даника под конкретную ротацию: E Q.
+def _danika_combo(sources, snapshot_tags=(ON,), c2_stat_tags=(OFF,)) -> Character:
+    """Комбо Даники: удары + баффы, которые снимают АТК в заданном состоянии.
 
-    on_tags       — теги ударов на поле (применение навыка, взрыв);
-    off_tags      — теги ударов вне поля (электро и SC удары навыка);
-    snapshot_tags — состояние, в котором берётся АТК для бонуса взрыва
-                    (по умолчанию = on_tags);
-    c2_stat_tags  — состояние, в котором берётся АТК для C2 (по умолчанию = off_tags).
+    snapshot_tags — состояние Даники при применении взрыва (бонус АТК);
+    c2_stat_tags  — состояние, в котором берётся АТК для C2.
     """
-    on_tags, off_tags = tuple(on_tags), tuple(off_tags)
-    snapshot_tags = tuple(snapshot_tags) if snapshot_tags is not None else on_tags
-    c2_stat_tags = tuple(c2_stat_tags) if c2_stat_tags is not None else off_tags
     return with_rotation(
         DANIKA_KIT,
-        sources=(
-            elemental("Навык — применение", "atk", SKILL_CAST_MV, "electro", "skill",
-                      [occ(1, *on_tags)]),
-            elemental("Навык — электро удары", "atk", SKILL_ELECTRO_MV, "electro", "skill",
-                      [occ(SKILL_ELECTRO_HITS, *off_tags)]),
-            stellar_conduct("Навык — звёздный проводник", "atk", SKILL_SC_MV, "electro",
-                            [occ(SKILL_SC_HITS, *off_tags)], kind="skill",
-                            polar_stacks=polar_stacks),
-            stellar_conduct("Взрыв — звёздный проводник, 1-й удар", "atk", BURST_SC_MV[0],
-                            "electro", [occ(1, *on_tags)], kind="burst",
-                            polar_stacks=polar_stacks),
-            stellar_conduct("Взрыв — звёздный проводник, 2-й удар", "atk", BURST_SC_MV[1],
-                            "electro", [occ(1, *on_tags)], kind="burst",
-                            polar_stacks=polar_stacks),
-            elemental("Взрыв — электро удары", "atk", BURST_ELECTRO_MV, "electro", "burst",
-                      [occ(BURST_ELECTRO_HITS, *on_tags)]),
-        ),
-        extra_buffs=burst_atk_buffs(snapshot_tags),
+        sources=sources,
+        extra_buffs=burst_atk_buffs(tuple(snapshot_tags)),
         constellation_extra_buffs={
-            1: c1_atk_buffs(snapshot_tags),
-            2: c2_buffs(c2_stat_tags),
+            1: c1_atk_buffs(tuple(snapshot_tags)),
+            2: c2_buffs(tuple(c2_stat_tags)),
+            3: c3_atk_buffs(tuple(snapshot_tags)),
+            6: c6_buffs(tuple(c2_stat_tags)),
         },
     )
 
 
+#: Каждая строка occ(N, теги...) — N ударов в этом наборе окон; одинаковые
+#: удары с разными баффами идут строками подряд.
 DANIKA_COMBO_DICT = {
     # Даника первой в ротации: E Q, дальше уходит с поля.
-    "support_eq": danika_rotation(),
+    "support_eq": _danika_combo((
+        elemental("Навык — применение", "atk", SKILL_CAST_MV, "electro", "skill", [
+            occ(1, ON),
+        ]),
+        elemental("Навык — электро удары", "atk", SKILL_ELECTRO_MV, "electro", "skill", [
+            occ(8, OFF),
+        ]),
+        stellar_conduct("Навык — звёздный проводник", "atk", SKILL_SC_MV, "electro", [
+            occ(1, OFF),
+        ], kind="skill"),
+        elemental("Взрыв — электро, 1-й удар", "atk", BURST_HIT_ELECTRO_MV[0], "electro", "burst", [
+            occ(1, ON),
+        ]),
+        stellar_conduct("Взрыв — звёздный проводник, 1-й удар", "atk", BURST_SC_MV[0], "electro", [
+            occ(1, ON),
+        ], kind="burst"),
+        elemental("Взрыв — электро, 5-й удар", "atk", BURST_HIT_ELECTRO_MV[1], "electro", "burst", [
+            occ(1, ON),
+        ]),
+        stellar_conduct("Взрыв — звёздный проводник, 5-й удар", "atk", BURST_SC_MV[1], "electro", [
+            occ(1, ON),
+        ], kind="burst"),
+        elemental("Взрыв — электро удары", "atk", BURST_ELECTRO_MV, "electro", "burst", [
+            occ(3, ON),
+        ]),
+    ), snapshot_tags=(ON,), c2_stat_tags=(OFF,)),
     # После Алеши (Знать 4ч): все удары и снапшот АТК — в окне NOBLE.
-    "support_eq_noble": danika_rotation(on_tags=(ON, NOBLE), off_tags=(OFF, NOBLE)),
+    "support_eq_noble": _danika_combo((
+        elemental("Навык — применение", "atk", SKILL_CAST_MV, "electro", "skill", [
+            occ(1, ON, NOBLE),
+        ]),
+        elemental("Навык — электро удары", "atk", SKILL_ELECTRO_MV, "electro", "skill", [
+            occ(8, OFF, NOBLE),
+        ]),
+        stellar_conduct("Навык — звёздный проводник", "atk", SKILL_SC_MV, "electro", [
+            occ(1, OFF, NOBLE),
+        ], kind="skill"),
+        elemental("Взрыв — электро, 1-й удар", "atk", BURST_HIT_ELECTRO_MV[0], "electro", "burst", [
+            occ(1, ON, NOBLE),
+        ]),
+        stellar_conduct("Взрыв — звёздный проводник, 1-й удар", "atk", BURST_SC_MV[0], "electro", [
+            occ(1, ON, NOBLE),
+        ], kind="burst"),
+        elemental("Взрыв — электро, 5-й удар", "atk", BURST_HIT_ELECTRO_MV[1], "electro", "burst", [
+            occ(1, ON, NOBLE),
+        ]),
+        stellar_conduct("Взрыв — звёздный проводник, 5-й удар", "atk", BURST_SC_MV[1], "electro", [
+            occ(1, ON, NOBLE),
+        ], kind="burst"),
+        elemental("Взрыв — электро удары", "atk", BURST_ELECTRO_MV, "electro", "burst", [
+            occ(3, ON, NOBLE),
+        ]),
+    ), snapshot_tags=(ON, NOBLE), c2_stat_tags=(OFF, NOBLE)),
 }
 
 

@@ -6,7 +6,7 @@
 бонуса урона нет — отрядных баффов нет.
 
 Анастасия — саппорт (Милосердие): корона 10 атак вне поля, Triumph.
-An Unfinished Requiem: +1 стак Polestar всем ударам SC отряда (polar_shift()).
+An Unfinished Requiem: стаки Polestar — polar_always у Анастасии (Team.polar_plan()).
 
 Артефакты: Анастасия — Звёздный сет, Даника — Сердце горна,
 остальные — Разочарование.
@@ -32,14 +32,14 @@ from ...data.characters.cyno import CYNO_COMBO_DICT, cyno_main_stats
 from ...data.characters.yae import YAE_COMBO_DICT
 from ...data.characters.danika import (DANIKA_COMBO_DICT, C2_ACTIVE_STACKS,
                                        C2_OTHER_STACKS, tag_stellar_conduct_hits)
-from ...data.characters.anastasia import anastasia_support, polar_shift, CROWN_HITS
+from ...data.characters.anastasia import anastasia_support, CROWN_HITS
 from ...data.weapons import *
 
 #: Электро резонанс (3 электро) — без бонуса урона
 TEAM_BUFFS: tuple = ()
 
 #: Время каждого персонажа в ротации (секунды)
-TIMES = {"Сайно": 15.0, "Анастасия": 3.0, "Даника": 3.0, "Яэ Мико": 2.4}
+TIMES = {"Сайно": 15.0, "Анастасия": 3.5, "Даника": 3.25, "Яэ Мико": 2.4}
 
 ROTATION = "Яэ EEE/Даника EQ/Анастасия EQ/Сайно QE (N2 CA N4 E)×3"
 
@@ -48,10 +48,10 @@ FULL_ATK = {S.ATK_PCT: 0.466 * 3}                            # АТК/АТК/А�
 MAIN_EM = {S.BASE_EM: 187.0 * 2, S.CRIT_VALUE: 0.622}        # МС/МС/крит (Сайно)
 
 #: Комбо с +1 стаком Polestar (Requiem Анастасии)
-CYNO = polar_shift(CYNO_COMBO_DICT["sc_combo"])
-YAE = polar_shift(YAE_COMBO_DICT["yae_sc_long_combo"])
-DANIKA = polar_shift(DANIKA_COMBO_DICT["support_eq"])
-ANASTASIA = polar_shift(anastasia_support("sc", [occ(CROWN_HITS, OFF)]))
+CYNO = CYNO_COMBO_DICT["sc_combo"]
+YAE = YAE_COMBO_DICT["yae_sc_long_combo"]
+DANIKA = DANIKA_COMBO_DICT["support_eq"]
+ANASTASIA = anastasia_support("sc", [occ(CROWN_HITS, OFF)])
 
 
 def enemy() -> Enemy:
@@ -80,7 +80,7 @@ def cyno_build(constellation: int = 1, weapon=DEATHMATCH.at(1), artifacts=(DISEN
     ), danika_c2_hits)
 
 
-def anastasia_build(constellation: int = 0, weapon=ARTEMISIA, artifacts=(STELLAR_SET,),
+def anastasia_build(constellation: int = 0, weapon=BREEZEBORNE_BOW.at(1), artifacts=(STELLAR_SET,),
                     main_stats=MAIN_ATK, danika_c2_hits: int = 0,
                     extra_buffs: Sequence[Buff] = ()) -> Build:
     return _c2(Build(
@@ -121,10 +121,10 @@ def yae_build(constellation: int = 1, weapon=ECHOES.at(5), artifacts=(DISENCHANT
     ), danika_c2_hits)
 
 
-def make_team(name: str, cyno_c: int = 2, cyno_weapon=SCARLET_SANDS.at(2),
-              anastasia_c: int = 0, anastasia_weapon=ELEGY_BOW.at(2),
+def make_team(name: str, cyno_c: int = 1, cyno_weapon=DEATHMATCH.at(1),
+              anastasia_c: int = 0, anastasia_weapon=BREEZEBORNE_BOW.at(1),
               danika_c: int = 0, danika_weapon=ATONEMENT,
-              yae_c: int = 2, yae_weapon=KAGURA.at(1),
+              yae_c: int = 1, yae_weapon=ECHOES.at(5),
               cyno_artifacts=(DISENCHANTMENT,), anastasia_artifacts=(MILLELITH,),
               danika_artifacts=(HEART_OF_FORGE,), yae_artifacts=(DISENCHANTMENT,)) -> Team:
     c2 = danika_c >= 2
@@ -147,7 +147,7 @@ def make_team(name: str, cyno_c: int = 2, cyno_weapon=SCARLET_SANDS.at(2),
 
 
 def team_name(cyno_c: int = 1, cyno_weapon=DEATHMATCH.at(1),
-              anastasia_c: int = 0, anastasia_weapon=ARTEMISIA,
+              anastasia_c: int = 0, anastasia_weapon=BREEZEBORNE_BOW.at(1),
               danika_c: int = 0, danika_weapon=ATONEMENT,
               yae_c: int = 1, yae_weapon=ECHOES.at(5)) -> str:
     _dw = (f" ({danika_weapon.name})" if danika_weapon.name != ATONEMENT.name else "")

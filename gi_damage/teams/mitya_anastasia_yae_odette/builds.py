@@ -5,7 +5,7 @@
 Реакций, наносящих урон, нет. Резонанс — крио (2 крио + 2 электро).
 
 Анастасия — саппорт (Милосердие): корона 10 атак вне поля, Triumph.
-An Unfinished Requiem: +1 стак Polestar всем ударам SC отряда (polar_shift()).
+An Unfinished Requiem: стаки Polestar — polar_always у Анастасии (Team.polar_plan()).
 
 Артефакты: Анастасия — Звёздный сет, Одетта — Сердце горна, Яэ —
 Разочарование. Митя — лучший по DPS из 2+2 на МС и Разочарования
@@ -29,16 +29,16 @@ from ...data.characters.mitya import mitya_dd_rotation, DD_TIME
 from ...data.characters.odette import (odette_burst_buffs, ODETTE_BURST_TIME,
                                        ODETTE_COMBO_DICT, ODETTE_BURST_SOURCES)
 from ...data.characters.yae import YAE_COMBO_DICT
-from ...data.characters.anastasia import anastasia_support, polar_shift, CROWN_HITS
+from ...data.characters.anastasia import anastasia_support, CROWN_HITS
 from ...data.weapons import *
 
 TEAM_BUFFS = (
-    Buff(S.CRIT_VALUE, 0.30, target=TEAM,
-         source="Крио резонанс: +15% крит. шанса (0.30 крит-вэлью)"),
+    Buff(S.CRIT_VALUE, 0.15, target=TEAM,
+         source="Крио резонанс (ослаблен ×0.5: 2 электро в отряде): +7.5% крит. шанса (0.15 крит-вэлью)"),
 )
 
 #: Время каждого персонажа в ротации (секунды)
-TIMES = {"Митя": DD_TIME, "Анастасия": 3.0, "Яэ Мико": 2.4, "Одетта": 2.4}
+TIMES = {"Митя": DD_TIME, "Анастасия": 3.5, "Яэ Мико": 2.4, "Одетта": 2.4}
 
 ROTATION = "Одетта EE/Яэ EEE/Анастасия EQ/Митя hE CA Q CA CA"
 
@@ -51,10 +51,10 @@ MITYA_DISENCHANTMENT = (DISENCHANTMENT,)
 MITYA_ARTIFACT_OPTIONS = (MITYA_EM_2_2, MITYA_DISENCHANTMENT)
 
 #: Комбо с +1 стаком Polestar (Requiem Анастасии). Митя без Валеры и Знати.
-MITYA = polar_shift(mitya_dd_rotation(hit_tags=(ON,), hold_tags=(ON,)))
-ODETTE = polar_shift(ODETTE_COMBO_DICT["odette_ssc_combo"])
-YAE = polar_shift(YAE_COMBO_DICT["yae_sc_short_combo"])
-ANASTASIA = polar_shift(anastasia_support("sc", [occ(CROWN_HITS, OFF)]))
+MITYA = mitya_dd_rotation(hit_tags=(ON,), hold_tags=(ON,))
+ODETTE = ODETTE_COMBO_DICT["odette_ssc_combo"]
+YAE = YAE_COMBO_DICT["yae_sc_short_combo"]
+ANASTASIA = anastasia_support("sc", [occ(CROWN_HITS, OFF)])
 
 
 def enemy() -> Enemy:
@@ -76,7 +76,7 @@ def mitya_build(constellation: int = 0, weapon=SPINDLELUTE, artifacts=MITYA_DISE
     )
 
 
-def anastasia_build(constellation: int = 0, weapon=ARTEMISIA, artifacts=(STELLAR_SET,),
+def anastasia_build(constellation: int = 0, weapon=BREEZEBORNE_BOW.at(1), artifacts=(STELLAR_SET,),
                     main_stats=MAIN_ATK,
                     extra_buffs: Sequence[Buff] = ()) -> Build:
     return Build(
@@ -123,11 +123,11 @@ def odette_build(constellation: int = 0, weapon=SILVER_LIGHT, artifacts=(HEART_O
 
 
 def make_team(name: str, mitya_c: int = 0, mitya_weapon=SPINDLELUTE,
-              anastasia_c: int = 0, anastasia_weapon=ARTEMISIA,
+              anastasia_c: int = 0, anastasia_weapon=BREEZEBORNE_BOW.at(1),
               yae_c: int = 1, yae_weapon=ECHOES.at(5),
               odette_c: int = 0, odette_weapon=SILVER_LIGHT,
-              mitya_artifacts=MITYA_DISENCHANTMENT, anastasia_artifacts=(STELLAR_SET,),
-              yae_artifacts=(DISENCHANTMENT,), odette_artifacts=(HEART_OF_FORGE,)) -> Team:
+              mitya_artifacts=MITYA_DISENCHANTMENT, anastasia_artifacts=(HEART_OF_FORGE,),
+              yae_artifacts=(DISENCHANTMENT,), odette_artifacts=(STELLAR_SET,)) -> Team:
     return Team(
         name=name,
         builds=[
@@ -159,7 +159,7 @@ def best_team(name: str, **kw) -> Team:
 
 
 def team_name(mitya_c: int = 0, mitya_weapon=SPINDLELUTE,
-              anastasia_c: int = 0, anastasia_weapon=ARTEMISIA,
+              anastasia_c: int = 0, anastasia_weapon=BREEZEBORNE_BOW.at(1),
               yae_c: int = 1, yae_weapon=ECHOES.at(5),
               odette_c: int = 0, odette_weapon=SILVER_LIGHT) -> str:
     return (f"C{mitya_c}R{mitya_weapon.refinement} Митя, "

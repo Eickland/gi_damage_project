@@ -32,9 +32,9 @@ TEAM_BUFFS = (
 )
 
 #: Время каждого персонажа в ротации (секунды)
-TIMES = {"Мидзуки": 13.7, "Диона": 1.9, "Одетта": 2.4, "Фарузан": 1.5}
+TIMES = {"Мидзуки": 12.5, "Диона": 2.3, "Одетта": 2.4, "Фарузан": 1.5}
 
-ROTATION = "Faruzan EQ / Diona hEQ/ Odette EE /Midzuki EQ"
+ROTATION = "Faruzan EQ / Diona hEQ/ Odette EQE /Midzuki EQ"
 
 
 # =========================================================================== #
@@ -136,15 +136,15 @@ def reactions(in_dreamdrifter: bool = True):
     d = (DREAM,) if in_dreamdrifter else ()
     return (
         # Мидзуки на поле -> её реакции всегда внутри окна
-        ssw_anemo("Мидзуки", 2, *d,BREEZEBORNE,FROSTGLOW, name="SSW анемо (Мидзуки)"),
-        ssw_anemo("Мидзуки", 8, INST, *d,BREEZEBORNE, name="SSW анемо (Мидзуки, Инструктор)"),
+        ssw_anemo("Мидзуки", 2, *d,FROSTGLOW, name="SSW анемо (Мидзуки)"),
+        ssw_anemo("Мидзуки", 8, INST, *d, name="SSW анемо (Мидзуки, Инструктор)"),
         # Фарузан триггерит со своего поля — Мидзуки в этот момент НЕ в Дрейфе.
         # Если по факту иначе, добавьте сюда *d.
-        ssw_anemo("Фарузан", 4, INST, *d,BREEZEBORNE,FROSTGLOW, name="SSW анемо (Фарузан, Инструктор)"),
-        ssw_anemo("Фарузан", 3, INST,BREEZEBORNE,FROSTGLOW, name="SSW анемо (Фарузан, Инструктор)"),
+        ssw_anemo("Фарузан", 4, INST, *d,FROSTGLOW, name="SSW анемо (Фарузан, Инструктор)"),
+        ssw_anemo("Фарузан", 3, INST,FROSTGLOW, name="SSW анемо (Фарузан, Инструктор)"),
         # Детонации вихря: проверьте, попадают ли они в окно.
-        ssw_vortex(3, 3, INST, *d,VV_CRYO,BREEZEBORNE,FROSTGLOW, name="SSW вихрь ×3 стака"),
-        ssw_vortex(3, 1, INST,VV_CRYO,BREEZEBORNE,FROSTGLOW, name="SSW вихрь ×3 стака"),
+        ssw_vortex(3, 3, INST, *d,VV_CRYO,FROSTGLOW, name="SSW вихрь ×3 стака"),
+        ssw_vortex(3, 1, INST,VV_CRYO,FROSTGLOW, name="SSW вихрь ×3 стака"),
     )
 
 
@@ -163,7 +163,7 @@ def make_team(name: str, mizuki_c: int, mizuki_weapon, odette_c, odette_weapon, 
         builds=[
             mizuki_build(constellation=mizuki_c, weapon=mizuki_weapon, artifacts=mizuki_artifacts),
             diona_build(constellation=diona_c, artifacts=diona_artifacts),
-            odette_build(constellation=odette_c, weapon=odette_weapon),
+            odette_build(constellation=odette_c, weapon=odette_weapon,use_burst=True),
             faruzan_build(artifacts=faruzan_artifacts,weapon=faruzan_weapon),
         ],
         enemy=enemy(),

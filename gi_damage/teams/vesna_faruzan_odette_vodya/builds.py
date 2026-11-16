@@ -30,7 +30,7 @@ from ...data.weapons import *
 #: Время каждого персонажа в ротации (секунды)
 TIMES = {"Весна": 13.6, "Фарузан": 1.5, "Одетта": 2.4, "Водяница": 1.5}
 
-ROTATION = "Фарузан E Q/Odette EE/  /Водяница E /Vesna E sEsE N3CsE Q sE N3CsE"
+ROTATION = "Odette EE/Фарузан EQ/Водяница E /Vesna E sEsE N3CsE Q sE N3CsE"
 
 
 # =========================================================================== #
@@ -53,7 +53,7 @@ def enemy() -> Enemy:
 def vesna_build(constellation: int, weapon, artifacts, extra_buffs: Sequence[Buff] = ()) -> Build:
 
     return Build(
-        character=VESNA_COMBO_DICT["ssw_burst_combo"],
+        character=VESNA_COMBO_DICT["vesna_ssw_burst_combo"],
         constellation=constellation,
         weapon=weapon,
         artifacts=(artifacts,),
@@ -130,10 +130,10 @@ def reactions():
     in_dreamdrifter=False — если реакции происходят вне окна.
     """
     return (
-        ssw_anemo("Весна", 8,BREEZEBORNE,FROSTGLOW, trigger_tags=(VODYA_LEAD,),char_tags={"Одетта": (VODYA_CHORUS,)}, name="SSW анемо (Весна)"),
-        ssw_anemo("Фарузан", 2,BREEZEBORNE,FROSTGLOW,char_tags={"Одетта": (VODYA_CHORUS,)}, name="SSW анемо (Фарузан)"),
-        ssw_anemo("Фарузан", 4,BREEZEBORNE,FROSTGLOW, name="SSW анемо (Фарузан)"),
-        ssw_vortex(2, 4,BREEZEBORNE,FROSTGLOW,VV_CRYO, name="SSW вихрь ×3 стака"),
+        ssw_anemo("Весна", 8,FROSTGLOW, trigger_tags=(VODYA_LEAD,),char_tags={"Одетта": (VODYA_CHORUS,)}, name="SSW анемо (Весна)"),
+        ssw_anemo("Фарузан", 2,FROSTGLOW,char_tags={"Одетта": (VODYA_CHORUS,)}, name="SSW анемо (Фарузан)"),
+        ssw_anemo("Фарузан", 4,FROSTGLOW, name="SSW анемо (Фарузан)"),
+        ssw_vortex(2, 4,FROSTGLOW,VV_CRYO, name="SSW вихрь ×3 стака"),
     )
 
 
@@ -164,10 +164,10 @@ def make_team(name: str, vesna_c: int, vesna_weapon, odette_c, odette_weapon, ve
 
 def all_teams() -> Dict[str, Team]:
     variants = (
-        ("Весна C0R0, Одетта C0R0, Фарузан C6R0, Водяница C0R0", 0, EMBERWELL, 0, SILVER_LIGHT, SCARLET_PROOF, MILLELITH, TTDS_HALF_CATALYSATOR,0,VIRIDESCENT,FAV_BOW),
-        ("Весна C0R1, Одетта C0R0, Фарузан C6R0, Водяница C0R0", 0, CHRYSALIS.at(1), 0, SILVER_LIGHT, SCARLET_PROOF, MILLELITH, TTDS_HALF_CATALYSATOR,0,VIRIDESCENT,FAV_BOW),
-        ("Весна C0R1, Одетта C0R0, Фарузан C6R1, Водяница C0R0", 0, CHRYSALIS.at(1), 0, SILVER_LIGHT, SCARLET_PROOF, MILLELITH, TTDS_HALF_CATALYSATOR,0,VIRIDESCENT,BREEZEBORNE_BOW),
-        ("Весна C0R1, Одетта C0R0, Фарузан C6R3, Водяница C0R1", 0, CHRYSALIS.at(1), 0, SILVER_LIGHT, SCARLET_PROOF, MILLELITH, MAELSTROM,0,VIRIDESCENT,BREEZEBORNE_BOW.at(3)),
+        ("Весна C0R0, Одетта C0R0, Фарузан C6R0, Водяница C0R0", 0, EMBERWELL, 0, SILVER_LIGHT, SCARLET_PROOF, MILLELITH, TTDS_HALF_CATALYSATOR,0,NOBLESSE,FAV_BOW),
+        ("Весна C0R1, Одетта C0R0, Фарузан C6R0, Водяница C0R0", 0, CHRYSALIS.at(1), 0, SILVER_LIGHT, SCARLET_PROOF, MILLELITH, TTDS_HALF_CATALYSATOR,0,NOBLESSE,FAV_BOW),
+        ("Весна C0R1, Одетта C0R0, Фарузан C6R1, Водяница C0R0", 0, CHRYSALIS.at(1), 0, SILVER_LIGHT, SCARLET_PROOF, MILLELITH, TTDS_HALF_CATALYSATOR,0,NOBLESSE,BREEZEBORNE_BOW),
+        ("Весна C0R1, Одетта C0R0, Фарузан C6R3, Водяница C0R1", 0, CHRYSALIS.at(1), 0, SILVER_LIGHT, SCARLET_PROOF, MILLELITH, MAELSTROM,0,NOBLESSE,BREEZEBORNE_BOW.at(3)),
     )
     return {name: make_team(name, c, vesna_w, c_odette, odette_w, mizuki_art, vodya_art,vodya_w,vodya_c, fara_art,fara_w) for name, 
             c, vesna_w, c_odette, odette_w, mizuki_art, vodya_art, vodya_w,vodya_c, fara_art, fara_w in variants}

@@ -34,10 +34,11 @@ FARUZAN_COMBO_DICT = {
     "ssw_combo" : with_rotation(
         FARUZAN_KIT, sources=(
         elemental("Использование навыка", "atk", 2.6784, "anemo", "skill",
-                  [occ(1, ON,),]),
+                  [occ(1, ON)]),
         elemental("Обвал под давлением", "atk", 1.944, "anemo", "skill",
-                  [occ(2, OFF,), occ(4, OFF, DREAM)]),
+                  [occ(2, OFF),
+                   occ(4, OFF, DREAM)]),
         elemental("Использование взрыва стихии", "atk", 6.7968, "anemo", "burst",
-                  [occ(1, ON,),]),             
+                  [occ(1, ON)]),             
         ))
 }

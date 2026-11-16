@@ -36,7 +36,7 @@ from ...data.weapons import *
 TEAM_BUFFS: tuple = ()
 
 #: Время каждого персонажа в ротации (секунды)
-TIMES = {"Сайно": 15.0, "Даника": 3.0, "Яэ Мико": 2.4, "Одетта": 2.4}
+TIMES = {"Сайно": 15.0, "Даника": 3.25, "Яэ Мико": 2.4, "Одетта": 2.4}
 
 ROTATION = "Одетта EE/Яэ EEE/Даника EQ/Сайно QE (N2 CA N4 E)×3"
 
@@ -88,7 +88,7 @@ def yae_build(constellation: int = 1, weapon=ECHOES.at(5), artifacts=(DISENCHANT
               main_stats=MAIN_ATK, danika_c2_hits: int = 0,
               extra_buffs: Sequence[Buff] = ()) -> Build:
     return _c2(Build(
-        character=YAE_COMBO_DICT["yae_sc_long_combo"],
+        character=YAE_COMBO_DICT["yae_sc_short_combo"],
         constellation=constellation,
         weapon=weapon,
         artifacts=artifacts,

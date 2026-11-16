@@ -40,9 +40,6 @@ TWR_EM = 200.0                # C1 Radiance: Together We Rise, +200 МС
 C2_ELECTRO_BONUS = 0.10 * 5   # C2: +10% электро урона × 5 стаков
 C2_SC_BONUS = 0.16 * 5        # C2: +16% урона звёздного проводника × 5 стаков
 
-#: Стаки «полярности» для звёздного проводника Сайно (см. formulas.stellar_conduct_multiplier).
-#: Взято как у Сандроне (основной персонаж на поле) — поправьте при необходимости.
-CYNO_POLAR_STACKS = 10
 
 #: Тег источника для +35% Judication (бафф «dmg_bonus.judication»)
 JUDICATION = "judication"
@@ -53,6 +50,7 @@ CYNO_KIT = Character(
     element="electro",
     weapon_type="polearm",
     default_field=ON,
+    polar_on_field=4.0,   # стаки Polestar отряду
     crit_mode="balance",
     stats={
         S.BASE_ATK: 318.0,
@@ -100,58 +98,101 @@ CYNO_KIT = Character(
 )
 
 
-def _na(name: str, mv: float, count: float, tags) -> object:
+def _na(name: str, mv: float, occurrences) -> object:
     """Обычная атака в Pathclearer: электро, +150% МС к базе (A4)."""
-    return elemental(name, "atk", mv, "electro", "normal", [occ(count, *tags)],
+    return elemental(name, "atk", mv, "electro", "normal", occurrences,
                      extra_scaling=(("em", NA_EM),))
 
 
-def _starsame(name: str, count: float, tags) -> object:
-    return stellar_conduct(name, "atk", STARSAME_ATK, "electro",
-                           [occ(count, *tags)], kind="sc_skill",
-                            extra_tags=(STARSAME,),
-                           polar_stacks=CYNO_POLAR_STACKS)
-
-
-#: Все временные окна отряда Одетта/Алеша/Диона, в которых находится Сайно.
-#: Расставляйте по ударам, как нужно.
-_SC_TEAM_TAGS = (ON, PACTSWORN, CATS_TAIL, NOBLE,ELEGY, OFFENSIVE_DIRECTIVE)
-#: То же без Offensive Directive Валеры (15 стаков на ротацию)
-_SC_TEAM_TAGS_NO_OD = tuple(t for t in _SC_TEAM_TAGS if t != OFFENSIVE_DIRECTIVE)
-
+#: Сайно всегда на поле. Каждая строка occ(N, теги...) — N ударов в этом
+#: наборе окон; одинаковые удары с разными баффами идут строками подряд.
 CYNO_COMBO_DICT = {
     # Q, E, затем 3 × (N2, CA, N4, E с Judication). 15 с.
     "sc_combo": with_rotation(
         CYNO_KIT,
         sources=(
-            _na("Pathclearer — 1-й удар", NA_MV[1], 3 * 2, _SC_TEAM_TAGS),
-            _na("Pathclearer — 2-й удар", NA_MV[2], 3 * 2, _SC_TEAM_TAGS),
-            _na("Pathclearer — 3-й удар", NA_MV[3], 3 * 1, _SC_TEAM_TAGS),
-            _na("Pathclearer — 4-й удар (2 инстанса)", NA_MV[4], 3 * 2, _SC_TEAM_TAGS),
-            elemental("Pathclearer — заряженная атака", "atk", CA_MV, "electro", "charged",
-                      [occ(3, *_SC_TEAM_TAGS)]),
-            elemental("Mortuary Rite", "atk", MORTUARY_RITE_MV, "electro", "skill",
-                      [occ(1, *_SC_TEAM_TAGS)]),
-            elemental("Mortuary Rite (Judication)", "atk", MORTUARY_RITE_MV, "electro", "skill",
-                      [occ(3, *_SC_TEAM_TAGS)], extra_tags=(JUDICATION,)),
+            _na("Pathclearer — 1-й удар", NA_MV[1], [
+                occ(6, ON, PACTSWORN, CATS_TAIL, NOBLE, ELEGY, OFFENSIVE_DIRECTIVE),
+            ]),
+            _na("Pathclearer — 2-й удар", NA_MV[2], [
+                occ(6, ON, PACTSWORN, CATS_TAIL, NOBLE, ELEGY, OFFENSIVE_DIRECTIVE),
+            ]),
+            _na("Pathclearer — 3-й удар", NA_MV[3], [
+                occ(3, ON, PACTSWORN, CATS_TAIL, NOBLE, ELEGY, OFFENSIVE_DIRECTIVE),
+            ]),
+            _na("Pathclearer — 4-й удар (2 инстанса)", NA_MV[4], [
+                occ(6, ON, PACTSWORN, CATS_TAIL, NOBLE, ELEGY, OFFENSIVE_DIRECTIVE),
+            ]),
+            elemental("Pathclearer — заряженная атака", "atk", CA_MV, "electro", "charged", [
+                occ(3, ON, PACTSWORN, CATS_TAIL, NOBLE, ELEGY, OFFENSIVE_DIRECTIVE),
+            ]),
+            elemental("Mortuary Rite", "atk", MORTUARY_RITE_MV, "electro", "skill", [
+                occ(1, ON, PACTSWORN, CATS_TAIL, NOBLE, ELEGY, OFFENSIVE_DIRECTIVE),
+            ]),
+            elemental("Mortuary Rite (Judication)", "atk", MORTUARY_RITE_MV, "electro", "skill", [
+                occ(3, ON, PACTSWORN, CATS_TAIL, NOBLE, ELEGY, OFFENSIVE_DIRECTIVE),
+            ], extra_tags=(JUDICATION,)),
             # Одно имя = один источник (Build.all_sources ключует по имени),
             # поэтому разные окна — это разные occurrences одного источника.
-            stellar_conduct("Duststalker Bolt - Starsame (A1)", "atk", STARSAME_ATK, "electro",
-                            [occ(3 * 2, *_SC_TEAM_TAGS), occ(3 * 1, ON, PACTSWORN, OFFENSIVE_DIRECTIVE)],
-                            kind="skill", extra_tags=(STARSAME,),
-                            polar_stacks=CYNO_POLAR_STACKS),
+            stellar_conduct("Duststalker Bolt - Starsame (A1)", "atk", STARSAME_ATK, "electro", [
+                occ(6, ON, PACTSWORN, CATS_TAIL, NOBLE, ELEGY, OFFENSIVE_DIRECTIVE,SEVEN_SACRED),
+                occ(3, ON, PACTSWORN, OFFENSIVE_DIRECTIVE),
+            ], kind="skill", extra_tags=(STARSAME,)),
         ), # type: ignore
         constellation_sources={
             # Q даёт 4 стака, первый Judication ещё 4 → максимум 8 за Pathclearer.
             # Сайно всегда под Together We Rise (C1), поэтому все — Starsame.
             # Offensive Directive Валеры — 15 стаков: 9 ушли на A1, на C6 остаётся 6 из 8.
-            6: (stellar_conduct("C6: Duststalker Bolt - Starsame", "atk", STARSAME_ATK, "electro",
-                                [occ(6, *_SC_TEAM_TAGS), occ(2, *_SC_TEAM_TAGS_NO_OD)],
-                                kind="sc_skill", extra_tags=(STARSAME,),
-                                polar_stacks=CYNO_POLAR_STACKS),),
+            6: (stellar_conduct("C6: Duststalker Bolt - Starsame", "atk", STARSAME_ATK, "electro", [
+                    occ(6, ON, PACTSWORN, CATS_TAIL, NOBLE, ELEGY, OFFENSIVE_DIRECTIVE,SEVEN_SACRED),
+                    occ(2, ON, PACTSWORN, CATS_TAIL, NOBLE, ELEGY),
+                ], kind="sc_skill", extra_tags=(STARSAME,)),),
+        }, # type: ignore
+    ),
+    # Укороченное: Q, E, затем 2 × (N2, CA, N4, E с Judication). CYNO_SC_SHORT_TIME = 10.5 с.
+    "sc_short_combo": with_rotation(
+        CYNO_KIT,
+        sources=(
+            _na("Pathclearer — 1-й удар", NA_MV[1], [
+                occ(4, ON, PACTSWORN, CATS_TAIL, NOBLE, ELEGY, OFFENSIVE_DIRECTIVE),
+            ]),
+            _na("Pathclearer — 2-й удар", NA_MV[2], [
+                occ(4, ON, PACTSWORN, CATS_TAIL, NOBLE, ELEGY, OFFENSIVE_DIRECTIVE),
+            ]),
+            _na("Pathclearer — 3-й удар", NA_MV[3], [
+                occ(2, ON, PACTSWORN, CATS_TAIL, NOBLE, ELEGY, OFFENSIVE_DIRECTIVE),
+            ]),
+            _na("Pathclearer — 4-й удар (2 инстанса)", NA_MV[4], [
+                occ(4, ON, PACTSWORN, CATS_TAIL, NOBLE, ELEGY, OFFENSIVE_DIRECTIVE),
+            ]),
+            elemental("Pathclearer — заряженная атака", "atk", CA_MV, "electro", "charged", [
+                occ(2, ON, PACTSWORN, CATS_TAIL, NOBLE, ELEGY, OFFENSIVE_DIRECTIVE),
+            ]),
+            elemental("Mortuary Rite", "atk", MORTUARY_RITE_MV, "electro", "skill", [
+                occ(1, ON, PACTSWORN, CATS_TAIL, NOBLE, ELEGY, OFFENSIVE_DIRECTIVE),
+            ]),
+            elemental("Mortuary Rite (Judication)", "atk", MORTUARY_RITE_MV, "electro", "skill", [
+                occ(2, ON, PACTSWORN, CATS_TAIL, NOBLE, ELEGY, OFFENSIVE_DIRECTIVE),
+            ], extra_tags=(JUDICATION,)),
+            stellar_conduct("Duststalker Bolt - Starsame (A1)", "atk", STARSAME_ATK, "electro", [
+                occ(4, ON, PACTSWORN, CATS_TAIL, NOBLE, ELEGY, OFFENSIVE_DIRECTIVE,SEVEN_SACRED),
+                occ(2, ON, PACTSWORN, OFFENSIVE_DIRECTIVE),
+            ], kind="skill", extra_tags=(STARSAME,)),
+        ), # type: ignore
+        constellation_sources={
+            # Стаков по-прежнему максимум 8 (Q 4 + первый Judication 4), обычных
+            # атак на них хватает (12 за 2 цикла). Offensive Directive Валеры —
+            # 15 стаков: 6 ушли на A1, 9 остаётся — все 8 C6 под ним.
+            6: (stellar_conduct("C6: Duststalker Bolt - Starsame", "atk", STARSAME_ATK, "electro", [
+                    occ(8, ON, PACTSWORN, CATS_TAIL, NOBLE, ELEGY, OFFENSIVE_DIRECTIVE,SEVEN_SACRED),
+                ], kind="sc_skill", extra_tags=(STARSAME,)),),
         }, # type: ignore
     ),
 }
+
+#: Время Сайно в ротации для sc_combo / sc_short_combo
+CYNO_SC_TIME = 15.0
+CYNO_SC_SHORT_TIME = 10.5
 
 
 # --------------------------------------------------------------------------- #

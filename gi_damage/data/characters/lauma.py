@@ -42,8 +42,6 @@ HOLD_SKILL_EM = 2.8454
 HOLD_SKILL_LB_EM = 2.736*3       
 SANCTUARY_EM = 3.456 
 SKILL_RES_SHRED = 0.25 
-SANCTUARY_HITS = 9
-
 PALE_HYMN_LB, PALE_HYMN_LB_C3 = 4.0003, 4.7226   # доп. урон лунных бутонов, доли МС
 C2_PALE_HYMN_LB = 4.00
 A1_CR, A1_CD = 0.10, 0.20
@@ -51,7 +49,6 @@ A4_PER_EM, A4_CAP = 0.0004, 0.32
 MOONSIGN_PER_EM, MOONSIGN_CAP = 0.000175, 0.14
 C2_LB_BONUS = 0.40
 C6_SANCTUARY_LB_EM = 1.85
-C6_SANCTUARY_LB_HITS = 8
 C6_ELEVATION = 0.25
 
 LAUMA_TIME = 3.0
@@ -127,11 +124,11 @@ LAUMA_COMBO_DICT = {
             lunar_bloom("Навык (удержание) — лунные бутоны", "em", HOLD_SKILL_LB_EM,
                         [occ(1, ON)], kind="skill"),
             elemental("Frostgrove Sanctuary", "em", SANCTUARY_EM, "dendro", "skill",
-                      [occ(SANCTUARY_HITS, OFF)]),
+                      [occ(9, OFF)]),
         ),
         constellation_sources={
             6: (lunar_bloom("C6: Frostgrove — лунные бутоны", "em", C6_SANCTUARY_LB_EM,
-                            [occ(C6_SANCTUARY_LB_HITS, OFF)], kind="skill"),),
+                            [occ(8, OFF)], kind="skill"),),
         },
     ),
 }

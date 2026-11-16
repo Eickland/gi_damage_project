@@ -5,8 +5,7 @@
 Реакций, наносящих урон, нет. Резонанс — крио и электро (2 + 2).
 
 Анастасия — саппорт (Милосердие), корона — 10 атак вне поля.
-An Unfinished Requiem: +1 стак Polestar всем ударам SC отряда — каждый
-персонаж берётся через polar_shift() (отдельное комбо с +1 стаком).
+An Unfinished Requiem: стаки Polestar — polar_always у Анастасии (Team.polar_plan()).
 
 Артефакты: Анастасия — Звёздный сет, Даника — Сердце горна,
 остальные — Разочарование (у Одетты не Сердце горна, чтобы не было двух
@@ -34,16 +33,16 @@ from ...data.characters.odette import (odette_burst_buffs, ODETTE_BURST_TIME,
                                        ODETTE_COMBO_DICT, ODETTE_BURST_SOURCES)
 from ...data.characters.danika import (DANIKA_COMBO_DICT, C2_ACTIVE_STACKS,
                                        C2_OTHER_STACKS, tag_stellar_conduct_hits)
-from ...data.characters.anastasia import anastasia_support, polar_shift, CROWN_HITS
+from ...data.characters.anastasia import anastasia_support, CROWN_HITS
 from ...data.weapons import *
 
 TEAM_BUFFS = (
-    Buff(S.CRIT_VALUE, 0.30, target=TEAM,
-         source="Крио резонанс: +15% крит. шанса (0.30 крит-вэлью)"),
+    Buff(S.CRIT_VALUE, 0.15, target=TEAM,
+         source="Крио резонанс (ослаблен ×0.5: 2 электро в отряде): +7.5% крит. шанса (0.15 крит-вэлью)"),
 )
 
 #: Время каждого персонажа в ротации (секунды)
-TIMES = {"Сайно": 15.0, "Анастасия": 3.0, "Даника": 3.0, "Одетта": 2.4}
+TIMES = {"Сайно": 15.0, "Анастасия": 3.5, "Даника": 3.25, "Одетта": 2.4}
 
 ROTATION = "Одетта EE/Даника EQ/Анастасия EQ/Сайно QE (N2 CA N4 E)×3"
 
@@ -52,10 +51,10 @@ FULL_ATK = {S.ATK_PCT: 0.466 * 3}                            # АТК/АТК/А�
 MAIN_EM = {S.BASE_EM: 187.0 * 2, S.CRIT_VALUE: 0.622}        # МС/МС/крит (Сайно)
 
 #: Комбо с +1 стаком Polestar (Requiem Анастасии)
-CYNO = polar_shift(CYNO_COMBO_DICT["sc_combo"])
-ODETTE = polar_shift(ODETTE_COMBO_DICT["odette_ssc_combo_cyno"])
-DANIKA = polar_shift(DANIKA_COMBO_DICT["support_eq"])
-ANASTASIA = polar_shift(anastasia_support("sc", [occ(CROWN_HITS, OFF)]))
+CYNO = CYNO_COMBO_DICT["sc_combo"]
+ODETTE = ODETTE_COMBO_DICT["odette_ssc_combo_cyno"]
+DANIKA = DANIKA_COMBO_DICT["support_eq"]
+ANASTASIA = anastasia_support("sc", [occ(CROWN_HITS, OFF)])
 
 
 def enemy() -> Enemy:
@@ -84,7 +83,7 @@ def cyno_build(constellation: int = 1, weapon=DEATHMATCH.at(1), artifacts=(DISEN
     ), danika_c2_hits)
 
 
-def anastasia_build(constellation: int = 0, weapon=ARTEMISIA, artifacts=(STELLAR_SET,),
+def anastasia_build(constellation: int = 0, weapon=BREEZEBORNE_BOW.at(1), artifacts=(STELLAR_SET,),
                     main_stats=MAIN_ATK, danika_c2_hits: int = 0,
                     extra_buffs: Sequence[Buff] = ()) -> Build:
     return _c2(Build(
@@ -111,7 +110,7 @@ def danika_build(constellation: int = 0, weapon=ATONEMENT, artifacts=(HEART_OF_F
     ), C2_OTHER_STACKS if constellation >= 2 else 0)
 
 
-def odette_build(constellation: int = 0, weapon=SILVER_LIGHT, artifacts=(DISENCHANTMENT,),
+def odette_build(constellation: int = 0, weapon=SILVER_LIGHT, artifacts=(STELLAR_SET,),
                  use_burst: bool | None = None, danika_c2_hits: int = 0,
                  extra_buffs: Sequence[Buff] = ()) -> Build:
     """use_burst=None — авто: до C4 не применяем, с C4 применяем."""
@@ -131,7 +130,7 @@ def odette_build(constellation: int = 0, weapon=SILVER_LIGHT, artifacts=(DISENCH
 
 
 def make_team(name: str, cyno_c: int = 1, cyno_weapon=DEATHMATCH.at(1),
-              anastasia_c: int = 0, anastasia_weapon=ARTEMISIA,
+              anastasia_c: int = 0, anastasia_weapon=BREEZEBORNE_BOW.at(1),
               danika_c: int = 0, danika_weapon=ATONEMENT,
               odette_c: int = 0, odette_weapon=SILVER_LIGHT,
               cyno_artifacts=(DISENCHANTMENT,), anastasia_artifacts=(MILLELITH,),
@@ -156,7 +155,7 @@ def make_team(name: str, cyno_c: int = 1, cyno_weapon=DEATHMATCH.at(1),
 
 
 def team_name(cyno_c: int = 1, cyno_weapon=DEATHMATCH.at(1),
-              anastasia_c: int = 0, anastasia_weapon=ARTEMISIA,
+              anastasia_c: int = 0, anastasia_weapon=BREEZEBORNE_BOW.at(1),
               danika_c: int = 0, danika_weapon=ATONEMENT,
               odette_c: int = 0, odette_weapon=SILVER_LIGHT) -> str:
     _dw = (f" ({danika_weapon.name})" if danika_weapon.name != ATONEMENT.name else "")

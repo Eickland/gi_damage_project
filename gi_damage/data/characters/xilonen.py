@@ -32,7 +32,6 @@ XILONEN_NAME = "Шилонен"
 #  Константы                                                                   #
 # --------------------------------------------------------------------------- #
 SKILL_MV = 3.2256                     # выпад, доли ЗЩ
-SKILL_CASTS = 2                       # E до и после Сандроне
 
 RES_SHRED, RES_SHRED_C3 = 0.36, 0.45
 SHRED_ELEMENTS = ("electro", "cryo", "pyro", "hydro", "geo")
@@ -42,7 +41,7 @@ C2_PYRO_ATK = 0.45
 C2_HYDRO_HP = 0.45
 C2_CRYO_CRIT_DMG = 0.60
 
-XILONEN_TIME = 1.2 * SKILL_CASTS      # 2.4 с
+XILONEN_TIME = 1.2 * 2      # 2.4 с
 
 
 def _for_element(element: str, value: float):
@@ -102,7 +101,7 @@ XILONEN_COMBO_DICT = {
         XILONEN_KIT,
         sources=(
             elemental("Скретч Йоуаль — выпад", "def", SKILL_MV, "geo", "skill",
-                      [occ(SKILL_CASTS, ON)]),
+                      [occ(2, ON)]),
         ),
     ),
 }

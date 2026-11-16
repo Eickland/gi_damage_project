@@ -8,8 +8,7 @@
 
 Окна баффов на отрезках комбо Анастасии [hEQ, N5 sE, N5 sE, N5 sE]:
     отдельных окон нет (баффы C6 Алеши — активному персонажу, на всё комбо).
-An Unfinished Requiem: +1 стак Polestar всем ударам SC отряда (polar_shift());
-у ударов Анастасии итого 9 стаков.
+An Unfinished Requiem: стаки Polestar — polar_always у Анастасии (Team.polar_plan()).
 
 Артефакты: Анастасия — Звёздный сет, Даника — Миллелит (полная АТК), Алеша — Сердце горна, Одетта — Разочарование.
 C2 Даники (danika_c=2): стаки — Анастасия 10, остальные по 7.
@@ -28,7 +27,7 @@ from ...data.artifacts import *
 from ...data.artifacts_presets import *
 from ...data.tags import *
 from ...data.characters.danika import C2_ACTIVE_STACKS, C2_OTHER_STACKS, tag_stellar_conduct_hits
-from ...data.characters.anastasia import anastasia_dd, polar_shift, DD_TIME, DD_TIME_SHORT, DD_POLAR_STACKS
+from ...data.characters.anastasia import ANASTASIA_COMBO_DICT, DD_TIME, DD_TIME_SHORT
 from ...data.characters.danika import DANIKA_COMBO_DICT
 from ...data.characters.alyosha import ALYOSHA_COMBO_DICT
 from ...data.characters.odette import (odette_burst_buffs, ODETTE_BURST_TIME,
@@ -36,12 +35,12 @@ from ...data.characters.odette import (odette_burst_buffs, ODETTE_BURST_TIME,
 from ...data.weapons import *
 
 TEAM_BUFFS = (
-    Buff(S.CRIT_VALUE, 0.30, target=TEAM,
-         source="Крио резонанс: +15% крит. шанса (0.30 крит-вэлью)"),
+    Buff(S.CRIT_VALUE, 0.15, target=TEAM,
+         source="Крио резонанс (ослаблен ×0.5: 2 электро в отряде): +7.5% крит. шанса (0.15 крит-вэлью)"),
 )
 
 #: Время каждого персонажа в ротации (секунды)
-TIMES = {"Анастасия": DD_TIME, "Даника": 3.0, "Алеша": 1.9, "Одетта": 2.4}
+TIMES = {"Анастасия": DD_TIME_SHORT, "Даника": 3.25, "Алеша": 1.9, "Одетта": 2.4}
 
 ROTATION = "Алеша EQ/Одетта EE/Даника EQ/Анастасия hEQ (N5 sE)×3"
 ROTATION_SHORT = ROTATION.replace("hEQ (N5 sE)×3", "hEQ N5sE N5sE sE")
@@ -50,15 +49,13 @@ MAIN_ATK = {S.ATK_PCT: 0.466 * 2, S.CRIT_VALUE: 0.622}       # АТК/АТК/к�
 MAIN_EM = {S.BASE_EM: 187.0 * 2, S.CRIT_VALUE: 0.622}        # МС/МС/крит
 FULL_ATK = {S.ATK_PCT: 0.466 * 3}                            # АТК/АТК/АТК (Даника)
 
-#: Теги отрезков комбо Анастасии: hEQ, N5 sE №1, №2, №3
-SEG_TAGS = ((ON,), (ON,), (ON,), (ON,))
 
 #: Комбо с +1 стаком Polestar (Requiem Анастасии): полное и короткое
-ANASTASIA = polar_shift(anastasia_dd("sc", SEG_TAGS, polar_stacks=DD_POLAR_STACKS - 1))
-ANASTASIA_SHORT = polar_shift(anastasia_dd("sc", SEG_TAGS, polar_stacks=DD_POLAR_STACKS - 1, n5=2))
-DANIKA = polar_shift(DANIKA_COMBO_DICT["support_eq"])
+ANASTASIA = ANASTASIA_COMBO_DICT["dd_sc"]
+ANASTASIA_SHORT = ANASTASIA_COMBO_DICT["dd_sc_short"]
+DANIKA = DANIKA_COMBO_DICT["support_eq"]
 ALYOSHA = ALYOSHA_COMBO_DICT["sc_combo"]
-ODETTE = polar_shift(ODETTE_COMBO_DICT["odette_ssc_combo"])
+ODETTE = ODETTE_COMBO_DICT["odette_ssc_combo"]
 
 
 def enemy() -> Enemy:
@@ -70,8 +67,8 @@ def _c2(build: Build, hits: int) -> Build:
     return tag_stellar_conduct_hits(build, DANIKA_C2, hits)
 
 
-def anastasia_build(constellation: int = 0, weapon=ARTEMISIA, artifacts=(STELLAR_SET,),
-                    main_stats=MAIN_ATK, danika_c2_hits: int = 0, short: bool = False,
+def anastasia_build(constellation: int = 0, weapon=ARTEMISIA, artifacts=(DISENCHANTMENT,),
+                    main_stats=MAIN_ATK, danika_c2_hits: int = 0, short: bool = True,
                     extra_buffs: Sequence[Buff] = ()) -> Build:
     """short=True — короткое комбо hEQ N5sE N5sE sE (13.2 с)."""
     return _c2(Build(
@@ -131,8 +128,8 @@ def odette_build(constellation: int = 0, weapon=SILVER_LIGHT, artifacts=(DISENCH
     ), danika_c2_hits)
 
 
-def make_team(name: str, anastasia_c: int = 0, anastasia_weapon=ARTEMISIA.at(5),
-              anastasia_artifacts=(STELLAR_SET,), short: bool = False,
+def make_team(name: str, anastasia_c: int = 0, anastasia_weapon=ARTEMISIA.at(1),
+              anastasia_artifacts=(DISENCHANTMENT,), short: bool = True,
               danika_c: int = 0, danika_weapon=ATONEMENT, danika_artifacts=(MILLELITH,),
               alyosha_c: int = 6, alyosha_weapon=FAV_LANCE, alyosha_artifacts=(HEART_OF_FORGE,),
               odette_c: int = 0, odette_weapon=SILVER_LIGHT, odette_artifacts=(DISENCHANTMENT,)) -> Team:

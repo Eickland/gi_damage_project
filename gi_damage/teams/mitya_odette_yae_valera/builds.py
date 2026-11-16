@@ -58,7 +58,7 @@ def enemy() -> Enemy:
 def mitya_build(constellation: int = 0, weapon=SPINDLELUTE, artifacts=MITYA_DISENCHANTMENT,
                 main_stats=MITYA_MAIN, extra_buffs: Sequence[Buff] = ()) -> Build:
     return Build(
-        character=MITYA_COMBO_DICT["dd_overload_valera"],
+        character=MITYA_COMBO_DICT["dd_overload"],
         constellation=constellation,
         weapon=weapon,
         artifacts=artifacts,
@@ -165,7 +165,7 @@ def team_name(mitya_c: int = 0, mitya_weapon=SPINDLELUTE, valera_c: int = 6,
 VARIANTS = (
     {},
     {"valera_c": 2},
-    {"valera_c": 6},
+    {"valera_c": 6,"mitya_c": 2,"mitya_weapon": RELIQUARY_OF_TRUTH},
     {"mitya_weapon": STARSEALED},
     {"mitya_c": 1},
     {"mitya_c": 2},

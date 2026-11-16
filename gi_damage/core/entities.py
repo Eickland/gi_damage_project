@@ -37,6 +37,9 @@ class Constellation:
     #: Изменения уже существующих источников урона: {имя источника: функция(src)->src}
     patches: Mapping[str, Callable[[DamageSource], DamageSource]] = field(default_factory=dict)
     multipliers: Mapping[str, ExtraMultiplier] = field(default_factory=dict)
+    #: Прибавка к стакам Polestar отряда от созвездия (см. Character)
+    polar_always: float = 0.0
+    polar_on_field: float = 0.0
 
 
 # --------------------------------------------------------------------------- #
@@ -118,6 +121,11 @@ class Character:
     multipliers: Mapping[str, ExtraMultiplier] = field(default_factory=dict)
     crit_mode: str = "expected"
     default_field: str = "off_field"
+    #: Стаки Polestar (звёздный проводник), которые персонаж даёт отряду:
+    #: polar_always — всегда (саппорты, пассивки);
+    #: polar_on_field — только пока он ДД на поле (см. Team.polar_plan()).
+    polar_always: float = 0.0
+    polar_on_field: float = 0.0
     note: str = ""
 
 
@@ -272,19 +280,34 @@ class Build:
         """Источники урона с учётом созвездий (добавления и патчи)."""
         sources = {s.name: s for s in self.character.sources}
         order = [s.name for s in self.character.sources]
+        seen_patches: List[Mapping[str, Callable]] = []
         for c in self.active_constellations():
             for name, patch in c.patches.items():
                 if name in sources:
                     sources[name] = patch(sources[name])
+            seen_patches.append(c.patches)
             for s in c.sources:
                 if s.name not in sources:
                     order.append(s.name)
+                # патчи этого и предыдущих созвездий действуют и на источники,
+                # добавленные созвездием (например, C6 по множителю таланта C3)
+                for patches in seen_patches:
+                    if s.name in patches:
+                        s = patches[s.name](s)
                 sources[s.name] = s
         for s in self.extra_sources:
             if s.name not in sources:
                 order.append(s.name)
             sources[s.name] = s
         return [sources[n] for n in order]
+
+    def polar_always(self) -> float:
+        """Стаки Polestar, которые сборка даёт отряду всегда."""
+        return self.character.polar_always + sum(c.polar_always for c in self.active_constellations())
+
+    def polar_on_field(self) -> float:
+        """Стаки Polestar, которые сборка даёт, пока она ДД на поле."""
+        return self.character.polar_on_field + sum(c.polar_on_field for c in self.active_constellations())
 
     def extra_multipliers(self) -> Dict[str, ExtraMultiplier]:
         out = dict(self.character.multipliers)

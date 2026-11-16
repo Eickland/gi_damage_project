@@ -5,7 +5,7 @@
 Реакций, наносящих урон, нет. Резонанс — крио (2 крио + 2 электро).
 
 Анастасия — саппорт (Милосердие): корона 10 атак вне поля, Triumph.
-An Unfinished Requiem: +1 стак Polestar всем ударам SC отряда (polar_shift()).
+An Unfinished Requiem: стаки Polestar — polar_always у Анастасии (Team.polar_plan()).
 
 Артефакты: Анастасия — Звёздный сет, Даника — Сердце горна, Алеша — Знать,
 Сандроне — Разочарование.
@@ -34,16 +34,16 @@ from ...data.characters.sandrone import SANDRONE_COMBO_DICT
 from ...data.characters.alyosha import ALYOSHA_COMBO_DICT
 from ...data.characters.danika import (DANIKA_COMBO_DICT, C2_ACTIVE_STACKS,
                                        C2_OTHER_STACKS, tag_stellar_conduct_hits)
-from ...data.characters.anastasia import anastasia_support, polar_shift, CROWN_HITS
+from ...data.characters.anastasia import anastasia_support, CROWN_HITS
 from ...data.weapons import *
 
 TEAM_BUFFS = (
-    Buff(S.CRIT_VALUE, 0.30, target=TEAM,
-         source="Крио резонанс: +15% крит. шанса (0.30 крит-вэлью)"),
+    Buff(S.CRIT_VALUE, 0.15, target=TEAM,
+         source="Крио резонанс (ослаблен ×0.5: 2 электро в отряде): +7.5% крит. шанса (0.15 крит-вэлью)"),
 )
 
 #: Время каждого персонажа в ротации (секунды)
-TIMES = {"Сандроне": 14.5, "Алеша": 1.9, "Даника": 3.0, "Анастасия": 3.0}
+TIMES = {"Сандроне": 14, "Алеша": 1.9, "Даника": 3.25, "Анастасия": 3.5}
 
 ROTATION = "Алеша EQ/Даника EQ/Анастасия EQ/Сандроне E CA EQ CA E CA E"
 
@@ -51,14 +51,14 @@ MAIN_ATK = {S.ATK_PCT: 0.466 * 2, S.CRIT_VALUE: 0.622}       # АТК/АТК/к�
 FULL_ATK = {S.ATK_PCT: 0.466 * 3}                            # АТК/АТК/АТК (Даника)
 
 #: Комбо с +1 стаком Polestar (Requiem Анастасии)
-SANDRONE = polar_shift(SANDRONE_COMBO_DICT["sandrone_sc_combo"])
+SANDRONE = SANDRONE_COMBO_DICT["sandrone_sc_combo"]
 
-DANIKA = polar_shift(DANIKA_COMBO_DICT["support_eq_noble"])
+DANIKA = DANIKA_COMBO_DICT["support_eq_noble"]
 #: Атаки короны в окне Знати Алеши
 CROWN_IN_NOBLE = 4
-ANASTASIA = polar_shift(anastasia_support(
+ANASTASIA = anastasia_support(
     "sc", [occ(CROWN_IN_NOBLE, OFF, NOBLE), occ(CROWN_HITS - CROWN_IN_NOBLE, OFF)],
-    on_tags=(ON, NOBLE)))
+    on_tags=(ON, NOBLE))
 
 
 def enemy() -> Enemy:
@@ -84,7 +84,7 @@ def sandrone_build(constellation: int = 0, weapon=ATONEMENT, artifacts=(DISENCHA
     ), danika_c2_hits)
 
 
-def anastasia_build(constellation: int = 0, weapon=ARTEMISIA, artifacts=(STELLAR_SET,),
+def anastasia_build(constellation: int = 0, weapon=BREEZEBORNE_BOW.at(1), artifacts=(STELLAR_SET,),
                     main_stats=MAIN_ATK, danika_c2_hits: int = 0,
                     extra_buffs: Sequence[Buff] = ()) -> Build:
     return _c2(Build(
@@ -127,10 +127,10 @@ def alyosha_build(constellation: int = 6, weapon=FAV_LANCE, artifacts=(NOBLESSE,
 
 
 def make_team(name: str, sandrone_c: int = 0, sandrone_weapon=ATONEMENT,
-              anastasia_c: int = 0, anastasia_weapon=ARTEMISIA,
+              anastasia_c: int = 0, anastasia_weapon=BREEZEBORNE_BOW.at(1),
               danika_c: int = 0, danika_weapon=ATONEMENT,
               alyosha_c: int = 6, alyosha_weapon=FAV_LANCE,
-              sandrone_artifacts=(DISENCHANTMENT,), anastasia_artifacts=(STELLAR_SET,),
+              sandrone_artifacts=(DISENCHANTMENT,), anastasia_artifacts=(DISENCHANTMENT,),
               danika_artifacts=(HEART_OF_FORGE,), alyosha_artifacts=(NOBLESSE,)) -> Team:
     c2 = danika_c >= 2
     return Team(
@@ -151,7 +151,7 @@ def make_team(name: str, sandrone_c: int = 0, sandrone_weapon=ATONEMENT,
 
 
 def team_name(sandrone_c: int = 0, sandrone_weapon=ATONEMENT,
-              anastasia_c: int = 0, anastasia_weapon=ARTEMISIA,
+              anastasia_c: int = 0, anastasia_weapon=BREEZEBORNE_BOW.at(1),
               danika_c: int = 0, danika_weapon=ATONEMENT,
               alyosha_c: int = 6, alyosha_weapon=FAV_LANCE) -> str:
     _dw = (f" ({danika_weapon.name})" if danika_weapon.name != ATONEMENT.name else "")

@@ -45,7 +45,7 @@ TEAM_BUFFS = (
 )
 
 #: Время каждого персонажа в ротации (секунды)
-TIMES = {"Мидзуки": 10.25, "Диона": 3.65, "Одетта": 2.4, "Фарузан": 2.7}
+TIMES = {"Мидзуки": 13, "Диона": 2.3, "Одетта": 2.4, "Фарузан": 2.2}
 
 ROTATION = "Faruzan EQ/Диона EQ /Midzuki E/ Odette EE/ Midzuki EQ /Faruzan E"
 
@@ -149,15 +149,15 @@ def reactions(in_dreamdrifter: bool = True):
     d = (DREAM,) if in_dreamdrifter else ()
     return (
         # Мидзуки на поле -> её реакции всегда внутри окна
-        ssw_anemo("Мидзуки", 2, *d,BREEZEBORNE,FROSTGLOW, name="SSW анемо (Мидзуки)"),
-        ssw_anemo("Мидзуки", 8, INST,BREEZEBORNE,FROSTGLOW, *d, name="SSW анемо (Мидзуки, Инструктор)"),
+        ssw_anemo("Мидзуки", 2, *d,FROSTGLOW, name="SSW анемо (Мидзуки)"),
+        ssw_anemo("Мидзуки", 8, INST,FROSTGLOW, *d, name="SSW анемо (Мидзуки, Инструктор)"),
         # Фарузан триггерит со своего поля — Мидзуки в этот момент НЕ в Дрейфе.
         # Если по факту иначе, добавьте сюда *d.
-        ssw_anemo("Фарузан", 4, INST,BREEZEBORNE,FROSTGLOW, *d, name="SSW анемо (Фарузан, Инструктор)"),
-        ssw_anemo("Фарузан", 3, INST,BREEZEBORNE,FROSTGLOW, name="SSW анемо (Фарузан, Инструктор)"),
+        ssw_anemo("Фарузан", 4, INST,FROSTGLOW, *d, name="SSW анемо (Фарузан, Инструктор)"),
+        ssw_anemo("Фарузан", 3, INST,FROSTGLOW, name="SSW анемо (Фарузан, Инструктор)"),
         # Детонации вихря: проверьте, попадают ли они в окно.
-        ssw_vortex(3, 3, INST,BREEZEBORNE,FROSTGLOW,VV_CRYO, *d, name="SSW вихрь ×3 стака"),
-        ssw_vortex(3, 1, INST,BREEZEBORNE,FROSTGLOW,VV_CRYO, name="SSW вихрь ×3 стака"),
+        ssw_vortex(3, 3, INST,FROSTGLOW,VV_CRYO, *d, name="SSW вихрь ×3 стака"),
+        ssw_vortex(3, 1, INST,FROSTGLOW,VV_CRYO, name="SSW вихрь ×3 стака"),
     )
 
 

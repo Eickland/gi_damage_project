@@ -54,8 +54,6 @@ C1_EM = 0.60
 C4_DENDRO_RES = 0.20
 C6_ELEVATION = 0.15
 
-SKILLS = 2                               # E × 2
-PHANTASMS = 6                            # sCA × 6
 NEFER_TIME = 8.5
 
 #: Тег ударов Phantasm Performance (для C1)
@@ -136,31 +134,35 @@ NEFER_KIT = Character(
     note="ДД лунных бутонов (Moonsign).",
 )
 
-#: Окна отряда: все удары — под Сахарозой и Инструктором (INST);
-#: 18 ударов теней тратят Pale Hymn Лаумы.
-_TAGS = (ON, INST)
-_SHADE_TAGS = (ON, INST, PALE_HYMN)
-
-
-def _shade(n: int):
-    return lunar_bloom(f"Phantasm — тень, {n}-й удар (LB)", "em", PP_SHADES[n],
-                       [occ(PHANTASMS, *_SHADE_TAGS)], kind="charged",
-                       extra_tags=(PHANTASM,), multipliers=("veil",))
-
-
+#: Каждая строка occ(N, теги...) — N ударов в этом наборе окон; одинаковые
+#: удары с разными баффами идут строками подряд.
+#: Все удары — под Сахарозой и Инструктором (INST); 18 ударов теней
+#: тратят Pale Hymn Лаумы.
 NEFER_COMBO_DICT = {
+    # E × 2, sCA × 6
     "lb_combo": with_rotation(
         NEFER_KIT,
         sources=(
-            elemental("Навык", "atk", SKILL[0], "dendro", "skill", [occ(SKILLS, *_TAGS)],
-                      extra_scaling=(("em", SKILL[1]),)),
-            elemental("Phantasm — 1-й удар Нефер", "atk", PP_NEFER[1][0], "dendro", "charged",
-                      [occ(PHANTASMS, *_TAGS)], extra_scaling=(("em", PP_NEFER[1][1]),),
-                      extra_tags=(PHANTASM,), multipliers=("veil",)),
-            elemental("Phantasm — 2-й удар Нефер", "atk", PP_NEFER[2][0], "dendro", "charged",
-                      [occ(PHANTASMS, *_TAGS)], extra_scaling=(("em", PP_NEFER[2][1]),),
-                      extra_tags=(PHANTASM,), multipliers=("veil",)),
-            _shade(1), _shade(2), _shade(3),
+            elemental("Навык", "atk", SKILL[0], "dendro", "skill", [
+                occ(2, ON, INST),
+            ], extra_scaling=(("em", SKILL[1]),)),
+            elemental("Phantasm — 1-й удар Нефер", "atk", PP_NEFER[1][0], "dendro", "charged", [
+                occ(6, ON, INST),
+            ], extra_scaling=(("em", PP_NEFER[1][1]),),
+               extra_tags=(PHANTASM,), multipliers=("veil",)),
+            elemental("Phantasm — 2-й удар Нефер", "atk", PP_NEFER[2][0], "dendro", "charged", [
+                occ(6, ON, INST),
+            ], extra_scaling=(("em", PP_NEFER[2][1]),),
+               extra_tags=(PHANTASM,), multipliers=("veil",)),
+            lunar_bloom("Phantasm — тень, 1-й удар (LB)", "em", PP_SHADES[1], [
+                occ(6, ON, INST, PALE_HYMN),
+            ], kind="charged", extra_tags=(PHANTASM,), multipliers=("veil",)),
+            lunar_bloom("Phantasm — тень, 2-й удар (LB)", "em", PP_SHADES[2], [
+                occ(6, ON, INST, PALE_HYMN),
+            ], kind="charged", extra_tags=(PHANTASM,), multipliers=("veil",)),
+            lunar_bloom("Phantasm — тень, 3-й удар (LB)", "em", PP_SHADES[3], [
+                occ(6, ON, INST, PALE_HYMN),
+            ], kind="charged", extra_tags=(PHANTASM,), multipliers=("veil",)),
         ),
         constellation_patches={
             # 2-й удар Нефер становится лунными бутонами (см. C6-источник ниже)
@@ -171,12 +173,12 @@ NEFER_COMBO_DICT = {
             # Это тоже лунные бутоны Phantasm Performance — C6 включает C1, поэтому
             # множитель сразу с +60% МС.
             6: (
-                lunar_bloom("C6: 2-й удар Нефер (LB)", "em", C6_SECOND_EM + C1_EM,
-                            [occ(PHANTASMS, *_TAGS)], kind="charged",
-                            extra_tags=(PHANTASM,), multipliers=("veil",)),
-                lunar_bloom("C6: завершающий удар (LB)", "em", C6_FINAL_EM + C1_EM,
-                            [occ(PHANTASMS, *_TAGS)], kind="charged",
-                            extra_tags=(PHANTASM,), multipliers=("veil",)),
+                lunar_bloom("C6: 2-й удар Нефер (LB)", "em", C6_SECOND_EM + C1_EM, [
+                    occ(6, ON, INST),
+                ], kind="charged", extra_tags=(PHANTASM,), multipliers=("veil",)),
+                lunar_bloom("C6: завершающий удар (LB)", "em", C6_FINAL_EM + C1_EM, [
+                    occ(6, ON, INST),
+                ], kind="charged", extra_tags=(PHANTASM,), multipliers=("veil",)),
             ),
         },
     ),

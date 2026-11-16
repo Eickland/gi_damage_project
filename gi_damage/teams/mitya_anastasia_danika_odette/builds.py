@@ -5,7 +5,7 @@
 Реакций, наносящих урон, нет. Резонанс — крио (2 крио + 2 электро).
 
 Анастасия — саппорт (Милосердие): корона 10 атак вне поля, Triumph.
-An Unfinished Requiem: +1 стак Polestar всем ударам SC отряда (polar_shift()).
+An Unfinished Requiem: стаки Polestar — polar_always у Анастасии (Team.polar_plan()).
 
 Артефакты: Анастасия — Звёздный сет, Даника — Сердце горна, Одетта —
 Разочарование. Митя — лучший по DPS из 2+2 на МС и Разочарования
@@ -33,16 +33,16 @@ from ...data.characters.odette import (odette_burst_buffs, ODETTE_BURST_TIME,
                                        ODETTE_COMBO_DICT, ODETTE_BURST_SOURCES)
 from ...data.characters.danika import (DANIKA_COMBO_DICT, C2_ACTIVE_STACKS,
                                        C2_OTHER_STACKS, tag_stellar_conduct_hits)
-from ...data.characters.anastasia import anastasia_support, polar_shift, CROWN_HITS
+from ...data.characters.anastasia import anastasia_support, CROWN_HITS
 from ...data.weapons import *
 
 TEAM_BUFFS = (
-    Buff(S.CRIT_VALUE, 0.30, target=TEAM,
-         source="Крио резонанс: +15% крит. шанса (0.30 крит-вэлью)"),
+    Buff(S.CRIT_VALUE, 0.15, target=TEAM,
+         source="Крио резонанс (ослаблен ×0.5: 2 электро в отряде): +7.5% крит. шанса (0.15 крит-вэлью)"),
 )
 
 #: Время каждого персонажа в ротации (секунды)
-TIMES = {"Митя": DD_TIME, "Анастасия": 3.0, "Даника": 3.0, "Одетта": 2.4}
+TIMES = {"Митя": DD_TIME, "Анастасия": 3.5, "Даника": 3.25, "Одетта": 2.4}
 
 ROTATION = "Одетта EE/Даника EQ/Анастасия EQ/Митя hE CA Q CA CA"
 
@@ -55,10 +55,10 @@ MITYA_DISENCHANTMENT = (DISENCHANTMENT,)
 MITYA_ARTIFACT_OPTIONS = (MITYA_EM_2_2, MITYA_DISENCHANTMENT)
 
 #: Комбо с +1 стаком Polestar (Requiem Анастасии). Митя без Валеры и Знати.
-MITYA = polar_shift(mitya_dd_rotation(hit_tags=(ON,), hold_tags=(ON,)))
-ODETTE = polar_shift(ODETTE_COMBO_DICT["odette_ssc_combo"])
-DANIKA = polar_shift(DANIKA_COMBO_DICT["support_eq"])
-ANASTASIA = polar_shift(anastasia_support("sc", [occ(CROWN_HITS, OFF)]))
+MITYA = mitya_dd_rotation(hit_tags=(ON,), hold_tags=(ON,))
+ODETTE = ODETTE_COMBO_DICT["odette_ssc_combo"]
+DANIKA = DANIKA_COMBO_DICT["support_eq"]
+ANASTASIA = anastasia_support("sc", [occ(CROWN_HITS, OFF)])
 
 
 def enemy() -> Enemy:
@@ -84,7 +84,7 @@ def mitya_build(constellation: int = 0, weapon=SPINDLELUTE, artifacts=MITYA_DISE
     ), danika_c2_hits)
 
 
-def anastasia_build(constellation: int = 0, weapon=ARTEMISIA, artifacts=(STELLAR_SET,),
+def anastasia_build(constellation: int = 0, weapon=BREEZEBORNE_BOW.at(1), artifacts=(STELLAR_SET,),
                     main_stats=MAIN_ATK, danika_c2_hits: int = 0,
                     extra_buffs: Sequence[Buff] = ()) -> Build:
     return _c2(Build(
@@ -111,7 +111,7 @@ def danika_build(constellation: int = 0, weapon=ATONEMENT, artifacts=(HEART_OF_F
     ), C2_OTHER_STACKS if constellation >= 2 else 0)
 
 
-def odette_build(constellation: int = 0, weapon=SILVER_LIGHT, artifacts=(DISENCHANTMENT,),
+def odette_build(constellation: int = 0, weapon=SILVER_LIGHT, artifacts=(STELLAR_SET,),
                  use_burst: bool | None = None, danika_c2_hits: int = 0,
                  extra_buffs: Sequence[Buff] = ()) -> Build:
     """use_burst=None — авто: до C4 не применяем, с C4 применяем."""
@@ -131,11 +131,11 @@ def odette_build(constellation: int = 0, weapon=SILVER_LIGHT, artifacts=(DISENCH
 
 
 def make_team(name: str, mitya_c: int = 0, mitya_weapon=SPINDLELUTE,
-              anastasia_c: int = 0, anastasia_weapon=ARTEMISIA,
+              anastasia_c: int = 0, anastasia_weapon=BREEZEBORNE_BOW.at(1),
               danika_c: int = 0, danika_weapon=ATONEMENT,
               odette_c: int = 0, odette_weapon=SILVER_LIGHT,
-              mitya_artifacts=MITYA_DISENCHANTMENT, anastasia_artifacts=(STELLAR_SET,),
-              danika_artifacts=(HEART_OF_FORGE,), odette_artifacts=(DISENCHANTMENT,)) -> Team:
+              mitya_artifacts=MITYA_DISENCHANTMENT, anastasia_artifacts=(DISENCHANTMENT,),
+              danika_artifacts=(HEART_OF_FORGE,), odette_artifacts=(STELLAR_SET,)) -> Team:
     c2 = danika_c >= 2
     return Team(
         name=name,
@@ -171,7 +171,7 @@ def best_team(name: str, **kw) -> Team:
 
 
 def team_name(mitya_c: int = 0, mitya_weapon=SPINDLELUTE,
-              anastasia_c: int = 0, anastasia_weapon=ARTEMISIA,
+              anastasia_c: int = 0, anastasia_weapon=BREEZEBORNE_BOW.at(1),
               danika_c: int = 0, danika_weapon=ATONEMENT,
               odette_c: int = 0, odette_weapon=SILVER_LIGHT) -> str:
     _dw = (f" ({danika_weapon.name})" if danika_weapon.name != ATONEMENT.name else "")

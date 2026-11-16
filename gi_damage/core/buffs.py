@@ -64,6 +64,13 @@ class BuffContext:
         self.recipient = recipient      # на кого он сейчас применяется
         self.state = recipient_state    # в каком состоянии считается получатель
 
+    # -- состав отряда -------------------------------------------------------- #
+    def team_has_model(self, model: str) -> bool:
+        """Есть ли в отряде удары с моделью урона model (например
+        "stellar_conduct" — отряд звёздного проводника)."""
+        builds = getattr(self._resolver, "builds", {})
+        return any(s.model == model for b in builds.values() for s in b.all_sources())
+
     # -- запросы статов ----------------------------------------------------- #
     def stat(self, character: str, name: str, st: State | Iterable[str] | None = None) -> float:
         """Стат персонажа `character` в состоянии `st` (по умолчанию — текущее)."""

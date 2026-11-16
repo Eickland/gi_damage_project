@@ -26,7 +26,7 @@ from ...core.utilits import merge_dicts
 from ...data.artifacts import *
 from ...data.artifacts_presets import *
 from ...data.tags import *
-from ...data.characters.cryo_mc import CMC_COMBO_DICT, CMC_SC_DD_TIME
+from ...data.characters.cryo_mc import CMC_COMBO_DICT, CMC_SC_DD_TIME, CMC_SC_DD_E_TIME
 from ...data.characters.odette import (odette_burst_buffs, ODETTE_BURST_TIME,
                                        ODETTE_COMBO_DICT, ODETTE_BURST_SOURCES)
 from ...data.characters.danika import (DANIKA_COMBO_DICT, C2_ACTIVE_STACKS,
@@ -35,14 +35,14 @@ from ...data.characters.yae import YAE_COMBO_DICT
 from ...data.weapons import *
 
 TEAM_BUFFS = (
-    Buff(S.CRIT_VALUE, 0.30, target=TEAM,
-         source="Крио резонанс: +15% крит. шанса (0.30 крит-вэлью)"),
+    Buff(S.CRIT_VALUE, 0.15, target=TEAM,
+         source="Крио резонанс (ослаблен ×0.5: 2 электро в отряде): +7.5% крит. шанса (0.15 крит-вэлью)"),
 )
 
 #: Время каждого персонажа в ротации (секунды)
-TIMES = {"Крио ГГ": CMC_SC_DD_TIME+1, "Яэ Мико": 2.4, "Даника": 3.0, "Одетта": 2.4}
+TIMES = {"Крио ГГ": CMC_SC_DD_E_TIME+1, "Яэ Мико": 2.4, "Даника": 3.25, "Одетта": 2.4}
 
-ROTATION = "Даника EQ/Одетта EE/Яэ EEE/Крио ГГ N2 P N2 N2 C N2 Q N2 N2"
+ROTATION = "Даника EQ/Одетта EE/Яэ EEE/Крио ГГ N2 N2 C Q N2"
 
 MAIN_ATK = {S.ATK_PCT: 0.466 * 2, S.CRIT_VALUE: 0.622}       # АТК/АТК/крит
 MAIN_EM = {S.BASE_EM: 187.0 * 2, S.CRIT_VALUE: 0.622}        # МС/МС/крит
@@ -140,7 +140,7 @@ def make_team(name: str, cmc_c: int = 6, cmc_weapon=EXAIPHANES.at(5),
                           danika_c2_hits=C2_ACTIVE_STACKS if c2 else 0),
             yae_build(yae_c, yae_weapon, yae_artifacts, danika_c2_hits=C2_OTHER_STACKS if c2 else 0),
             danika_build(danika_c, danika_weapon, danika_artifacts),
-            odette_build(odette_c, odette_weapon, odette_artifacts, danika_c2_hits=C2_OTHER_STACKS if c2 else 0),
+            odette_build(odette_c, odette_weapon, odette_artifacts, danika_c2_hits=C2_OTHER_STACKS if c2 else 0,use_burst=True),
         ],
         enemy=enemy(),
         buffs=TEAM_BUFFS,

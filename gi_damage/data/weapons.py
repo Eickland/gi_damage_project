@@ -8,7 +8,7 @@ from __future__ import annotations
 from ..core.buffs import SELF, Buff, TEAM, temp, OTHERS
 from ..core.entities import Weapon
 from ..core.stats import S
-from .tags import BREEZEBORNE, TTDS_HALF, ON, OFF, TTDS_FULL, ELEGY
+from .tags import TTDS_HALF, ON, OFF, TTDS_FULL, ELEGY
 
 # --------------------------------------------------------------------------- #
 WANDERER_SONG = Weapon(
@@ -59,34 +59,33 @@ WANDERER_SONG_CRYO = Weapon(
     note="Усредненный бонус за 6 ротаций, элементальный бонус — крио",
 )
 
+def _cryo_electro_count(ctx) -> int:
+    return sum(1 for el in ctx.elements().values() if el in ("cryo", "electro"))
+
+
+#: За каждого крио или электро персонажа в отряде (включая носителя):
+#: +20 МС и +6% урона звёздных реакций (SC и SSW) на R1, +25% за пробуждение.
 WINTER = Weapon(
     name="Застывшее сердце зимы",
     base_atk=510.0,
     stats={S.CRIT_VALUE: 0.551},
     refinement=1,
-    stats_by_refinement={
-        1: {
-            S.BASE_EM: 40.0,
-            S.SSW_BONUS: 0.12
-        },
-        2: {
-            S.BASE_EM: 50.0,
-            S.SSW_BONUS: 0.15
-        },
-        3: {
-            S.BASE_EM: 60.0,
-            S.SSW_BONUS: 0.18
-        },
-        4: {
-            S.BASE_EM: 70.0,
-            S.SSW_BONUS: 0.21
-        },
-        5: {
-            S.BASE_EM: 80.0,
-            S.SSW_BONUS: 0.24
-        },
+    buffs_by_refinement={
+        r: (Buff(S.BASE_EM, lambda ctx, k=20.0 * (1 + 0.25 * (r - 1)): k * _cryo_electro_count(ctx),
+                 target=SELF,
+                 source=f"Застывшее сердце зимы R{r}: +{20 * (1 + 0.25 * (r - 1)):g} МС "
+                        f"за каждого крио/электро персонажа"),
+            Buff(S.SC_BONUS, lambda ctx, k=0.06 * (1 + 0.25 * (r - 1)): k * _cryo_electro_count(ctx),
+                 target=SELF,
+                 source=f"Застывшее сердце зимы R{r}: +{0.06 * (1 + 0.25 * (r - 1)):.1%} урона "
+                        f"звёздного проводника за каждого крио/электро персонажа"),
+            Buff(S.SSW_BONUS, lambda ctx, k=0.06 * (1 + 0.25 * (r - 1)): k * _cryo_electro_count(ctx),
+                 target=SELF,
+                 source=f"Застывшее сердце зимы R{r}: +{0.06 * (1 + 0.25 * (r - 1)):.1%} урона "
+                        f"звёздного рассеивания за каждого крио/электро персонажа"))
+        for r in range(1, 6)
     },
-    note="",
+    note="Пассивка зависит от числа крио/электро персонажей в отряде (с носителем).",
 )
 
 SAC_JADE = Weapon(
@@ -512,6 +511,13 @@ FAV_SWORD = Weapon(
     note="",
 )
 
+FAV_GREATSWORD = Weapon(
+    name="Двуручный меч фавония",
+    base_atk=454.0,
+    refinement=5,
+    note="Двуручник, 61.3% ВЭ (на урон не влияет). Пассивка — частицы энергии, урона не даёт.",
+)
+
 FAV_LANCE = Weapon(
     name="Копье фавония",
     base_atk=454.0,
@@ -628,10 +634,11 @@ BREEZEBORNE_BOW = Weapon(
         S.CRIT_VALUE: 2 * 0.276,
     },
     buffs_by_refinement={
-        r: (temp(S.SSW_BONUS, BREEZEBORNE_BONUS[r], BREEZEBORNE, target=TEAM,
+        # Постоянный бафф: действует на все удары отряда.
+        r: (Buff(S.SSW_BONUS, BREEZEBORNE_BONUS[r], target=TEAM,
                  source=f"Напевы ветра R{r}: +{BREEZEBORNE_BONUS[r]:.0%} "
                         f"урона звёздных реакций отряду"),
-            temp(S.SC_BONUS, BREEZEBORNE_BONUS[r], BREEZEBORNE, target=TEAM,
+            Buff(S.SC_BONUS, BREEZEBORNE_BONUS[r], target=TEAM,
                  source=f"Напевы ветра R{r}: +{BREEZEBORNE_BONUS[r]:.0%} "
                         f"урона звёздных реакций отряду"),)
         for r in BREEZEBORNE_BONUS
@@ -966,8 +973,16 @@ SILVER_RADIANCE = Weapon(
 
 
 #: Весенний прилив (сигна Даники). Даны только значения R1.
-SPRING_TIDE_ATK = {1: 0.32}       # +32% АТК носителю
-SPRING_TIDE_SC = {1: 0.40}        # +40% урона SC активного персонажа
+SPRING_TIDE_ATK = {1: 0.32,
+                   2: 0.40,
+                   3: 0.48,
+                   4: 0.56,
+                   5: 0.64,}       # +32% АТК носителю
+SPRING_TIDE_SC = {1: 0.40,
+                  2: 0.50,
+                  3: 0.60,
+                  4: 0.70,
+                  5: 0.80,}        # +40% урона SC активного персонажа
 
 SPRING_TIDE = Weapon(
     name="Весенний прилив",
@@ -984,6 +999,81 @@ SPRING_TIDE = Weapon(
     note="Двуручник, сигна Даники. 16.5% АТК. R1: +32% АТК носителю, +40% урона "
          "звёздного проводника, который наносит активный персонаж. Пробуждения "
          "не даны.",
+)
+
+#: Магический супермеч (двуручный): 565 базовой атаки, +48% АТК.
+#: Запасное оружие Сандроне на базовой линии (нет 2 электро и нет хилера).
+MAGIC_SUPERSWORD = Weapon(
+    name="Магический супермеч",
+    base_atk=565.0,
+    refinement=5,
+    stats={S.ATK_PCT: 0.48},
+    note="Базовая АТК 565, +48% силы атаки.",
+)
+
+#: Скитающаяся звезда: +24% МС носителя к АТК (R1, +6% за ранг), отряду — 30%
+#: этого эффекта. Несколько носителей — эффекты суммируются. Бафф постоянный.
+WANDERING_STAR_BONUS = {r: 0.24 + 0.06 * (r - 1) for r in range(1, 6)}
+WANDERING_STAR_TEAM_SHARE = 0.30
+
+WANDERING_STAR = Weapon(
+    name="Скитающаяся звезда",
+    base_atk=510.0,
+    refinement=1,
+    stats={S.BASE_EM: 165.0},
+    buffs_by_refinement={
+        r: (Buff(S.FLAT_ATK, lambda ctx, k=WANDERING_STAR_BONUS[r]: k * ctx.own("em"),
+                 target=SELF,
+                 source=f"Скитающаяся звезда R{r}: АТК +{WANDERING_STAR_BONUS[r]:.0%} МС носителя"),
+            Buff(S.FLAT_ATK,
+                 lambda ctx, k=WANDERING_STAR_BONUS[r] * WANDERING_STAR_TEAM_SHARE: k * ctx.own("em"),
+                 target=OTHERS,
+                 source=f"Скитающаяся звезда R{r}: отряду 30% эффекта "
+                        f"(+{WANDERING_STAR_BONUS[r] * WANDERING_STAR_TEAM_SHARE:.1%} МС носителя к АТК)"),)
+        for r in WANDERING_STAR_BONUS
+    },
+    note="Базовая АТК 510, +165 МС. Бафф постоянный.",
+)
+
+#: Сигна Ризли. Бонусы растут на 25% за пробуждение.
+TREASURY_OVERSIGHT = Weapon(
+    name="Казначейский надзор",
+    base_atk=674.0,
+    refinement=1,
+    stats={S.CRIT_VALUE: 0.221 * 2},
+    stats_by_refinement={
+        r: {
+            S.ATK_PCT: 0.16 * k,
+            f"{S.DMG_BONUS}.normal": 0.48 * k,       # урон обычной атаки
+            f"{S.DMG_BONUS}.charged": 0.42 * k,      # урон заряженной атаки
+            S.SC_BONUS: 0.42 * k,                    # реакция «Звёздный проводник»
+        }
+        for r, k in ((r, 1 + 0.25 * (r - 1)) for r in range(1, 6))
+    },
+    note="Базовая АТК 674, крит. шанс 22.1%. Бафф постоянный.",
+)
+
+#: Разбивающий цепи (лук): +4.8% АТК за каждого члена отряда другой стихии;
+#: при 3+ таких — ещё +24 МС. Пробуждения: +25% к бонусам.
+CHAIN_BREAKER = Weapon(
+    name="Разбивающий цепи",
+    base_atk=565.0,
+    refinement=1,
+    stats={S.ATK_PCT: 0.276},
+    buffs_by_refinement={
+        r: (Buff(S.ATK_PCT, lambda ctx, k=0.048 * (1 + 0.25 * (r - 1)):
+                 k * ctx.count_allies(same_element=False),
+                 target=SELF,
+                 source=f"Разбивающий цепи R{r}: +{0.048 * (1 + 0.25 * (r - 1)):.1%} АТК "
+                        f"за каждого члена отряда другой стихии"),
+            Buff(S.BASE_EM, lambda ctx, v=24.0 * (1 + 0.25 * (r - 1)):
+                 v if ctx.count_allies(same_element=False) >= 3 else 0.0,
+                 target=SELF,
+                 source=f"Разбивающий цепи R{r}: +{24 * (1 + 0.25 * (r - 1)):g} МС "
+                        f"при 3 членах отряда другой стихии"))
+        for r in range(1, 6)
+    },
+    note="Базовая АТК 565, АТК 27.6%. Бафф постоянный.",
 )
 
 ALL = {w.name: w for w in (WANDERER_SONG, SUNNY_MORNING_SLEEP_IN, EXAIPHANES,

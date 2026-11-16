@@ -36,23 +36,12 @@ C2_EM = 200.0                 # C2: +200 МС при сакуре 4 ур.
 C6_DEF_IGNORE = 0.60          # C6: молнии сакуры игнорируют 60% защиты
 C6_SC_CRIT_DMG = 2.00         # C6: +200% крит. урона звёздного проводника
 
-#: Количество ударов за ротацию отряда
-ENHANCED_HITS = 7             # усиленных молний (раз в ~3 с)
-NORMAL_HITS = 15              # обычных: 3 сакуры × ~22 с / 2.9 с ≈ 22 удара, минус 7 усиленных
-A1_STRIKES = 3                # доп. молний A1 (по одной на каждое E при 3 сакурах рядом)
-
-#: Стаки «полярности» для звёздного проводника Яэ (как у Одетты вне поля)
-YAE_POLAR_STACKS = 8
-YAE_POLAR_STACKS_WRIO = 5
-YAE_POLAR_STACKS_INST = 5      # отряд с Шилонен (Инструктор)
-YAE_INST_HITS = 4               # усиленных молний под Инструктором (из 7)
-
-
 YAE_KIT = Character(
     name="Яэ Мико",
     element="electro",
     weapon_type="catalyst",
     default_field=OFF,
+    polar_always=1.33,   # стаки Polestar отряду
     crit_mode="balance",
     stats={
         S.BASE_ATK: 340.0,
@@ -106,71 +95,73 @@ YAE_KIT = Character(
     note="Только отряды звёздного проводника.",
 )
 
-#: Окна отряда, в которых находится Яэ (вне поля). Расставляйте, как нужно.
-_YAE_TAGS = (OFF, NOBLE,ELEGY)
-
+#: Яэ всегда вне поля. Каждая строка occ(N, теги...) — N ударов в этом
+#: наборе окон; одинаковые удары с разными баффами идут строками подряд.
 YAE_COMBO_DICT = {
     "yae_sc_long_combo": with_rotation(
         YAE_KIT,
         sources=(
             elemental("Сесшо Сакура — молния", "atk", SAKURA_MV[SAKURA_LEVEL_C0],
-                      "electro", "skill", [occ(NORMAL_HITS, *_YAE_TAGS)],
-                      extra_tags=(SESSHOU_SAKURA,)),
+                      "electro", "skill", [
+                        occ(15, OFF, NOBLE, ELEGY),
+                      ], extra_tags=(SESSHOU_SAKURA,)),
             elemental("Сесшо Сакура — усиленная молния", "atk",
-                      SAKURA_MV[SAKURA_LEVEL_C0] + ENHANCED_ATK,
-                      "electro", "skill", [occ(ENHANCED_HITS, *_YAE_TAGS)],
-                      extra_tags=(SESSHOU_SAKURA,)),
+                      SAKURA_MV[SAKURA_LEVEL_C0] + ENHANCED_ATK, "electro", "skill", [
+                        occ(7, OFF, NOBLE, ELEGY),
+                      ], extra_tags=(SESSHOU_SAKURA,)),
             stellar_conduct("Усиленная молния — звёздный проводник", "atk",
-                            ENHANCED_SC_ATK, "electro",
-                            [occ(ENHANCED_HITS-3, *_YAE_TAGS),
-                             occ(3, OFF)], kind="skill",
-                            polar_stacks=YAE_POLAR_STACKS),
+                            ENHANCED_SC_ATK, "electro", [
+                              occ(4, OFF, NOBLE, ELEGY,DECODING,SEVEN_SACRED),
+                              occ(3, OFF),
+                            ], kind="skill"),
             stellar_conduct("A1: доп. молния — звёздный проводник", "atk",
-                            A1_SC_ATK, "electro",
-                            [occ(A1_STRIKES, ON, NOBLE)], kind="skill",
-                            polar_stacks=YAE_POLAR_STACKS),
+                            A1_SC_ATK, "electro", [
+                              occ(3, ON, NOBLE,DECODING,SEVEN_SACRED),
+                            ], kind="skill"),
         ),
     ),
     "yae_sc_short_combo": with_rotation(
         YAE_KIT,
         sources=(
             elemental("Сесшо Сакура — молния", "atk", SAKURA_MV[SAKURA_LEVEL_C0],
-                      "electro", "skill", [occ(NORMAL_HITS-3, *_YAE_TAGS)],
-                      extra_tags=(SESSHOU_SAKURA,)),
+                      "electro", "skill", [
+                        occ(12, OFF, NOBLE, ELEGY),
+                      ], extra_tags=(SESSHOU_SAKURA,)),
             elemental("Сесшо Сакура — усиленная молния", "atk",
-                      SAKURA_MV[SAKURA_LEVEL_C0] + ENHANCED_ATK,
-                      "electro", "skill", [occ(ENHANCED_HITS-1, *_YAE_TAGS)],
-                      extra_tags=(SESSHOU_SAKURA,)),
+                      SAKURA_MV[SAKURA_LEVEL_C0] + ENHANCED_ATK, "electro", "skill", [
+                        occ(6, OFF, NOBLE, ELEGY),
+                      ], extra_tags=(SESSHOU_SAKURA,)),
             stellar_conduct("Усиленная молния — звёздный проводник", "atk",
-                            ENHANCED_SC_ATK, "electro",
-                            [occ(ENHANCED_HITS-3, *_YAE_TAGS),
-                             occ(2, OFF)], kind="skill",
-                            polar_stacks=YAE_POLAR_STACKS),
+                            ENHANCED_SC_ATK, "electro", [
+                              occ(4, OFF, NOBLE, ELEGY,SEVEN_SACRED),
+                              occ(2, OFF),
+                            ], kind="skill"),
             stellar_conduct("A1: доп. молния — звёздный проводник", "atk",
-                            A1_SC_ATK, "electro",
-                            [occ(A1_STRIKES, ON, NOBLE)], kind="skill",
-                            polar_stacks=YAE_POLAR_STACKS),
+                            A1_SC_ATK, "electro", [
+                              occ(3, ON, NOBLE),
+                            ], kind="skill"),
         ),
     ),
     "yae_sc_wrio_combo": with_rotation(
         YAE_KIT,
         sources=(
             elemental("Сесшо Сакура — молния", "atk", SAKURA_MV[SAKURA_LEVEL_C0],
-                      "electro", "skill", [occ(NORMAL_HITS, *_YAE_TAGS)],
-                      extra_tags=(SESSHOU_SAKURA,)),
+                      "electro", "skill", [
+                        occ(15, OFF, NOBLE, ELEGY),
+                      ], extra_tags=(SESSHOU_SAKURA,)),
             elemental("Сесшо Сакура — усиленная молния", "atk",
-                      SAKURA_MV[SAKURA_LEVEL_C0] + ENHANCED_ATK,
-                      "electro", "skill", [occ(ENHANCED_HITS, *_YAE_TAGS)],
-                      extra_tags=(SESSHOU_SAKURA,)),
+                      SAKURA_MV[SAKURA_LEVEL_C0] + ENHANCED_ATK, "electro", "skill", [
+                        occ(7, OFF, NOBLE, ELEGY),
+                      ], extra_tags=(SESSHOU_SAKURA,)),
             stellar_conduct("Усиленная молния — звёздный проводник", "atk",
-                            ENHANCED_SC_ATK, "electro",
-                            [occ(ENHANCED_HITS-3, *_YAE_TAGS),
-                             occ(1, OFF)], kind="skill",
-                            polar_stacks=YAE_POLAR_STACKS_WRIO),
+                            ENHANCED_SC_ATK, "electro", [
+                              occ(4, OFF, NOBLE, ELEGY,SEVEN_SACRED),
+                              occ(1, OFF),
+                            ], kind="skill"),
             stellar_conduct("A1: доп. молния — звёздный проводник", "atk",
-                            A1_SC_ATK, "electro",
-                            [occ(A1_STRIKES, ON, NOBLE)], kind="skill",
-                            polar_stacks=YAE_POLAR_STACKS_WRIO),
+                            A1_SC_ATK, "electro", [
+                              occ(3, ON, NOBLE),
+                            ], kind="skill"),
         ),
     ),
     # Отряд с Шилонен в Инструкторе: 7 усиленных молний, 4 из них — под
@@ -179,23 +170,23 @@ YAE_COMBO_DICT = {
         YAE_KIT,
         sources=(
             elemental("Сесшо Сакура — молния", "atk", SAKURA_MV[SAKURA_LEVEL_C0],
-                      "electro", "skill", [occ(NORMAL_HITS, OFF)],
-                      extra_tags=(SESSHOU_SAKURA,)),
+                      "electro", "skill", [
+                        occ(15, OFF),
+                      ], extra_tags=(SESSHOU_SAKURA,)),
             elemental("Сесшо Сакура — усиленная молния", "atk",
-                      SAKURA_MV[SAKURA_LEVEL_C0] + ENHANCED_ATK,
-                      "electro", "skill",
-                      [occ(YAE_INST_HITS, OFF, INST),
-                       occ(ENHANCED_HITS - YAE_INST_HITS, OFF)],
-                      extra_tags=(SESSHOU_SAKURA,)),
+                      SAKURA_MV[SAKURA_LEVEL_C0] + ENHANCED_ATK, "electro", "skill", [
+                        occ(4, OFF, INST),
+                        occ(3, OFF),
+                      ], extra_tags=(SESSHOU_SAKURA,)),
             stellar_conduct("Усиленная молния — звёздный проводник", "atk",
-                            ENHANCED_SC_ATK, "electro",
-                            [occ(YAE_INST_HITS, OFF, INST),
-                             occ(ENHANCED_HITS - YAE_INST_HITS, OFF)], kind="skill",
-                            polar_stacks=YAE_POLAR_STACKS_INST),
+                            ENHANCED_SC_ATK, "electro", [
+                              occ(4, OFF, INST,SEVEN_SACRED),
+                              occ(3, OFF),
+                            ], kind="skill"),
             stellar_conduct("A1: доп. молния — звёздный проводник", "atk",
-                            A1_SC_ATK, "electro",
-                            [occ(A1_STRIKES, ON)], kind="skill",
-                            polar_stacks=YAE_POLAR_STACKS_INST),
+                            A1_SC_ATK, "electro", [
+                              occ(3, ON),
+                            ], kind="skill"),
         ),
     ),
 }

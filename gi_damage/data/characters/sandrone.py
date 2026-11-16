@@ -18,6 +18,7 @@ SANDRONE_KIT = Character(
     element="cryo",
     weapon_type="claymore",
     default_field=ON,
+    polar_on_field=3.0,   # стаки Polestar отряду
     crit_mode="balance",
     stats={
         S.BASE_ATK: 342,
@@ -88,47 +89,48 @@ SANDRONE_COMBO_DICT = {
     SANDRONE_KIT,
     sources=(
         elemental("Prism Shot DMG", "atk", 0.5832, "cryo", "skill",
-                  [occ(3, ON,VV_CRYO,TTDS_FULL)]),
+                  [occ(3, ON, VV_CRYO, TTDS_FULL, TTDS_HALF)]),
         elemental("Charged Attack Sweeping Fire DMG", "atk", 0.85, "cryo", "charged",
-                  [occ(27, ON,VV_CRYO,TTDS_FULL), occ(9, ON,)]),
+                  [occ(27, ON, VV_CRYO, TTDS_FULL, TTDS_HALF),
+                   occ(9, ON)]),
         elemental("Bombardment DMG", "atk", 1.5879, "cryo", "burst",
-                  [occ(3, ON,VV_CRYO,TTDS_FULL),]),
+                  [occ(3, ON, VV_CRYO, TTDS_FULL, TTDS_HALF)]),
         stellar_conduct("Charged Attack Condensed Beam Stellar-Conduct", "atk", 1.615,
-                      "cryo", [occ(4, ON, INST,BREEZEBORNE,VV_CRYO,TTDS_FULL,SEVEN_SACRED,CATS_TAIL),
-                               occ(3, ON, INST,BREEZEBORNE,VV_CRYO,SEVEN_SACRED,CATS_TAIL),
-                               occ(1, ON,BREEZEBORNE,VV_CRYO,TTDS_FULL),
-                               occ(1, ON,),], kind="charged",polar_stacks=7),
+                      "cryo", [occ(4, ON, INST, VV_CRYO, TTDS_FULL, TTDS_HALF, SEVEN_SACRED, CATS_TAIL),
+                               occ(3, ON, INST, VV_CRYO, SEVEN_SACRED, CATS_TAIL),
+                               occ(1, ON, VV_CRYO, TTDS_FULL, TTDS_HALF),
+                               occ(1, ON),], kind="charged"),
         stellar_conduct("Prism Shot Stellar-Conduct DMG", "atk", 0.3888*4,
-                      "cryo", [occ(1, ON, INST,BREEZEBORNE,VV_CRYO,TTDS_FULL,CATS_TAIL,SEVEN_SACRED),
-                               occ(1, ON,BREEZEBORNE,VV_CRYO,TTDS_FULL,CATS_TAIL,SEVEN_SACRED),
-                               occ(1, ON,),], kind="skill",polar_stacks=7),
+                      "cryo", [occ(1, ON, INST, VV_CRYO, TTDS_FULL, TTDS_HALF, CATS_TAIL, SEVEN_SACRED),
+                               occ(1, ON, VV_CRYO, TTDS_FULL, TTDS_HALF, CATS_TAIL, SEVEN_SACRED),
+                               occ(1, ON),], kind="skill"),
         stellar_conduct("Convective Inhibition Ray Stellar-Conduct DMG", "atk", 2*3.9696, "cryo",
-                      [occ(1, ON, INST,BREEZEBORNE,FROSTGLOW,VV_CRYO,TTDS_FULL,CATS_TAIL,SEVEN_SACRED)], kind="burst",polar_stacks=8),
+                      [occ(1, ON, INST, FROSTGLOW, VV_CRYO, TTDS_FULL, TTDS_HALF, CATS_TAIL, SEVEN_SACRED)], kind="burst"),
     ),
     constellation_patches={
         1: {
             "Charged Attack Condensed Beam Stellar-Conduct": lambda s: replace(s, occurrences=[
-                occ(5, ON, INST,BREEZEBORNE,VV_CRYO,TTDS_FULL,CATS_TAIL,SEVEN_SACRED),
-                occ(1, ON,BREEZEBORNE,VV_CRYO,TTDS_FULL,CATS_TAIL),
-                occ(2, ON,BREEZEBORNE,VV_CRYO,INST),
-                occ(4, ON,BREEZEBORNE,VV_CRYO,INST,CATS_TAIL,SEVEN_SACRED),
+                occ(5, ON, INST, VV_CRYO, TTDS_FULL, TTDS_HALF, CATS_TAIL, SEVEN_SACRED),
+                occ(1, ON, VV_CRYO, TTDS_FULL, TTDS_HALF, CATS_TAIL),
+                occ(2, ON, VV_CRYO, INST),
+                occ(4, ON, VV_CRYO, INST, CATS_TAIL, SEVEN_SACRED),
                 ]),
             "Prism Shot Stellar-Conduct DMG": lambda s: replace(s, occurrences=[
-                occ(1, ON,BREEZEBORNE,VV_CRYO,TTDS_FULL,CATS_TAIL,SEVEN_SACRED),
-                occ(1, ON,BREEZEBORNE,VV_CRYO,SEVEN_SACRED),
+                occ(1, ON, VV_CRYO, TTDS_FULL, TTDS_HALF, CATS_TAIL, SEVEN_SACRED),
+                occ(1, ON, VV_CRYO, SEVEN_SACRED),
                 ]),            
         },
         2: {
             "Charged Attack Condensed Beam Stellar-Conduct": lambda s: replace(s, occurrences=[
-                occ(5, ON, INST,BREEZEBORNE,VV_CRYO,TTDS_FULL,CATS_TAIL,SEVEN_SACRED),
-                occ(1, ON,BREEZEBORNE,VV_CRYO,TTDS_FULL,CATS_TAIL),
-                occ(2, ON,BREEZEBORNE,VV_CRYO,INST,SANDRONE_CA_STACKS_1),
-                occ(2, ON,BREEZEBORNE,VV_CRYO,INST,CATS_TAIL,SEVEN_SACRED,SANDRONE_CA_STACKS_2),
-                occ(2, ON,BREEZEBORNE,VV_CRYO,INST,CATS_TAIL,SEVEN_SACRED,SANDRONE_CA_STACKS_3),
+                occ(5, ON, INST, VV_CRYO, TTDS_FULL, TTDS_HALF, CATS_TAIL, SEVEN_SACRED),
+                occ(1, ON, VV_CRYO, TTDS_FULL, TTDS_HALF, CATS_TAIL),
+                occ(2, ON, VV_CRYO, INST, SANDRONE_CA_STACKS_1),
+                occ(2, ON, VV_CRYO, INST, CATS_TAIL, SEVEN_SACRED, SANDRONE_CA_STACKS_2),
+                occ(2, ON, VV_CRYO, INST, CATS_TAIL, SEVEN_SACRED, SANDRONE_CA_STACKS_3),
                 ]),
             "Prism Shot Stellar-Conduct DMG": lambda s: replace(s, occurrences=[
-                occ(1, ON,BREEZEBORNE,VV_CRYO,TTDS_FULL,CATS_TAIL,SEVEN_SACRED),
-                occ(1, ON,BREEZEBORNE,VV_CRYO,SEVEN_SACRED),
+                occ(1, ON, VV_CRYO, TTDS_FULL, TTDS_HALF, CATS_TAIL, SEVEN_SACRED),
+                occ(1, ON, VV_CRYO, SEVEN_SACRED),
                 ]),            
         },
     },
@@ -136,63 +138,66 @@ SANDRONE_COMBO_DICT = {
         4: (
             stellar_conduct("Prismatic Resonance Cannon",
                           "atk", 1.25, "cryo",
-                          [occ(1, ON,VV_CRYO,CATS_TAIL,SEVEN_SACRED), occ(2, ON, INST, BREEZEBORNE,TTDS_HALF,VV_CRYO,CATS_TAIL,SEVEN_SACRED)],polar_stacks=7),
+                          [occ(1, ON, VV_CRYO, CATS_TAIL, SEVEN_SACRED),
+                           occ(2, ON, INST, TTDS_HALF, TTDS_FULL, VV_CRYO, CATS_TAIL, SEVEN_SACRED)]),
         ),
         6: (
             stellar_conduct("Condensed Cluster Beam Stellar-Conduct",
                           "atk", 0.8, "cryo",
-                          [occ(6, ON, INST, BREEZEBORNE,TTDS_HALF,VV_CRYO,CATS_TAIL,SEVEN_SACRED),
-                           occ(2, ON, INST,VV_CRYO,CATS_TAIL,SEVEN_SACRED),
-                           occ(2, ON, INST,VV_CRYO,SEVEN_SACRED),
-                           ],polar_stacks=7),
+                          [occ(4, ON, INST, TTDS_HALF, TTDS_FULL, VV_CRYO, CATS_TAIL, SEVEN_SACRED),
+                           occ(2, ON, INST, VV_CRYO, CATS_TAIL, SEVEN_SACRED),
+                           occ(2, ON, INST, VV_CRYO, SEVEN_SACRED),
+                           ]),
         ),
     },
 ),
+    
     "sandrone_sc_combo" : with_rotation(
     SANDRONE_KIT,
     sources=(
         elemental("Prism Shot DMG", "atk", 0.5832, "cryo", "skill",
-                  [occ(3, ON,VV_CRYO,TTDS_FULL)]),
+                  [occ(3, ON, VV_CRYO, TTDS_FULL, TTDS_HALF,NOBLE)]),
         elemental("Charged Attack Sweeping Fire DMG", "atk", 0.85, "cryo", "charged",
-                  [occ(27, ON,VV_CRYO,TTDS_FULL), occ(9, ON,)]),
+                  [occ(27, ON, VV_CRYO, TTDS_FULL, TTDS_HALF,NOBLE),
+                   occ(9, ON)]),
         elemental("Bombardment DMG", "atk", 1.5879, "cryo", "burst",
-                  [occ(3, ON,VV_CRYO,TTDS_FULL),]),
+                  [occ(3, ON, VV_CRYO, TTDS_FULL, TTDS_HALF)]),
         stellar_conduct("Charged Attack Condensed Beam Stellar-Conduct", "atk", 1.615,
-                      "cryo", [occ(4, ON, INST,BREEZEBORNE,VV_CRYO,TTDS_FULL,SEVEN_SACRED,CATS_TAIL,NOBLE),
-                               occ(3, ON, INST,BREEZEBORNE,VV_CRYO,SEVEN_SACRED,CATS_TAIL),
-                               occ(1, ON,BREEZEBORNE,VV_CRYO,TTDS_FULL,NOBLE),
-                               occ(1, ON,),], kind="charged",polar_stacks=8),
+                      "cryo", [occ(4, ON, INST, VV_CRYO, TTDS_FULL, TTDS_HALF, SEVEN_SACRED, CATS_TAIL, NOBLE),
+                               occ(3, ON, INST, VV_CRYO, SEVEN_SACRED, CATS_TAIL),
+                               occ(1, ON, VV_CRYO, TTDS_FULL, TTDS_HALF, NOBLE),
+                               occ(1, ON),], kind="charged"),
         stellar_conduct("Prism Shot Stellar-Conduct DMG", "atk", 0.3888*4,
-                      "cryo", [occ(1, ON, INST,BREEZEBORNE,VV_CRYO,TTDS_FULL,CATS_TAIL,SEVEN_SACRED,NOBLE),
-                               occ(1, ON,BREEZEBORNE,VV_CRYO,TTDS_FULL,CATS_TAIL,SEVEN_SACRED,NOBLE),
-                               occ(1, ON,),], kind="skill",polar_stacks=7),
+                      "cryo", [occ(1, ON, INST, VV_CRYO, TTDS_FULL, TTDS_HALF, CATS_TAIL, SEVEN_SACRED, NOBLE),
+                               occ(1, ON, VV_CRYO, TTDS_FULL, TTDS_HALF, CATS_TAIL, SEVEN_SACRED, NOBLE),
+                               occ(1, ON),], kind="skill"),
         stellar_conduct("Convective Inhibition Ray Stellar-Conduct DMG", "atk", 2*3.9696, "cryo",
-                      [occ(1, ON, INST,BREEZEBORNE,FROSTGLOW,VV_CRYO,TTDS_FULL,CATS_TAIL,SEVEN_SACRED,NOBLE)], kind="burst",polar_stacks=9),
+                      [occ(1, ON, INST, FROSTGLOW, VV_CRYO, TTDS_FULL, TTDS_HALF, CATS_TAIL, SEVEN_SACRED, NOBLE)], kind="burst"),
     ),
     constellation_patches={
         1: {
             "Charged Attack Condensed Beam Stellar-Conduct": lambda s: replace(s, occurrences=[
-                occ(5, ON, INST,BREEZEBORNE,VV_CRYO,TTDS_FULL,CATS_TAIL,SEVEN_SACRED,NOBLE),
-                occ(1, ON,BREEZEBORNE,VV_CRYO,TTDS_FULL,CATS_TAIL),
-                occ(2, ON,BREEZEBORNE,VV_CRYO,INST),
-                occ(4, ON,BREEZEBORNE,VV_CRYO,INST,CATS_TAIL,SEVEN_SACRED),
+                occ(5, ON, INST, VV_CRYO, TTDS_FULL, TTDS_HALF, CATS_TAIL, SEVEN_SACRED, NOBLE),
+                occ(1, ON, VV_CRYO, TTDS_FULL, TTDS_HALF, CATS_TAIL),
+                occ(2, ON, VV_CRYO, INST),
+                occ(4, ON, VV_CRYO, INST, CATS_TAIL, SEVEN_SACRED),
                 ]),
             "Prism Shot Stellar-Conduct DMG": lambda s: replace(s, occurrences=[
-                occ(1, ON,BREEZEBORNE,VV_CRYO,TTDS_FULL,CATS_TAIL,SEVEN_SACRED,NOBLE),
-                occ(1, ON,BREEZEBORNE,VV_CRYO,SEVEN_SACRED),
+                occ(1, ON, VV_CRYO, TTDS_FULL, TTDS_HALF, CATS_TAIL, SEVEN_SACRED, NOBLE),
+                occ(1, ON, VV_CRYO, SEVEN_SACRED),
                 ]),            
         },
         2: {
             "Charged Attack Condensed Beam Stellar-Conduct": lambda s: replace(s, occurrences=[
-                occ(5, ON, INST,BREEZEBORNE,VV_CRYO,TTDS_FULL,CATS_TAIL,SEVEN_SACRED,NOBLE),
-                occ(1, ON,BREEZEBORNE,VV_CRYO,TTDS_FULL,CATS_TAIL,NOBLE),
-                occ(2, ON,BREEZEBORNE,VV_CRYO,INST,SANDRONE_CA_STACKS_1),
-                occ(2, ON,BREEZEBORNE,VV_CRYO,INST,CATS_TAIL,SEVEN_SACRED,SANDRONE_CA_STACKS_2),
-                occ(2, ON,BREEZEBORNE,VV_CRYO,INST,CATS_TAIL,SEVEN_SACRED,SANDRONE_CA_STACKS_3),
+                occ(5, ON, INST, VV_CRYO, TTDS_FULL, TTDS_HALF, CATS_TAIL, SEVEN_SACRED, NOBLE),
+                occ(1, ON, VV_CRYO, TTDS_FULL, TTDS_HALF, CATS_TAIL, NOBLE),
+                occ(2, ON, VV_CRYO, INST, SANDRONE_CA_STACKS_1),
+                occ(2, ON, VV_CRYO, INST, CATS_TAIL, SEVEN_SACRED, SANDRONE_CA_STACKS_2),
+                occ(2, ON, VV_CRYO, INST, CATS_TAIL, SEVEN_SACRED, SANDRONE_CA_STACKS_3),
                 ]),
             "Prism Shot Stellar-Conduct DMG": lambda s: replace(s, occurrences=[
-                occ(1, ON,BREEZEBORNE,VV_CRYO,TTDS_FULL,CATS_TAIL,SEVEN_SACRED,NOBLE),
-                occ(1, ON,BREEZEBORNE,VV_CRYO,SEVEN_SACRED),
+                occ(1, ON, VV_CRYO, TTDS_FULL, TTDS_HALF, CATS_TAIL, SEVEN_SACRED, NOBLE),
+                occ(1, ON, VV_CRYO, SEVEN_SACRED),
                 ]),            
         },
     },
@@ -200,17 +205,71 @@ SANDRONE_COMBO_DICT = {
         4: (
             stellar_conduct("Prismatic Resonance Cannon",
                           "atk", 1.25, "cryo",
-                          [occ(1, ON,VV_CRYO,CATS_TAIL,SEVEN_SACRED), occ(2, ON, INST, BREEZEBORNE,TTDS_HALF,VV_CRYO,CATS_TAIL,SEVEN_SACRED,NOBLE)],polar_stacks=9),
+                          [occ(1, ON, VV_CRYO, CATS_TAIL, SEVEN_SACRED),
+                           occ(2, ON, INST, TTDS_HALF, TTDS_FULL, VV_CRYO, CATS_TAIL, SEVEN_SACRED, NOBLE)]),
         ),
         6: (
             stellar_conduct("Condensed Cluster Beam Stellar-Conduct",
                           "atk", 0.8, "cryo",
-                          [occ(6, ON, INST, BREEZEBORNE,TTDS_HALF,VV_CRYO,CATS_TAIL,SEVEN_SACRED,NOBLE),
-                           occ(2, ON, INST,VV_CRYO,CATS_TAIL,SEVEN_SACRED),
-                           occ(2, ON, INST,VV_CRYO,SEVEN_SACRED),
-                           ],polar_stacks=9),
+                          [occ(4, ON, INST, TTDS_HALF, TTDS_FULL, VV_CRYO, CATS_TAIL, SEVEN_SACRED, NOBLE),
+                           occ(2, ON, VV_CRYO, CATS_TAIL, SEVEN_SACRED),
+                           occ(2, ON, VV_CRYO, SEVEN_SACRED),
+                           ]),
         ),
     },
 ),
 
 }
+
+# --------------------------------------------------------------------------- #
+# Укороченное комбо (только C0 Сандроне): на одну заряженную атаку меньше.
+#
+# Одна CA (из трёх в «E CA EQ CA E CA E») = треть всех ударов, кроме ульты.
+# Количество каждого удара умножаем на 2/3 пропорционально по всем окнам
+# усилений (распределение по баффам сохраняется), ульта (kind="burst")
+# не трогается. Время Сандроне в ротации — на 4 с меньше.
+# --------------------------------------------------------------------------- #
+from ...core.sources import Occurrence  # noqa: E402
+
+SANDRONE_ONE_CA_TIME = 4.0          #: длительность одной заряженной атаки, с
+SANDRONE_SHORT_FACTOR = 2.0 / 3.0   #: доля ударов, остающаяся без одной CA
+
+
+def _scale_source(src, factor: float, keep_kinds):
+    if src.kind in keep_kinds:
+        return src
+    return replace(src, occurrences=[Occurrence(o.state, o.count * factor)
+                                     for o in src.occurrences])
+
+
+def _scale_patch(patch, factor: float, keep_kinds):
+    """Патч, меняющий occurrences, масштабируем; патчи только mv — как есть."""
+    def wrapped(src):
+        out = patch(src)
+        if out.occurrences is src.occurrences:
+            return out
+        return _scale_source(out, factor, keep_kinds)
+    return wrapped
+
+
+def drop_hits(combo: Character, factor: float = SANDRONE_SHORT_FACTOR,
+              keep_kinds=("burst",)) -> Character:
+    """Копия комбо, где все удары (кроме keep_kinds) умножены на factor —
+    и свои источники, и источники/патчи созвездий."""
+    consts = {
+        n: replace(c,
+                   sources=tuple(_scale_source(s, factor, keep_kinds) for s in c.sources),
+                   patches={k: _scale_patch(p, factor, keep_kinds)
+                            for k, p in c.patches.items()})
+        for n, c in combo.constellations.items()
+    }
+    return replace(combo,
+                   sources=tuple(_scale_source(s, factor, keep_kinds) for s in combo.sources),
+                   constellations=consts)
+
+
+#: Как sandrone_sc_combo, но без одной заряженной атаки (время Сандроне −4 с).
+#: Такая ротация возможна только на C0 Сандроне, поэтому созвездий у комбо нет
+#: вообще (ни баффов, ни патчей, ни доп. ударов) — любое constellation= даёт C0.
+SANDRONE_COMBO_DICT["sandrone_c0_sc_short_combo"] = replace(
+    drop_hits(SANDRONE_COMBO_DICT["sandrone_sc_combo"]), constellations={})

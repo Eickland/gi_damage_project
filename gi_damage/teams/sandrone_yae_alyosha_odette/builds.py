@@ -24,12 +24,12 @@ from ...data.characters.alyosha import ALYOSHA_COMBO_DICT
 from ...data.weapons import *
 
 TEAM_BUFFS = (
-    Buff(S.CRIT_VALUE, 0.30, target=TEAM,
-         source="Крио резонанс: +15% крит. шанса (0.30 крит-вэлью)"),
+    Buff(S.CRIT_VALUE, 0.15, target=TEAM,
+         source="Крио резонанс (ослаблен ×0.5: 2 электро в отряде): +7.5% крит. шанса (0.15 крит-вэлью)"),
 )
 
 #: Время каждого персонажа в ротации (секунды)
-TIMES = {"Сандроне": 14.5, "Алеша": 1.9, "Одетта": 2.4, "Яэ Мико": 2.4}
+TIMES = {"Сандроне": 14, "Алеша": 1.9, "Одетта": 2.4, "Яэ Мико": 2.4}
 
 ROTATION = "Алеша EQ/Одетта EE/Яэ EEE/Сандроне E CA EQ CA E CA E"
 
@@ -104,9 +104,9 @@ def alyosha_build(constellation: int = 6, weapon=FAV_LANCE, artifacts=(HEART_OF_
 
 
 def make_team(name: str, sandrone_c: int = 0, sandrone_weapon=ATONEMENT,
-              odette_c: int = 2, odette_weapon=SILVER_LIGHT,
-              yae_c: int = 2, yae_weapon=ECHOES.at(5),
-              alyosha_c: int = 6, alyosha_weapon=SYMPHONIST,
+              odette_c: int = 0, odette_weapon=SILVER_LIGHT,
+              yae_c: int = 1, yae_weapon=ECHOES.at(5),
+              alyosha_c: int = 6, alyosha_weapon=FAV_LANCE,
               sandrone_artifacts=(DISENCHANTMENT,), odette_artifacts=(DISENCHANTMENT,),
               yae_artifacts=(MILLELITH,), alyosha_artifacts=(HEART_OF_FORGE,)) -> Team:
     return Team(

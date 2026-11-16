@@ -24,7 +24,6 @@ from gi_damage.data.weapons import *
 from gi_damage.teams.zibai_linnea_columbina_illuga.builds import (
     zibai_build, make_team, columbina_build,linnea_build,illuga_build,
     refresh_reactions)
-from gi_damage.teams.mizuki_faruzan_cmc_odette.rosters import c6_mizuki_main_stats
 from gi_damage.teams.mizuki_faruzan_diona_odette.builds import diona_build
 from gi_damage.teams.mizuki_faruzan_qiqi_odette.builds import qiqi_build
 from gi_damage.teams.sandrone_odette_mitya_alyosha.builds import alyosha_build

@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
 """
+Ростеры отряда Цзы Бай / Линея / Колумбина / Иллуги.
+
 Запуск:  python -m gi_damage.teams.zibai_linnea_columbina_illuga.rosters
          python -m gi_damage.teams.zibai_linnea_columbina_illuga.rosters --details
 
-Созвездия сравниваются через make_team: у Цзы Бай от созвездия зависит время
-ротации, у Линеи — число реакций (C2).
+Стандартные ростеры (gi_damage/visual/standard_rosters.py) собираются на
+Линее C0. Созвездия Линеи меняют число реакций (C2), поэтому в стандартном
+ростере созвездий их нет. Вместо него два отдельных ростера:
+  * «Созвездия Линеи (C0–C1)» — от базы C0;
+  * «Созвездия Линеи от C2» — база C2 (с её числом реакций), от неё C3–C6.
 """
 
 from __future__ import annotations
@@ -12,40 +17,34 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
-from gi_damage.core.report import compare, hit_details, source_breakdown, team_summary
-from gi_damage.teams.zibai_linnea_columbina_illuga.builds import (
-    BASE_NAME, all_teams, make_team, team_name)
+from gi_damage.core.engine import Team
+from gi_damage.teams.zibai_linnea_columbina_illuga import builds
+from gi_damage.visual.rosters import RosterBook
+from gi_damage.visual.standard_rosters import run_standard
+
+#: стандартный ростер созвездий Линеи не строим (меняются реакции)
+SKIP = {("Линея", "c")}
+#: в ростерах на базе C0 Линея не выше C1
+LINNEA_MAX_C = 1
 
 
-def _section(title: str, teams) -> None:
-    print(f"=== {title} ===")
-    print(compare([t.compute() for t in teams]))
-    print()
+def _linnea(c: int):
+    return builds.make_team(f"C{c}", linnea_c=c).compute()
+
+
+def extra(book: RosterBook, base: Team) -> None:
+    book.add([_linnea(c) for c in range(LINNEA_MAX_C + 1)],
+             "Созвездия — Линея (C0–C1)", base=0,
+             notes=[f"Линея ограничена C{LINNEA_MAX_C}: с C2 меняется число реакций"])
+    book.add([_linnea(c) for c in range(2, 7)],
+             "Созвездия — Линея от C2", base=0,
+             notes=["база — отряд с C2 Линеи (реакции C2); % от базы — к нему"])
 
 
 def main(argv: list[str]) -> int:
-    details = "--details" in argv
-
-    for team in all_teams().values():
-        result = team.compute()
-        print(team_summary(result))
-        if details:
-            print(source_breakdown(result))
-            print()
-            print(hit_details(result))
-            print()
-
-    _section("Созвездия Цзы Бай", [make_team(team_name(zibai_c=c), zibai_c=c)
-                                   for c in (0, 1, 2, 3, 4, 6)])
-    _section("Созвездия Линеи", [make_team(team_name(linnea_c=c), linnea_c=c)
-                                 for c in (0, 1, 2, 4, 6)])
-    _section("Созвездия Колумбины", [make_team(team_name(columbina_c=c), columbina_c=c)
-                                     for c in (0, 1, 2, 4, 6)])
-    _section("Созвездия Иллуги", [make_team(team_name(illuga_c=c), illuga_c=c)
-                                  for c in (0, 2, 3, 4, 6)])
-    return 0
+    return run_standard(builds, argv, extra=extra, skip=SKIP)
 
 
 if __name__ == "__main__":

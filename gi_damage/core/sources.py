@@ -75,7 +75,9 @@ class DamageSource:
     multipliers: Tuple[str, ...] = ()  # имена доп. множителей персонажа (см. Character.multipliers)
     res_override: Optional[float] = None   # заменить множитель сопротивления цели
     crit_mode: Optional[str] = None    # переопределить режим крита для этого источника
-    polar_stacks: int = 1 
+    #: Стаки Polestar, заданные вручную: перекрывают расчёт по отряду
+    #: (Team.polar_plan()).
+    polar_override: Optional[float] = None
     #: Доп. слагаемые базы от других статов: (("em", 1.5),) = «+150% МС».
     #: База удара = Стат × Множитель + Σ Стат_i × k_i (до бонусов урона /
     #: множителя звёздной реакции). Пример: пассивка Сайно A4.

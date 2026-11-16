@@ -108,9 +108,9 @@ def nicole_build(constellation: int = 0, weapon=ECHOES.at(5), artifacts=NICOLE_A
 
 def make_team(name: str, wrio_c: int = 1, wrio_weapon=WANDERER_SONG_CRYO.at(5),
               odette_c: int = 0, odette_weapon=SILVER_LIGHT,
-              yae_c: int = 2, yae_weapon=ECHOES.at(5),
+              yae_c: int = 1, yae_weapon=ECHOES.at(5),
               nicole_c: int = 0, nicole_weapon=ECHOES.at(5),
-              wrio_artifacts=(DISENCHANTMENT,), odette_artifacts=(HEART_OF_FORGE,),
+              wrio_artifacts=(STELLAR_SET,), odette_artifacts=(HEART_OF_FORGE,),
               yae_artifacts=(DISENCHANTMENT,), nicole_artifacts=NICOLE_ARTIFACTS) -> Team:
     return Team(
         name=name,
@@ -127,7 +127,7 @@ def make_team(name: str, wrio_c: int = 1, wrio_weapon=WANDERER_SONG_CRYO.at(5),
     )
 
 
-BASE_NAME = "C1R5 Ризли, C0R5 Одетта, C1R5 Яэ, C0R5 Николь"
+BASE_NAME = "C1R0 Ризли, C0R0 Одетта, C1R0 Яэ, C0R0 Николь"
 
 
 def all_teams() -> Dict[str, Team]:

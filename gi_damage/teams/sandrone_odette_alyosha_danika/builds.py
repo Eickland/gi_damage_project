@@ -35,12 +35,12 @@ from ...data.characters.danika import (DANIKA_COMBO_DICT, C2_ACTIVE_STACKS,
 from ...data.weapons import *
 
 TEAM_BUFFS = (
-    Buff(S.CRIT_VALUE, 0.30, target=TEAM,
-         source="Крио резонанс: +15% крит. шанса (0.30 крит-вэлью)"),
+    Buff(S.CRIT_VALUE, 0.15, target=TEAM,
+         source="Крио резонанс (ослаблен ×0.5: 2 электро в отряде): +7.5% крит. шанса (0.15 крит-вэлью)"),
 )
 
 #: Время каждого персонажа в ротации (секунды)
-TIMES = {"Сандроне": 14.5, "Алеша": 1.9, "Даника": 1.9, "Одетта": 2.4}
+TIMES = {"Сандроне": 14, "Алеша": 1.9, "Даника": 3.25, "Одетта": 2.4}
 
 ROTATION = "Алеша EQ/Даника EQ/Одетта EE/Сандроне E CA EQ CA E CA E"
 
@@ -71,7 +71,7 @@ def sandrone_build(constellation: int = 0, weapon=ATONEMENT, artifacts=(DISENCHA
     ), danika_c2_hits)
 
 
-def odette_build(constellation: int = 0, weapon=SILVER_LIGHT, artifacts=(DISENCHANTMENT,),
+def odette_build(constellation: int = 0, weapon=SILVER_LIGHT, artifacts=(STELLAR_SET,),
                  use_burst: bool | None = None, danika_c2_hits: int = 0,
                  extra_buffs: Sequence[Buff] = ()) -> Build:
     """use_burst=None — авто: до C4 не применяем, с C4 применяем."""
@@ -118,8 +118,8 @@ def danika_build(constellation: int = 0, weapon=ATONEMENT, artifacts=(HEART_OF_F
     ), C2_OTHER_STACKS if constellation >= 2 else 0)
 
 
-def make_team(name: str, sandrone_c: int = 0, sandrone_weapon=TEASPOON,
-              odette_c: int = 2, odette_weapon=SILVER_LIGHT,
+def make_team(name: str, sandrone_c: int = 0, sandrone_weapon=ATONEMENT,
+              odette_c: int = 0, odette_weapon=SILVER_LIGHT,
               alyosha_c: int = 6, alyosha_weapon=FAV_LANCE,
               danika_c: int = 0, danika_weapon=ATONEMENT,
               sandrone_artifacts=(DISENCHANTMENT,), odette_artifacts=(STELLAR_SET,),
@@ -144,7 +144,7 @@ def make_team(name: str, sandrone_c: int = 0, sandrone_weapon=TEASPOON,
 
 def team_name(sandrone_c: int = 0, sandrone_weapon=ATONEMENT, odette_c: int = 0,
               odette_weapon=SILVER_LIGHT, alyosha_c: int = 6, alyosha_weapon=FAV_LANCE,
-              danika_c: int = 2, danika_weapon=ATONEMENT) -> str:
+              danika_c: int = 0, danika_weapon=ATONEMENT) -> str:
     _dw = (f" ({danika_weapon.name})" if danika_weapon.name != ATONEMENT.name else "")
     return (f"C{sandrone_c}R{sandrone_weapon.refinement} Сандроне, "
             f"C{odette_c}R{odette_weapon.refinement} Одетта, "
@@ -155,9 +155,9 @@ def team_name(sandrone_c: int = 0, sandrone_weapon=ATONEMENT, odette_c: int = 0,
 #: Вариации: C0 / C1 / C2 Даники
 VARIANTS = (
     {"danika_c": 0},
-    {"danika_c": 1},
+    {"danika_c": 0,"odette_c":2,"odette_weapon":FROSTFEATHER},
     {"danika_c": 2},
-            {"danika_c": 0, "danika_weapon": SPRING_TIDE},  # Даника с сигной (Весенний прилив R1)
+    {"danika_c": 0, "danika_weapon": SPRING_TIDE},  # Даника с сигной (Весенний прилив R1)
 )
 
 BASE_NAME = team_name()

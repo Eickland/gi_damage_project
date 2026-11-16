@@ -37,8 +37,8 @@
   * саппорт: максимум маяков без C1 — 4 (C1 поднимает до 5);
   * саппорт: подрыв считается как N инстансов по 165.6% МС (N = число маяков);
   * саппорт: C4 — 13 поглощённых маяков → 2 доп. удара по 300% МС;
-  * ДД: стаки полярности у ударов имплозии — MITYA_DD_POLAR_STACKS;
-  * ДД: C4 (поглощение маяков ядром) в режиме ДД не работает;
+  * ДД: C4 — детекторное ядро, 2 удара по 300% МС (урон SC, электро),
+    с теми же баффами, что у заряженных атак (kind="charged", теги имплозии);
   * ДД: удар самой заряженной атаки по АТК (GRADIENT_DETONATION_MV) не считается —
     только удары SC по маякам.
 """
@@ -80,23 +80,15 @@ IMPLOSION_EM = GRADIENT_DETONATION_SC_EM   # 403.2% МС за маяк
 C5_IMPLOSION_EM = 4.76                     # C5: 476% МС за маяк
 DD_BURST_ATK_MV = 6.0048                   # взрыв: 600.48% АТК
 DD_BURST_EM_MV = 12.0096                   # взрыв: 1200.96% МС
-DD_HITS = {0: 13, 1: 16}                   # ударов имплозии: C0 / C1+
-DD_OD_STACKS = {0: 13, 1: 15}              # стаков Offensive Directive Валеры
+DD_HITS = {0: 12, 1: 14}                   # ударов имплозии: C0 / C1+
+DD_OD_STACKS = {0: 12, 1: 14}              # стаков Offensive Directive Валеры
 C2_DD_ACTIVE_EM = 234.0                    # C2 (ДД): +234 МС активному персонажу
 C6_BEACON_CHANCE = 0.34                    # C6 (ДД): шанс нового маяка
 #: Ожидаемое число ударов на один исходный маяк: 1 + p + p² + … = 1 / (1 − p)
 C6_HIT_FACTOR = 1.0 / (1.0 - C6_BEACON_CHANCE)
 DD_TIME = 10.2                             # hE + CA Q CA CA, секунды
-#: Стаки «полярности» для ударов имплозии (Митя на поле, отряд электро SC)
-MITYA_DD_POLAR_STACKS = 6
 
-#: Количество ударов в комбо саппорта
-ELECTRO_CORE_HITS = 3
-SC_HITS = 13
-C4_HITS = SC_HITS // 5               # 2
 
-#: Стаки «полярности» для звёздного проводника Мити (вне поля)
-MITYA_POLAR_STACKS = 6
 
 MITYA_NAME = "Митя"
 
@@ -138,6 +130,7 @@ MITYA_KIT = Character(
     element="electro",
     weapon_type="catalyst",
     default_field=OFF,
+    polar_always=1.33,   # стаки Polestar отряду
     crit_mode="balance",
     stats={
         S.BASE_ATK: 263.0,
@@ -183,6 +176,8 @@ MITYA_KIT = Character(
 MITYA_DD_KIT = replace(
     MITYA_KIT,
     default_field=ON,
+    polar_always=0.0,      # стаки Polestar: в режиме ДД — только пока на поле
+    polar_on_field=1.33,
     buffs=_COMMON_BUFFS,
     multipliers={},
     constellations={
@@ -202,9 +197,15 @@ MITYA_DD_KIT = replace(
     note="ДД на поле (режим перегрузки).",
 )
 
-_MITYA_TAGS = (OFF,)
-
 IMPLOSION_NAME = "Имплозия превращения (SC)"
+C4_DD_NAME = "C4: детекторное ядро (SC)"
+C4_DD_HITS = 2
+
+
+def _c4_dd(*tags):
+    """C4 (ДД): 2 удара детекторного ядра, 300% МС, SC; баффы — как у заряженных."""
+    return {4: (stellar_conduct(C4_DD_NAME, "em", C4_EM, "electro",
+                                [occ(C4_DD_HITS, *tags)], kind="charged"),)}
 
 
 def _implosion_occ(total: float, od: int, hit_tags, od_tags):
@@ -216,8 +217,7 @@ def _implosion_occ(total: float, od: int, hit_tags, od_tags):
     return out
 
 
-def mitya_dd_rotation(hit_tags=(ON,), hold_tags=(ON,), burst_tags=None,
-                      polar_stacks: int = MITYA_DD_POLAR_STACKS) -> Character:
+def mitya_dd_rotation(hit_tags=(ON,), hold_tags=(ON,), burst_tags=None) -> Character:
     """Митя-ДД под конкретную ротацию: hE → CA Q CA CA.
 
     hit_tags   — теги ударов имплозии (OFFENSIVE_DIRECTIVE добавляется сам
@@ -239,8 +239,7 @@ def mitya_dd_rotation(hit_tags=(ON,), hold_tags=(ON,), burst_tags=None,
             elemental("Навык удержанием", "atk", HOLD_SKILL_MV, "electro", "skill",
                       [occ(1, *hold_tags)]),
             stellar_conduct(IMPLOSION_NAME, "em", IMPLOSION_EM, "electro",
-                            occs(DD_HITS[0], DD_OD_STACKS[0]), kind="charged",
-                            polar_stacks=polar_stacks),
+                            occs(DD_HITS[0], DD_OD_STACKS[0]), kind="charged"),
             elemental("Взрыв стихии (АТК)", "atk", DD_BURST_ATK_MV, "electro", "burst",
                       [occ(1, *burst_tags)]),
             elemental("Взрыв стихии (МС)", "em", DD_BURST_EM_MV, "electro", "burst",
@@ -253,50 +252,118 @@ def mitya_dd_rotation(hit_tags=(ON,), hold_tags=(ON,), burst_tags=None,
             6: {IMPLOSION_NAME: lambda s: replace(
                 s, occurrences=occs(c6_total, DD_OD_STACKS[1]))},
         },
+        constellation_sources=_c4_dd(*od_tags),
     )
 
 
+#: Каждая строка occ(N, теги...) — N ударов в этом наборе окон; одинаковые
+#: удары с разными баффами идут строками подряд.
 MITYA_COMBO_DICT = {
+    # Саппорт: 13 ударов SC ядра = поглощения + подрыв маяков (4, с C1 — 5).
     "support_steady": with_rotation(
         MITYA_KIT,
         sources=(
-            elemental("Навык нажатием", "atk", TAP_SKILL_MV, "electro", "skill",
-                      [occ(1, ON)]),
-            elemental("Ядро Steady State", "atk", CORE_MV, "electro", "skill",
-                      [occ(ELECTRO_CORE_HITS, *_MITYA_TAGS)], multipliers=("core",)),
-            stellar_conduct("Ядро — поглощение маяка (SC)", "em", CORE_CONSUME_EM, "electro",
-                            [occ(SC_HITS - MAX_BEACONS[0], *_MITYA_TAGS)], kind="skill",
-                            multipliers=("core",), polar_stacks=MITYA_POLAR_STACKS),
-            stellar_conduct("Ядро — подрыв маяков (SC)", "em", CORE_DETONATION_EM, "electro",
-                            [occ(MAX_BEACONS[0], *_MITYA_TAGS)], kind="skill",
-                            multipliers=("core",), polar_stacks=MITYA_POLAR_STACKS),
+            elemental("Навык нажатием", "atk", TAP_SKILL_MV, "electro", "skill", [
+                occ(1, ON),
+            ]),
+            elemental("Ядро Steady State", "atk", CORE_MV, "electro", "skill", [
+                occ(3, OFF),
+            ], multipliers=("core",)),
+            stellar_conduct("Ядро — поглощение маяка (SC)", "em", CORE_CONSUME_EM, "electro", [
+                occ(9, OFF,DECODING,SEVEN_SACRED),
+            ], kind="skill", multipliers=("core",)),
+            stellar_conduct("Ядро — подрыв маяков (SC)", "em", CORE_DETONATION_EM, "electro", [
+                occ(4, OFF),
+            ], kind="skill", multipliers=("core",)),
         ),
         constellation_patches={
             # 5 маяков: подрыв на 5, поглощений на 1 меньше (всего по-прежнему 13)
             1: {
-                "Ядро — поглощение маяка (SC)": lambda s: replace(
-                    s, occurrences=[occ(SC_HITS - MAX_BEACONS[1], *_MITYA_TAGS)]),
-                "Ядро — подрыв маяков (SC)": lambda s: replace(
-                    s, occurrences=[occ(MAX_BEACONS[1], *_MITYA_TAGS)]),
+                "Ядро — поглощение маяка (SC)": lambda s: replace(s, occurrences=[
+                    occ(8, OFF),
+                ]),
+                "Ядро — подрыв маяков (SC)": lambda s: replace(s, occurrences=[
+                    occ(5, OFF),
+                ]),
             },
         },
         constellation_sources={
             4: (
-                stellar_conduct("C4: удар за 5 поглощённых маяков (SC)", "em", C4_EM,
-                                "electro", [occ(C4_HITS, *_MITYA_TAGS)], kind="skill",
-                                polar_stacks=MITYA_POLAR_STACKS),
+                stellar_conduct("C4: удар за 5 поглощённых маяков (SC)", "em", C4_EM, "electro", [
+                    occ(2, OFF),
+                ], kind="skill"),
             ),
         },
     ),
     # ДД: Одетта EE / Яэ EEE / Митя hE CA / Валера E CA Q / Митя CA Q CA.
-    # Все удары после Валеры — в окне «Знати» Валеры.
-    "dd_overload_valera": mitya_dd_rotation(
-        hit_tags=(ON, NOBLE), hold_tags=(ON,), burst_tags=(ON, NOBLE)),
+    # Все удары после Валеры — в окне «Знати» Валеры. Ударов имплозии 13
+    # (C1+: 16, C6: 16 × C6_HIT_FACTOR), первые 13 (C1+: 15) тратят стаки
+    # Offensive Directive Валеры.
+    "dd_overload": with_rotation(
+        MITYA_DD_KIT,
+        sources=(
+            elemental("Навык удержанием", "atk", HOLD_SKILL_MV, "electro", "skill", [
+                occ(1, ON),
+            ]),
+            stellar_conduct(IMPLOSION_NAME, "em", IMPLOSION_EM, "electro", [
+                occ(10, ON, OFFENSIVE_DIRECTIVE,SEVEN_SACRED,CATS_TAIL),
+                occ(2, ON, OFFENSIVE_DIRECTIVE,SEVEN_SACRED),
+            ], kind="charged"),
+            elemental("Взрыв стихии (АТК)", "atk", DD_BURST_ATK_MV, "electro", "burst", [
+                occ(1, ON, NOBLE),
+            ]),
+            elemental("Взрыв стихии (МС)", "em", DD_BURST_EM_MV, "electro", "burst", [
+                occ(1, ON, NOBLE),
+            ]),
+        ),
+        constellation_patches={
+            1: {IMPLOSION_NAME: lambda s: replace(s, occurrences=[
+                occ(11, ON, OFFENSIVE_DIRECTIVE,SEVEN_SACRED),
+                occ(2, ON, OFFENSIVE_DIRECTIVE,SEVEN_SACRED,CATS_TAIL),
+            ])},
+            5: {IMPLOSION_NAME: lambda s: replace(s, mv=C5_IMPLOSION_EM)},
+            6: {IMPLOSION_NAME: lambda s: replace(s, occurrences=[
+                occ(11, ON, OFFENSIVE_DIRECTIVE,SEVEN_SACRED,CATS_TAIL),
+                occ(2, ON, OFFENSIVE_DIRECTIVE,SEVEN_SACRED),
+                occ(14 * C6_HIT_FACTOR - 13, ON, NOBLE,SEVEN_SACRED),
+            ])},
+        },
+        constellation_sources=_c4_dd(ON, OFFENSIVE_DIRECTIVE, SEVEN_SACRED, CATS_TAIL),
+    ),
     # ДД: Одетта EE / Валера E CA Q / Сахароза EdQ / Митя hE CA Q CA /
     #     Сахароза Ed / Митя CA — все удары Мити под баффами Сахарозы
     #     (A1 +50 МС, A4 +20% её МС, «Тайные истории драконоборцев» +48% АТК)
     #     и Изумрудной тенью (электро).
-    "dd_overload_sucrose": mitya_dd_rotation(
-        hit_tags=(ON, NOBLE, INST, SUCROSE_PASSIVE, VV_ELECTRO, TTDS_FULL),
-        hold_tags=(ON, NOBLE, INST, SUCROSE_PASSIVE, VV_ELECTRO, TTDS_FULL)),
+    "dd_overload_sucrose": with_rotation(
+        MITYA_DD_KIT,
+        sources=(
+            elemental("Навык удержанием", "atk", HOLD_SKILL_MV, "electro", "skill", [
+                occ(1, ON, NOBLE, INST, SUCROSE_PASSIVE, VV_ELECTRO, TTDS_FULL, TTDS_HALF),
+            ]),
+            stellar_conduct(IMPLOSION_NAME, "em", IMPLOSION_EM, "electro", [
+                occ(10, ON, INST, SUCROSE_PASSIVE, VV_ELECTRO, OFFENSIVE_DIRECTIVE,SEVEN_SACRED,CATS_TAIL),
+                occ(2, ON, OFFENSIVE_DIRECTIVE,SEVEN_SACRED),
+            ], kind="charged"),
+            elemental("Взрыв стихии (АТК)", "atk", DD_BURST_ATK_MV, "electro", "burst", [
+                occ(1, ON, NOBLE, INST, SUCROSE_PASSIVE, VV_ELECTRO, TTDS_FULL, TTDS_HALF),
+            ]),
+            elemental("Взрыв стихии (МС)", "em", DD_BURST_EM_MV, "electro", "burst", [
+                occ(1, ON, INST, SUCROSE_PASSIVE, VV_ELECTRO),
+            ]),
+        ),
+        constellation_patches={
+            1: {IMPLOSION_NAME: lambda s: replace(s, occurrences=[
+                occ(11, ON, INST, SUCROSE_PASSIVE, VV_ELECTRO, OFFENSIVE_DIRECTIVE,SEVEN_SACRED,CATS_TAIL),
+                occ(2, ON, OFFENSIVE_DIRECTIVE,SEVEN_SACRED),
+            ])},
+            5: {IMPLOSION_NAME: lambda s: replace(s, mv=C5_IMPLOSION_EM)},
+            6: {IMPLOSION_NAME: lambda s: replace(s, occurrences=[
+                occ(11, ON, INST, SUCROSE_PASSIVE, VV_ELECTRO, OFFENSIVE_DIRECTIVE,SEVEN_SACRED,CATS_TAIL),
+                occ(2, ON, OFFENSIVE_DIRECTIVE,SEVEN_SACRED),
+                occ(14 * C6_HIT_FACTOR - 13, ON, INST, SUCROSE_PASSIVE, VV_ELECTRO,SEVEN_SACRED),
+            ])},
+        },
+        constellation_sources=_c4_dd(ON, INST, SUCROSE_PASSIVE, VV_ELECTRO,
+                                     OFFENSIVE_DIRECTIVE, SEVEN_SACRED, CATS_TAIL),
+    ),
 }

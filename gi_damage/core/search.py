@@ -183,6 +183,8 @@ class Investable:
                         бесплатно, созвездия не докупаются (max_constellation
                         и owned игнорируются). Его сигна (`SignatureWeapon`
                         с character=label) покупается как обычно.
+    start_constellation — созвездие, которое уже есть бесплатно (owned=True):
+                        докупаются только C(start+1)..C(max_constellation).
     """
 
     label: str
@@ -191,6 +193,7 @@ class Investable:
     max_constellation: int = 6
     owned: bool = True
     fixed_constellation: Optional[int] = None
+    start_constellation: int = 0
     _name: Optional[str] = field(default=None, init=False, repr=False, compare=False)
 
     def __post_init__(self) -> None:
@@ -206,14 +209,16 @@ class Investable:
     def max_steps(self) -> int:
         if self.fixed:
             return 0
-        return self.max_constellation + (0 if self.owned else 1)
+        if self.owned:
+            return max(0, self.max_constellation - self.start_constellation)
+        return self.max_constellation + 1
 
     def constellation_at(self, steps: int) -> Optional[int]:
         """Созвездие после `steps` покупок; None — персонажа нет."""
         if self.fixed:
             return self.fixed_constellation
         if self.owned:
-            return steps
+            return steps + self.start_constellation
         return None if steps == 0 else steps - 1
 
     @property

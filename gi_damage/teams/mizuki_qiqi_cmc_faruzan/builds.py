@@ -84,12 +84,12 @@ def qiqi_build(constellation: int, artifacts, weapon=FAV_SWORD, extra_buffs: Seq
     )
 
 
-def cryo_mc_build(constellation: int, artifacts, weapon=EXAIPHANES, extra_buffs: Sequence[Buff] = ()) -> Build:
+def cryo_mc_build(constellation: int, artifacts, weapon=EXAIPHANES.at(5), extra_buffs: Sequence[Buff] = ()) -> Build:
     return Build(
         character=CMC_COMBO_DICT["cmc_ssw_mizuki_combo"],
         constellation=constellation,
         weapon=weapon,
-        artifacts=(artifacts,),
+        artifacts=artifacts,
         extra_stats=merge_dicts(
             {S.ATK_PCT: 0.466 * 2, S.CRIT_VALUE: 0.622},
             STANDART_SUBSTAT_PRESET),
@@ -128,15 +128,15 @@ def reactions(in_dreamdrifter: bool = True):
     d = (DREAM,) if in_dreamdrifter else ()
     return (
         # Мидзуки на поле -> её реакции всегда внутри окна
-        ssw_anemo("Мидзуки", 2, *d,BREEZEBORNE,FROSTGLOW, name="SSW анемо (Мидзуки)"),
-        ssw_anemo("Мидзуки", 8, INST, *d,BREEZEBORNE, name="SSW анемо (Мидзуки, Инструктор)"),
+        ssw_anemo("Мидзуки", 2, *d,FROSTGLOW, name="SSW анемо (Мидзуки)"),
+        ssw_anemo("Мидзуки", 8, INST, *d, name="SSW анемо (Мидзуки, Инструктор)"),
         # Фарузан триггерит со своего поля — Мидзуки в этот момент НЕ в Дрейфе.
         # Если по факту иначе, добавьте сюда *d.
-        ssw_anemo("Фарузан", 4, INST, *d,BREEZEBORNE,FROSTGLOW, name="SSW анемо (Фарузан, Инструктор)"),
-        ssw_anemo("Фарузан", 3, INST,BREEZEBORNE,FROSTGLOW, name="SSW анемо (Фарузан, Инструктор)"),
+        ssw_anemo("Фарузан", 4, INST, *d,FROSTGLOW, name="SSW анемо (Фарузан, Инструктор)"),
+        ssw_anemo("Фарузан", 3, INST,FROSTGLOW, name="SSW анемо (Фарузан, Инструктор)"),
         # Детонации вихря: проверьте, попадают ли они в окно.
-        ssw_vortex(3, 3, INST, *d,VV_CRYO,BREEZEBORNE,FROSTGLOW, name="SSW вихрь ×3 стака"),
-        ssw_vortex(3, 1, INST,VV_CRYO,BREEZEBORNE,FROSTGLOW, name="SSW вихрь ×3 стака"),
+        ssw_vortex(3, 3, INST, *d,VV_CRYO,FROSTGLOW, name="SSW вихрь ×3 стака"),
+        ssw_vortex(3, 1, INST,VV_CRYO,FROSTGLOW, name="SSW вихрь ×3 стака"),
     )
 
 
@@ -168,7 +168,7 @@ def make_team(name: str, mizuki_c: int, mizuki_weapon, cmc_c,cmc_artifacts, mizu
 
 def all_teams() -> Dict[str, Team]:
     variants = (
-        ("Мидзуки C6R1, C4R3 Крио ГГ, Ци Ци, С6R0 Фарузан", 6, SUNNY_MORNING_SLEEP_IN, 4, (HEART_OF_FORGE,),(NIGHT_SKY.at(2),AUBADE.at(2)),VIRIDESCENT,FAV_BOW, MILLELITH,0),
+        ("Мидзуки C2R0, C6R5 Крио ГГ, Ци Ци, С6R0 Фарузан", 2, WANDERER_SONG, 6, (HEART_OF_FORGE,), (NIGHT_SKY.at(2),AUBADE.at(2)), VIRIDESCENT, FAV_BOW, MILLELITH, 0),
     )
     return {name: make_team(name, c, mizuki_w, c_cmc, cmc_arts, mizuki_art, faruzan_art,faruzan_w,
                             qiqi_art, c_qiqi) for name, c, mizuki_w, c_cmc, cmc_arts, mizuki_art, faruzan_art, faruzan_w, qiqi_art, c_qiqi in variants}

@@ -40,7 +40,7 @@ TEAM_BUFFS = (
 )
 
 #: Время каждого персонажа в ротации (секунды)
-TIMES = {"Сандроне": 14.5, "Одетта": 2.4, "Яэ Мико": 2.4, "Шилонен": XILONEN_TIME}
+TIMES = {"Сандроне": 14, "Одетта": 2.4, "Яэ Мико": 2.4, "Шилонен": XILONEN_TIME}
 
 ROTATION = ("Одетта EE/Яэ EEE/Шилонен E/Сандроне E CA EQ CA/"
             "Шилонен E/Сандроне E CA E")
@@ -114,10 +114,10 @@ def xilonen_build(constellation: int = 0, weapon=FAV_SWORD, artifacts=(INSTRUCTO
     )
 
 
-def make_team(name: str, sandrone_c: int = 0, sandrone_weapon=TIDAL_SHADOW,
-              yae_c: int = 2, yae_weapon=ECHOES.at(5),
-              odette_c: int = 2, odette_weapon=SILVER_LIGHT,
-              xilonen_c: int = 2, xilonen_weapon=FAV_SWORD,
+def make_team(name: str, sandrone_c: int = 0, sandrone_weapon=MAGIC_SUPERSWORD,
+              yae_c: int = 1, yae_weapon=ECHOES.at(5),
+              odette_c: int = 0, odette_weapon=SILVER_LIGHT,
+              xilonen_c: int = 0, xilonen_weapon=FAV_SWORD,
               sandrone_artifacts=(DISENCHANTMENT,), yae_artifacts=(HEART_OF_FORGE,),
               odette_artifacts=(DISENCHANTMENT,), xilonen_artifacts=(INSTRUCTOR,)) -> Team:
     return Team(

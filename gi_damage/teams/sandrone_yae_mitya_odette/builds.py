@@ -24,12 +24,12 @@ from ...data.characters.mitya import MITYA_COMBO_DICT
 from ...data.weapons import *
 
 TEAM_BUFFS = (
-    Buff(S.CRIT_VALUE, 0.30, target=TEAM,
-         source="Крио резонанс: +15% крит. шанса (0.30 крит-вэлью)"),
+    Buff(S.CRIT_VALUE, 0.15, target=TEAM,
+         source="Крио резонанс (ослаблен ×0.5: 2 электро в отряде): +7.5% крит. шанса (0.15 крит-вэлью)"),
 )
 
 #: Время каждого персонажа в ротации (секунды)
-TIMES = {"Сандроне": 14.5, "Митя": 1.5, "Одетта": 2.4, "Яэ Мико": 2.4}
+TIMES = {"Сандроне": 14, "Митя": 1.5, "Одетта": 2.4, "Яэ Мико": 2.4}
 
 ROTATION = "Одетта EE/Яэ EEE/Митя E/Сандроне E CA EQ CA E CA E"
 
@@ -102,9 +102,9 @@ def mitya_build(constellation: int = 0, weapon=TTDS_FULL_CATALYSATOR, artifacts=
     )
 
 
-def make_team(name: str, sandrone_c: int = 0, sandrone_weapon=TEASPOON,
+def make_team(name: str, sandrone_c: int = 0, sandrone_weapon=ATONEMENT,
               odette_c: int = 0, odette_weapon=SILVER_LIGHT,
-              yae_c: int = 2, yae_weapon=ECHOES.at(5),
+              yae_c: int = 1, yae_weapon=ECHOES.at(5),
               mitya_c: int = 0, mitya_weapon=TTDS_FULL_CATALYSATOR,
               sandrone_artifacts=(DISENCHANTMENT,), odette_artifacts=(HEART_OF_FORGE,),
               yae_artifacts=(DISENCHANTMENT,), mitya_artifacts=(MILLELITH,)) -> Team:
@@ -123,7 +123,7 @@ def make_team(name: str, sandrone_c: int = 0, sandrone_weapon=TEASPOON,
     )
 
 
-BASE_NAME = "C0R0 Сандроне, C1R5 Яэ, С6R0 Алеша, C0R0 Одетта"
+BASE_NAME = "C0R0 Сандроне, C1R0 Яэ, С0R0 Митя, C0R0 Одетта"
 
 
 def all_teams() -> Dict[str, Team]:

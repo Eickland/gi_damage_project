@@ -42,7 +42,7 @@ from ...data.weapons import *
 TEAM_BUFFS: tuple = (Buff("res_reduction.geo", 0.10, target=TEAM,
          source="Гео резонанс: -10% гео сопротивления"),)
 
-ROTATION = "Линея E/Колумбина EQ/Иллуги EQ/Цзы Бай E N4sE N4sE Q N4sE N4sE"
+ROTATION = "Линея E/Колумбина EQ/Иллуги EQ/Цзы Бай E N4sE N4sE Q N4sE N1sE"
 
 #: Реакции за ротацию (до множителя A4 Колумбины)
 LC_ON_ZIBAI = 12
@@ -148,10 +148,10 @@ def illuga_build(constellation: int = 6, weapon=DRAGONS_BANE, artifacts=(SERENAD
     )
 
 
-def make_team(name: str, zibai_c: int = 2, linnea_c: int = 2,
-              columbina_c: int = 2, illuga_c: int = 6,
-              zibai_weapon=MOONSHARD.at(1), linnea_weapon=GOLDEN_OATH.at(1),
-              columbina_weapon=NOCTURNE.at(1), illuga_weapon=DRAGONS_BANE,
+def make_team(name: str, zibai_c: int = 0, linnea_c: int = 0,
+              columbina_c: int = 0, illuga_c: int = 6,
+              zibai_weapon=HARBINGER.at(5), linnea_weapon=COVENANT_FROST_SNOW.at(5),
+              columbina_weapon=PROTOTYPE_AMBER.at(5), illuga_weapon=DRAGONS_BANE,
               zibai_artifacts=(NIGHT_SKY,), linnea_artifacts=(AUBADE,),
               columbina_artifacts=(AUBADE,), illuga_artifacts=(SERENADE,),
               linnea_combo: str = "super_power") -> Team:

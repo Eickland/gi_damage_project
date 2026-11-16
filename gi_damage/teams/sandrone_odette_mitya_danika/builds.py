@@ -34,12 +34,12 @@ from ...data.characters.danika import (DANIKA_COMBO_DICT, C2_ACTIVE_STACKS,
 from ...data.weapons import *
 
 TEAM_BUFFS = (
-    Buff(S.CRIT_VALUE, 0.30, target=TEAM,
-         source="Крио резонанс: +15% крит. шанса (0.30 крит-вэлью)"),
+    Buff(S.CRIT_VALUE, 0.15, target=TEAM,
+         source="Крио резонанс (ослаблен ×0.5: 2 электро в отряде): +7.5% крит. шанса (0.15 крит-вэлью)"),
 )
 
 #: Время каждого персонажа в ротации (секунды)
-TIMES = {"Сандроне": 14.5, "Даника": 3, "Одетта": 2.4, "Митя": 1.5}
+TIMES = {"Сандроне": 14, "Даника": 3.25, "Одетта": 2.4, "Митя": 1.5}
 
 ROTATION = "Даника EQ/Одетта EE/Митя E/Сандроне E CA EQ CA E CA E"
 

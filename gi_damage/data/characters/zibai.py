@@ -66,9 +66,7 @@ C6_ELEVATION = 0.016 * (PHASE_RADIANCE_MAX - 70)   # 0.48
 STRIDE_1 = "zibai_stride"      # 1-й удар sE (гео)
 STRIDE_2 = "zibai_stride2"     # 2-й удар sE (лунная кристаллизация)
 
-LOOPS_NA = 4                   # N4 × 4
-LOOPS_STRIDE = 4               # sE × 4 (C1: 5)
-ZIBAI_TIME = 14.1              # длительность комбо, с
+ZIBAI_TIME = 13.2              # длительность комбо, с
 ZIBAI_C1_EXTRA_TIME = 0.3      # C1: анимация доп. sE
 
 
@@ -156,48 +154,43 @@ ZIBAI_KIT = Character(
     note="ДД лунной кристаллизации, масштабирование от ЗЩ.",
 )
 
-#: Окна отряда: все удары под Nightingale's Song Иллуги,
-#: удары лунной кристаллизации ещё и тратят Field Catalog Линеи.
-_TAGS = (ON, NIGHTINGALE)
-_LC_TAGS = (ON, NIGHTINGALE, FIELD_CATALOG)
-
 ZIBAI_COMBO_DICT = {
     # E N4 sE N4 sE Q N4 sE N4 sE — 14.8 с (C1: +sE в начале, +0.3 с)
     "lc_combo": with_rotation(
         ZIBAI_KIT,
         sources=(
-            elemental("1-й удар", "def", NA_MV[1], "geo", "normal", [occ(LOOPS_NA, *_TAGS)]),
-            elemental("2-й удар", "def", NA_MV[2], "geo", "normal", [occ(LOOPS_NA, *_TAGS)]),
+            elemental("1-й удар", "def", NA_MV[1], "geo", "normal", [occ(4, ON, NIGHTINGALE)]),
+            elemental("2-й удар", "def", NA_MV[2], "geo", "normal", [occ(3, ON, NIGHTINGALE)]),
             elemental("3-й удар (2 инстанса)", "def", NA_MV[3], "geo", "normal",
-                      [occ(LOOPS_NA * 2, *_TAGS)]),
-            elemental("4-й удар", "def", NA_MV[4], "geo", "normal", [occ(LOOPS_NA, *_TAGS)]),
+                      [occ(6, ON, NIGHTINGALE)]),
+            elemental("4-й удар", "def", NA_MV[4], "geo", "normal", [occ(3, ON, NIGHTINGALE)]),
             # C0: первая N4 идёт сразу после E — без C4; остальные три — после sE
             lunar_crystallize("4-й удар — доп. (LC)", "def", NA4_EXTRA_MV,
-                              [occ(1, *_LC_TAGS,INST)], kind="normal"),
+                              [occ(1, ON, NIGHTINGALE, FIELD_CATALOG, INST)], kind="normal"),
             lunar_crystallize("4-й удар — доп. после sE (LC)", "def", NA4_EXTRA_MV,
-                              [occ(LOOPS_NA - 1, *_LC_TAGS)], kind="normal"),
+                              [occ(2, ON, NIGHTINGALE, FIELD_CATALOG)], kind="normal"),
             elemental("Spirit Steed's Stride — 1-й удар", "def", STRIDE_MV[1], "geo", "skill",
-                      [occ(LOOPS_STRIDE, *_TAGS)], extra_tags=(STRIDE_1,)),
+                      [occ(4, ON, NIGHTINGALE)], extra_tags=(STRIDE_1,)),
             lunar_crystallize("Spirit Steed's Stride — 2-й удар (LC)", "def", STRIDE_MV[2],
-                              [occ(LOOPS_STRIDE, *_LC_TAGS)],
+                              [occ(4, ON, NIGHTINGALE, FIELD_CATALOG)],
                               kind="skill", extra_tags=(STRIDE_2,)),
             elemental("Tri-Sphere Eminence — 1-й удар", "def", BURST_MV[1], "geo", "burst",
-                      [occ(1, *_TAGS)]),
+                      [occ(1, ON, NIGHTINGALE)]),
             lunar_crystallize("Tri-Sphere Eminence — 2-й удар (LC)", "def", BURST_MV[2],
-                              [occ(1, *_LC_TAGS,INST)], kind="burst"),
+                              [occ(1, ON, NIGHTINGALE, FIELD_CATALOG, INST)], kind="burst"),
         ),
         constellation_patches={
             1: {
                 # +1 sE в начале: он и получает +220% (окно ZIBAI_C1)
                 "Spirit Steed's Stride — 1-й удар": lambda s: replace(
-                    s, occurrences=[occ(LOOPS_STRIDE + 1, *_TAGS)]),
+                    s, occurrences=[occ(5, ON, NIGHTINGALE)]),
                 "Spirit Steed's Stride — 2-й удар (LC)": lambda s: replace(
-                    s, occurrences=[occ(1, *_LC_TAGS, ZIBAI_C1),
-                                    occ(LOOPS_STRIDE, *_LC_TAGS)]),
+                    s, occurrences=[occ(1, ON, NIGHTINGALE, FIELD_CATALOG, ZIBAI_C1),
+                                    occ(4, ON, NIGHTINGALE, FIELD_CATALOG)]),
                 # теперь все 4 серии N4 идут после sE
                 "4-й удар — доп. (LC)": lambda s: replace(s, occurrences=[]),
                 "4-й удар — доп. после sE (LC)": lambda s: replace(
-                    s, occurrences=[occ(LOOPS_NA, *_LC_TAGS)]),
+                    s, occurrences=[occ(4, ON, NIGHTINGALE, FIELD_CATALOG)]),
             },
         },
     ),

@@ -37,8 +37,6 @@ SONG_LC, SONG_LC_C3 = 4.0666, 4.8008                  # … урон лунно�
 A4_GEO = {0: 0.0, 1: 0.07, 2: 0.14, 3: 0.24}          # по числу гидро/гео в отряде
 A4_LC = {0: 0.0, 1: 0.48, 2: 0.96, 3: 1.60}
 AEDON_EM, AEDON_DEF = 4.0, 2.0                        # C2
-AEDON_HITS = 5
-
 A1_CR, A1_CD, A1_EM = 0.05, 0.10, 50.0
 C6_CR, C6_CD, C6_EM = 0.10, 0.30, 80.0
 C4_DEF = 200.0
@@ -127,7 +125,7 @@ ILLUGA_COMBO_DICT = {
         ),
         constellation_sources={
             2: (elemental("C2: Aedon", "em", AEDON_EM, "geo", "burst",
-                          [occ(AEDON_HITS, OFF)], extra_scaling=(("def", AEDON_DEF),)),),
+                          [occ(5, OFF)], extra_scaling=(("def", AEDON_DEF),)),),
         },
     ),
 }

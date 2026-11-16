@@ -24,12 +24,12 @@ from ...data.characters.alyosha import ALYOSHA_COMBO_DICT
 from ...data.weapons import *
 
 TEAM_BUFFS = (
-    Buff(S.CRIT_VALUE, 0.30, target=TEAM,
-         source="Крио резонанс: +15% крит. шанса (0.30 крит-вэлью)"),
+    Buff(S.CRIT_VALUE, 0.15, target=TEAM,
+         source="Крио резонанс (ослаблен ×0.5: 2 электро в отряде): +7.5% крит. шанса (0.15 крит-вэлью)"),
 )
 
 #: Время каждого персонажа в ротации (секунды)
-TIMES = {"Сандроне": 14.5, "Алеша": 1.65, "Одетта": 2.4, "Митя": 1.5}
+TIMES = {"Сандроне": 14, "Алеша": 1.9, "Одетта": 2.4, "Митя": 1.5}
 
 ROTATION = "Алеша EQ/Одетта EE/Митя E/Сандроне E CA EQ CA E CA E"
 
@@ -74,7 +74,7 @@ def odette_build(constellation: int = 0, weapon=SILVER_LIGHT, artifacts=(DISENCH
     )
 
 
-def mitya_build(constellation: int = 0, weapon=TTDS_FULL_CATALYSATOR, artifacts=(MILLELITH,),
+def mitya_build(constellation: int = 0, weapon=TTDS_HALF_CATALYSATOR, artifacts=(MILLELITH,),
                 main_stats={S.BASE_EM: 187.0 * 3},
                 extra_buffs: Sequence[Buff] = ()) -> Build:
     return Build(
@@ -105,7 +105,7 @@ def alyosha_build(constellation: int = 6, weapon=FAV_LANCE, artifacts=(HEART_OF_
 
 def make_team(name: str, sandrone_c: int = 0, sandrone_weapon=ATONEMENT,
               odette_c: int = 0, odette_weapon=SILVER_LIGHT,
-              mitya_c: int = 2, mitya_weapon=TTDS_FULL_CATALYSATOR,
+              mitya_c: int = 0, mitya_weapon=TTDS_HALF_CATALYSATOR,
               alyosha_c: int = 6, alyosha_weapon=FAV_LANCE,
               sandrone_artifacts=(DISENCHANTMENT,), odette_artifacts=(DISENCHANTMENT,),
               mitya_artifacts=(MILLELITH,), alyosha_artifacts=(HEART_OF_FORGE,)) -> Team:

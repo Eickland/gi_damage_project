@@ -38,9 +38,9 @@ TEAM_BUFFS = (
 )
 
 #: Время каждого персонажа в ротации (секунды)
-TIMES = {"Мидзуки": 10.5, "Анастасия": 3.0, "Крио ГГ": 3.65, "Водяница": 1.35}
+TIMES = {"Мидзуки": 10, "Анастасия": 3.5, "Крио ГГ": 3.65, "Водяница": 1.6}
 
-ROTATION = "CMC E CA Q/Анастасия EQ/Водяница E/Midzuki EQ"
+ROTATION = "Водяница E/CMC E CA Q/Анастасия EQ/Midzuki EQ"
 
 MAIN_ATK = {S.ATK_PCT: 0.466 * 2, S.CRIT_VALUE: 0.622}       # АТК/АТК/крит
 
@@ -54,7 +54,7 @@ def enemy() -> Enemy:
     return Enemy(res={"anemo": 0.10, "cryo": 0.10}, def_mult=0.4875, elevation=0.0)
 
 
-def mizuki_build(constellation: int = 2, weapon=WANDERER_SONG.at(5), artifacts=(VIRIDESCENT,),
+def mizuki_build(constellation: int = 2, weapon=WANDERER_SONG.at(5), artifacts=(GILDED),
                  extra_buffs: Sequence[Buff] = ()) -> Build:
     if constellation == 6 and weapon.name != "Сон солнечным утром":
         main_stats = {S.BASE_EM: 187 * 3}
@@ -71,7 +71,7 @@ def mizuki_build(constellation: int = 2, weapon=WANDERER_SONG.at(5), artifacts=(
     )
 
 
-def anastasia_build(constellation: int = 0, weapon=ARTEMISIA, artifacts=(STELLAR_SET,),
+def anastasia_build(constellation: int = 0, weapon=BREEZEBORNE_BOW.at(1), artifacts=(HEART_OF_FORGE,),
                     main_stats=MAIN_ATK, extra_buffs: Sequence[Buff] = ()) -> Build:
     return Build(
         character=ANASTASIA,
@@ -84,8 +84,8 @@ def anastasia_build(constellation: int = 0, weapon=ARTEMISIA, artifacts=(STELLAR
     )
 
 
-def cryo_mc_build(constellation: int = 4, artifacts=(HEART_OF_FORGE.at(2), SCARLET_PROOF.at(2)),
-                  weapon=EXAIPHANES, extra_buffs: Sequence[Buff] = ()) -> Build:
+def cryo_mc_build(constellation: int = 6, artifacts=(HEART_OF_FORGE.at(2), SCARLET_PROOF.at(2)),
+                  weapon=EXAIPHANES.at(5), extra_buffs: Sequence[Buff] = ()) -> Build:
     return Build(
         character=CMC_COMBO_DICT["cmc_ssw_mizuki_combo"],
         constellation=constellation,
@@ -114,22 +114,22 @@ def reactions(in_dreamdrifter: bool = True):
     """События SSW за ротацию: как в mizuki_vodya_odette_cmc + Requiem Анастасии."""
     d = (DREAM,) if in_dreamdrifter else ()
     return requiem_reactions((
-        ssw_anemo("Мидзуки", 1, *d, BREEZEBORNE, FROSTGLOW, trigger_tags=(VODYA_LEAD,),
+        ssw_anemo("Мидзуки", 1, *d, FROSTGLOW, trigger_tags=(VODYA_LEAD,),
                   name="SSW анемо (Мидзуки)"),
-        ssw_anemo("Мидзуки", 10, *d, BREEZEBORNE, FROSTGLOW, trigger_tags=(VODYA_LEAD,),
+        ssw_anemo("Мидзуки", 10, *d, FROSTGLOW, trigger_tags=(VODYA_LEAD,),
                   char_tags={"Крио ГГ": (VODYA_CHORUS,)}, name="SSW анемо (Мидзуки)"),
-        ssw_vortex(3, 3, *d, BREEZEBORNE, FROSTGLOW, VV_CRYO, name="SSW вихрь ×3 стака"),
-        requiem_vortex(*d, BREEZEBORNE, FROSTGLOW, VV_CRYO),
+        ssw_vortex(3, 3, *d, FROSTGLOW, VV_CRYO, name="SSW вихрь ×3 стака"),
+        requiem_vortex(*d, FROSTGLOW, VV_CRYO),
     ))
 
 
 def make_team(name: str, mizuki_c: int = 2, mizuki_weapon=WANDERER_SONG.at(5),
-              cmc_c: int = 4, cmc_weapon=EXAIPHANES,
+              cmc_c: int = 6, cmc_weapon=EXAIPHANES.at(5),
               cmc_artifacts=(HEART_OF_FORGE.at(2), SCARLET_PROOF.at(2)),
-              mizuki_artifacts=(VIRIDESCENT,), vodya_artifacts=(MILLELITH,),
+              mizuki_artifacts=(GILDED,), vodya_artifacts=(MILLELITH,),
               vodya_weapon=TTDS_HALF_CATALYSATOR, vodya_c: int = 0,
-              anastasia_c: int = 0, anastasia_weapon=ARTEMISIA,
-              anastasia_artifacts=(STELLAR_SET,)) -> Team:
+              anastasia_c: int = 0, anastasia_weapon=BREEZEBORNE_BOW.at(1),
+              anastasia_artifacts=(HEART_OF_FORGE,)) -> Team:
     return Team(
         name=name,
         builds=[
@@ -148,11 +148,9 @@ def make_team(name: str, mizuki_c: int = 2, mizuki_weapon=WANDERER_SONG.at(5),
 
 #: Первые вариации mizuki_vodya_odette_cmc (Одетта -> Анастасия)
 VARIANTS = (
-    ("Мидзуки C1, C0R1 Анастасия, C4R3 Крио ГГ, С0R0 Водяница (Мил)",
-     dict(mizuki_c=1, mizuki_artifacts=(GILDED,))),
-    ("Мидзуки C2, C0R1 Анастасия, C4R3 Крио ГГ, С0R0 Водяница (Мил)",
+    ("Мидзуки C2, C0R1 Анастасия, C6R5 Крио ГГ, С0R0 Водяница (Мил)",
      dict(mizuki_c=2, mizuki_artifacts=(VIRIDESCENT,))),
-    ("Мидзуки C2, C0R1 Анастасия, C4R3 Крио ГГ, С0R0 Водяница (2+2)",
+    ("Мидзуки C2, C0R1 Анастасия, C6R5 Крио ГГ, С0R0 Водяница (2+2)",
      dict(mizuki_c=2, vodya_artifacts=(MILLELITH.at(2), VOURUKASHA.at(2)))),
 )
 

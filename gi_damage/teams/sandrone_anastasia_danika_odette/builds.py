@@ -1,12 +1,12 @@
 """
 Отряд звёздного проводника: Сандроне / Анастасия / Даника / Одетта.
 
-Ротация: Даника EQ / Анастасия EQ / Одетта EE / Сандроне E CA EQ CA E CA E.
+Ротация: Даника EQ / Анастасия EQ / Одетта EE / Сандроне E CA EQ CA E
+(укороченное комбо Сандроне, только C0 — без одной заряженной атаки).
 Реакций, наносящих урон, нет. Резонанс — крио (3 крио + 1 электро).
 
 Анастасия — саппорт (Милосердие), корона — 10 атак вне поля.
-An Unfinished Requiem: +1 стак Polestar всем ударам SC отряда — каждый
-персонаж берётся через polar_shift() (отдельное комбо с +1 стаком).
+An Unfinished Requiem: стаки Polestar — polar_always у Анастасии (Team.polar_plan()).
 
 Артефакты: Анастасия — Звёздный сет, Даника — Сердце горна,
 остальные — Разочарование.
@@ -28,12 +28,12 @@ from ...core.utilits import merge_dicts
 from ...data.artifacts import *
 from ...data.artifacts_presets import *
 from ...data.tags import *
-from ...data.characters.sandrone import SANDRONE_COMBO_DICT
+from ...data.characters.sandrone import SANDRONE_COMBO_DICT, SANDRONE_ONE_CA_TIME
 from ...data.characters.odette import (odette_burst_buffs, ODETTE_BURST_TIME,
                                        ODETTE_COMBO_DICT, ODETTE_BURST_SOURCES)
 from ...data.characters.danika import (DANIKA_COMBO_DICT, C2_ACTIVE_STACKS,
                                        C2_OTHER_STACKS, tag_stellar_conduct_hits)
-from ...data.characters.anastasia import anastasia_support, polar_shift, CROWN_HITS
+from ...data.characters.anastasia import anastasia_support, CROWN_HITS
 from ...data.weapons import *
 
 TEAM_BUFFS = (
@@ -42,18 +42,21 @@ TEAM_BUFFS = (
 )
 
 #: Время каждого персонажа в ротации (секунды)
-TIMES = {"Сандроне": 14.5, "Анастасия": 3.0, "Даника": 3.0, "Одетта": 2.4}
+#: Сандроне: комбо sandrone_c0_sc_short_combo — без одной CA (14.5 − 4 = 10.5 с)
+TIMES = {"Сандроне": 14, "Анастасия": 3.5, "Даника": 3.25, "Одетта": 2.4}
 
-ROTATION = "Даника EQ/Анастасия EQ/Одетта EE/Сандроне E CA EQ CA E CA E"
+ROTATION = "Даника EQ/Анастасия EQ/Одетта EE/Сандроне E CA EQ CA E"
 
 MAIN_ATK = {S.ATK_PCT: 0.466 * 2, S.CRIT_VALUE: 0.622}       # АТК/АТК/крит
-FULL_ATK = {S.ATK_PCT: 0.466 * 3}                            # АТК/АТК/АТК (Даника)
+#: Даника — единственный электро в отряде: часы на ВЭ вместо АТК
+#: (штраф по требованию энергии) — АТК/АТК/ВЭ.
+DANIKA_MAIN_ER = {S.ATK_PCT: 0.466 * 2}
 
 #: Комбо с +1 стаком Polestar (Requiem Анастасии)
-SANDRONE = polar_shift(SANDRONE_COMBO_DICT["sandrone_sc_combo"])
-ODETTE = polar_shift(ODETTE_COMBO_DICT["odette_ssc_combo"])
-DANIKA = polar_shift(DANIKA_COMBO_DICT["support_eq"])
-ANASTASIA = polar_shift(anastasia_support("sc", [occ(CROWN_HITS, OFF)]))
+SANDRONE = SANDRONE_COMBO_DICT["sandrone_sc_combo"]
+ODETTE = ODETTE_COMBO_DICT["odette_ssc_combo"]
+DANIKA = DANIKA_COMBO_DICT["support_eq"]
+ANASTASIA = anastasia_support("sc", [occ(CROWN_HITS, OFF)])
 
 
 def enemy() -> Enemy:
@@ -79,7 +82,7 @@ def sandrone_build(constellation: int = 0, weapon=ATONEMENT, artifacts=(DISENCHA
     ), danika_c2_hits)
 
 
-def anastasia_build(constellation: int = 0, weapon=ARTEMISIA, artifacts=(STELLAR_SET,),
+def anastasia_build(constellation: int = 0, weapon=BREEZEBORNE_BOW.at(1), artifacts=(STELLAR_SET,),
                     main_stats=MAIN_ATK, danika_c2_hits: int = 0,
                     extra_buffs: Sequence[Buff] = ()) -> Build:
     return _c2(Build(
@@ -93,8 +96,8 @@ def anastasia_build(constellation: int = 0, weapon=ARTEMISIA, artifacts=(STELLAR
     ), danika_c2_hits)
 
 
-def danika_build(constellation: int = 0, weapon=ATONEMENT, artifacts=(HEART_OF_FORGE,),
-                 main_stats=FULL_ATK, extra_buffs: Sequence[Buff] = ()) -> Build:
+def danika_build(constellation: int = 0, weapon=FAV_GREATSWORD, artifacts=(HEART_OF_FORGE,),
+                 main_stats=DANIKA_MAIN_ER, extra_buffs: Sequence[Buff] = ()) -> Build:
     return _c2(Build(
         character=DANIKA,
         constellation=constellation,
@@ -106,7 +109,7 @@ def danika_build(constellation: int = 0, weapon=ATONEMENT, artifacts=(HEART_OF_F
     ), C2_OTHER_STACKS if constellation >= 2 else 0)
 
 
-def odette_build(constellation: int = 0, weapon=SILVER_LIGHT, artifacts=(DISENCHANTMENT,),
+def odette_build(constellation: int = 0, weapon=SILVER_LIGHT, artifacts=(STELLAR_SET,),
                  use_burst: bool | None = None, danika_c2_hits: int = 0,
                  extra_buffs: Sequence[Buff] = ()) -> Build:
     """use_burst=None — авто: до C4 не применяем, с C4 применяем."""
@@ -125,9 +128,9 @@ def odette_build(constellation: int = 0, weapon=SILVER_LIGHT, artifacts=(DISENCH
     ), danika_c2_hits)
 
 
-def make_team(name: str, sandrone_c: int = 0, sandrone_weapon=ATONEMENT,
-              anastasia_c: int = 0, anastasia_weapon=ARTEMISIA,
-              danika_c: int = 0, danika_weapon=ATONEMENT,
+def make_team(name: str, sandrone_c: int = 0, sandrone_weapon=MAGIC_SUPERSWORD,
+              anastasia_c: int = 0, anastasia_weapon=BREEZEBORNE_BOW.at(1),
+              danika_c: int = 0, danika_weapon=FAV_GREATSWORD,
               odette_c: int = 0, odette_weapon=SILVER_LIGHT,
               sandrone_artifacts=(DISENCHANTMENT,), anastasia_artifacts=(MILLELITH,),
               danika_artifacts=(HEART_OF_FORGE,), odette_artifacts=(STELLAR_SET,)) -> Team:
@@ -150,11 +153,11 @@ def make_team(name: str, sandrone_c: int = 0, sandrone_weapon=ATONEMENT,
     )
 
 
-def team_name(sandrone_c: int = 0, sandrone_weapon=ATONEMENT,
-              anastasia_c: int = 0, anastasia_weapon=ARTEMISIA,
-              danika_c: int = 0, danika_weapon=ATONEMENT,
+def team_name(sandrone_c: int = 0, sandrone_weapon=MAGIC_SUPERSWORD,
+              anastasia_c: int = 0, anastasia_weapon=BREEZEBORNE_BOW.at(1),
+              danika_c: int = 0, danika_weapon=FAV_GREATSWORD,
               odette_c: int = 0, odette_weapon=SILVER_LIGHT) -> str:
-    _dw = (f" ({danika_weapon.name})" if danika_weapon.name != ATONEMENT.name else "")
+    _dw = (f" ({danika_weapon.name})" if danika_weapon.name != FAV_GREATSWORD.name else "")
     return (f"C{sandrone_c}R{sandrone_weapon.refinement} Сандроне, "
             f"C{anastasia_c}R{anastasia_weapon.refinement} Анастасия, "
             f"C{danika_c}R{danika_weapon.refinement} Даника{_dw}, "
