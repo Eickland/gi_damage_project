@@ -99,10 +99,10 @@ def render_card(result, store: Optional[IconStore] = None, index: int = 0,
   <div class="body">
     <div class="units">{units}</div>
     <div class="mid">
-      <table>
+      <div class="hscroll"><table>
         <thead><tr><th>Отряд</th><th>Урон</th><th>Доля</th><th>Поле</th></tr></thead>
         <tbody>{table}</tbody>
-      </table>
+      </table></div>
       <div class="total">
         <div><span>DPR</span><b>{fmt(result.dpr)}</b></div>
         <div><span>Ротация</span><b>{result.rotation_time:g}s</b></div>
@@ -172,7 +172,75 @@ td.num i{position:absolute;left:0;bottom:0;height:2px;background:var(--bar)}
   font-size:12px;color:var(--mute)}
 svg.ph{width:100%;height:100%;display:block}
 @media(max-width:900px){.grid{grid-template-columns:1fr}}
+""" + r"""
+/* ---- узкие экраны: прокрутка внутри карточки + ползунок ---- */
+.units,.hscroll,.rtable{max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.units{padding-bottom:2px}
+/* когда JS повесил свой ползунок — родную полосу прячем, чтобы не было двух */
+.hs{scrollbar-width:none}
+.hs::-webkit-scrollbar{display:none}
+.hbar{flex:1 1 100%;width:100%;margin:4px 0 2px;height:18px;background:transparent;
+  -webkit-appearance:none;appearance:none;cursor:pointer;touch-action:none}
+.hbar::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:#2a2b33}
+.hbar::-moz-range-track{height:6px;border-radius:3px;background:#2a2b33}
+.hbar::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;margin-top:-5px;
+  width:var(--tw,40px);height:16px;border-radius:8px;background:var(--line);border:0}
+.hbar::-moz-range-thumb{width:var(--tw,40px);height:16px;border-radius:8px;
+  background:var(--line);border:0}
+.hbar[hidden]{display:none}
+@media print{.hbar{display:none!important}.hs{overflow:visible}}
+@media(max-width:600px){
+  h1{margin:12px 12px 0;font-size:18px}
+  .grid{padding:10px 8px 20px;gap:10px}
+  .body,.rbody{padding:8px;gap:8px}
+  .body>*,.rbody>*{min-width:0;max-width:100%}
+  .mid,.info,.rtable{flex:1 1 100%;min-width:0}
+  .unit{width:68px}
+  .ic{width:56px;height:56px}
+  .ic.weapon,.ic.art{width:42px;height:42px}
+  /* в таблице ростера: номер и первый меняющийся столбец остаются на месте */
+  .rt td.v .vcell span{white-space:normal;max-width:8.5em;font-size:11px}
+  .rt th.rk,.rt td.rk{position:sticky;left:0;z-index:1;background:var(--panel);
+    width:34px;min-width:34px;max-width:34px;padding-left:2px;padding-right:2px}
+  .rt th.rk{background:var(--bar)}
+  .rt tr>:nth-child(2){position:sticky;left:34px;z-index:1;background:var(--panel);
+    box-shadow:6px 0 6px -4px #000a}
+  .rt thead tr>:nth-child(2){background:var(--bar)}
+  .rt tr.best td.rk,.rt tr.best>td:nth-child(2){background:#2a1215}
+  /* страница вложений: подписи покупок переносятся, «Всего куплено» — рядами */
+  .rt .chgs{width:42vw;max-width:190px}
+  .rt .chgs span{white-space:normal;font-size:11px}
+  .rt .chgs .ic{flex:0 0 auto}
+  .rt .hold{min-width:150px}
+}
 """
+
+#: Ползунок под каждым блоком, который не влезает по ширине (таблица, ряд
+#: персонажей). Работает и на телефонах, где родная полоса прокрутки скрыта.
+SCROLL_JS = r"""<script>(()=>{
+const SEL='.units,.hscroll,.rtable';
+function setup(el){
+  if(el._hb)return;
+  const bar=document.createElement('input');
+  bar.type='range';bar.min=0;bar.max=1000;bar.value=0;bar.className='hbar';bar.hidden=true;
+  bar.setAttribute('aria-label','Прокрутка по горизонтали');
+  el.after(bar);el._hb=bar;
+  const upd=()=>{const over=el.scrollWidth-el.clientWidth;
+    if(over<=2||!el.clientWidth){bar.hidden=true;el.classList.remove('hs');return;}
+    bar.hidden=false;el.classList.add('hs');
+    bar.style.setProperty('--tw',Math.max(28,bar.clientWidth*el.clientWidth/el.scrollWidth)+'px');
+    bar.value=Math.round(el.scrollLeft/over*1000);};
+  bar.addEventListener('input',()=>{el.scrollLeft=bar.value/1000*(el.scrollWidth-el.clientWidth);});
+  el.addEventListener('scroll',()=>{const over=el.scrollWidth-el.clientWidth;
+    if(over>0)bar.value=Math.round(el.scrollLeft/over*1000);},{passive:true});
+  new ResizeObserver(upd).observe(el);
+  if(el.firstElementChild)new ResizeObserver(upd).observe(el.firstElementChild);
+}
+function all(){document.querySelectorAll(SEL).forEach(setup);}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',all);else all();
+document.addEventListener('load',e=>{const el=e.target.closest&&e.target.closest(SEL);
+  if(el&&el._hb)el.dispatchEvent(new Event('scroll'));},true);
+})();</script>"""
 
 
 def render_page(results: Sequence, title: str = "Расчёт отрядов",
@@ -188,7 +256,7 @@ def render_page(results: Sequence, title: str = "Расчёт отрядов",
             f'<title>{html.escape(title)}</title><style>{CSS}</style></head><body>'
             f'<h1>{html.escape(title)}</h1>'
             f'<div class="grid" style="--cols:{max(1, columns)}">{cards}</div>'
-            f'</body></html>')
+            f'{SCROLL_JS}</body></html>')
 
 
 def save_cards(results: Sequence, path: str | Path, title: str = "Расчёт отрядов",

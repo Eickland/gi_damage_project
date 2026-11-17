@@ -27,9 +27,10 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from gi_damage.core.search import plan_report
-from gi_damage.visual.cards import CSS, fmt
+from gi_damage.visual.cards import CSS, SCROLL_JS, fmt
 from gi_damage.visual.icons import IconStore
 from gi_damage.visual.rosters import ROSTER_CSS
+from gi_damage.visual.search import SEARCH_CSS
 from gi_damage.visual.search import render_plan
 from gi_damage.visual.standard_invest import standard_plan
 from scripts.render_all_rosters import EXTRA_CSS, SharedIconStore, team_list
@@ -119,7 +120,7 @@ def main() -> int:
     title = "Порядок инвестиций звёздных команд"
     page = (f"<!doctype html><html lang='ru'><head><meta charset='utf-8'>"
             f"<meta name='viewport' content='width=device-width,initial-scale=1'>"
-            f"<title>{title}</title><style>{CSS}{ROSTER_CSS}{EXTRA_CSS}</style></head><body>"
+            f"<title>{title}</title><style>{CSS}{ROSTER_CSS}{SEARCH_CSS}{EXTRA_CSS}</style></head><body>"
             f"<h1>{title}</h1>"
             f"<p class='rot' style='margin:0 20px 8px'>{n} отрядов, кост до {args.budget}. "
             f"Старт — базовая линия (все персонажи куплены, без сигн и созвездий, кроме "
@@ -130,7 +131,7 @@ def main() -> int:
             f"<button onclick=\"document.querySelectorAll('details.team')"
             f".forEach(e=>e.open=false)\">Свернуть всё</button></div>"
             f"<nav class='toc'>{''.join(toc)}</nav>{''.join(body)}"
-            f"{store.script()}</body></html>")
+            f"{store.script()}{SCROLL_JS}</body></html>")
     out = Path(args.out)
     out.write_text(page, encoding="utf-8")
     if unfinished:

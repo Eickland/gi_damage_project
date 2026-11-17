@@ -6,7 +6,7 @@
 
 Крио ГГ: C6R5 (Пробуждение R5), Разочарование, комбо как в
 cryo_mc_odette_sucrose_alyosha: N2 P N2 N2 C N2 Q N2 N2 (9.2 с).
-C6 Крио ГГ (окно FROSTGLOW, 15 с после взрыва): ротация ~16.1 с, окно
+C6 Крио ГГ (окно FROSTGLOW, 15 с после взрыва): ротация ~18.05 с, окно
 перекрывает почти всю её, поэтому все удары остальных — с FROSTGLOW.
 An Unfinished Requiem: стаки Polestar — polar_always у Анастасии (Team.polar_plan()).
 Эпос Мити (половинчатый бафф, ротация < 20.5 с; окно TTDS_FULL/TTDS_HALF) — на всех ударах Крио ГГ: он идёт сразу после Мити.
@@ -27,7 +27,7 @@ from ...core.utilits import merge_dicts
 from ...data.artifacts import *
 from ...data.artifacts_presets import *
 from ...data.tags import *
-from ...data.characters.cryo_mc import CMC_COMBO_DICT, CMC_SC_DD_TIME
+from ...data.characters.cryo_mc import CMC_COMBO_DICT, CMC_SC_DD_TIME, CMC_N2_TIME
 from ...data.characters.danika import (DANIKA_COMBO_DICT, C2_ACTIVE_STACKS,
                                        C2_OTHER_STACKS, tag_stellar_conduct_hits, add_tags)
 from ...data.characters.danika import (C2_ACTIVE_STACKS, C2_OTHER_STACKS,
@@ -42,16 +42,20 @@ TEAM_BUFFS = (
 )
 
 #: Время каждого персонажа в ротации (секунды)
-TIMES = {"Крио ГГ": CMC_SC_DD_TIME+1.3, "Анастасия": 3.5, "Митя": 1.5, "Даника": 3.25}
+#: Доп. N2 у Крио ГГ — заполнитель: ротация не короче отката взрывов
+#: Анастасии и Даники (бета, 18 с). 1 × N2 → ротация 18.05 с.
+CMC_EXTRA_N2 = 1
 
-ROTATION = "Анастасия EQ/Даника EQ/Митя E/Крио ГГ N2 P N2 N2 C N2 Q N2 N2"
+TIMES = {"Крио ГГ": CMC_SC_DD_TIME + CMC_EXTRA_N2 * CMC_N2_TIME, "Анастасия": 3.5, "Митя": 1.5, "Даника": 3.25}
+
+ROTATION = "Анастасия EQ/Даника EQ/Митя E/Крио ГГ N2 P N2 N2 C N2 Q N2 N2 + N2×1"
 
 MAIN_ATK = {S.ATK_PCT: 0.466 * 2, S.CRIT_VALUE: 0.622}       # АТК/АТК/крит
 MAIN_EM = {S.BASE_EM: 187.0 * 2, S.CRIT_VALUE: 0.622}        # МС/МС/крит
 FULL_ATK = {S.ATK_PCT: 0.466 * 3}                            # АТК/АТК/АТК (Даника)
 
 #: Комбо с +1 стаком Polestar (Requiem Анастасии)
-CMC = CMC_COMBO_DICT["cmc_sc_dd_combo"]
+CMC = CMC_COMBO_DICT[f"cmc_sc_dd_combo_{CMC_EXTRA_N2}n2"]   # + доп. N2, баффы те же
 ANASTASIA = anastasia_support("sc", [occ(CROWN_HITS, OFF)])
 MITYA = MITYA_COMBO_DICT["support_steady"]
 DANIKA = DANIKA_COMBO_DICT["support_eq"]

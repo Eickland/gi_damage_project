@@ -6,7 +6,7 @@
 
 Крио ГГ: C6R5 (Пробуждение R5), Разочарование, комбо как в
 cryo_mc_odette_sucrose_alyosha: N2 P N2 N2 C N2 Q N2 N2 (9.2 с).
-C6 Крио ГГ (окно FROSTGLOW, 15 с после взрыва): ротация ~17.0 с, окно
+C6 Крио ГГ (окно FROSTGLOW, 15 с после взрыва): ротация ~18.0 с, окно
 перекрывает почти всю её, поэтому все удары остальных — с FROSTGLOW.
 An Unfinished Requiem: стаки Polestar — polar_always у Анастасии (Team.polar_plan()).
 Ротация ~17 с — у Яэ короткое комбо.
@@ -27,7 +27,7 @@ from ...core.utilits import merge_dicts
 from ...data.artifacts import *
 from ...data.artifacts_presets import *
 from ...data.tags import *
-from ...data.characters.cryo_mc import CMC_COMBO_DICT, CMC_SC_DD_TIME, CMC_SC_DD_E_TIME
+from ...data.characters.cryo_mc import CMC_COMBO_DICT, CMC_SC_DD_TIME, CMC_SC_DD_E_TIME, CMC_N2_TIME
 from ...data.characters.odette import (odette_burst_buffs, ODETTE_BURST_TIME,
                                        ODETTE_COMBO_DICT, ODETTE_BURST_SOURCES)
 from ...data.characters.danika import (C2_ACTIVE_STACKS, C2_OTHER_STACKS,
@@ -42,16 +42,20 @@ TEAM_BUFFS = (
 )
 
 #: Время каждого персонажа в ротации (секунды)
-TIMES = {"Крио ГГ": CMC_SC_DD_E_TIME+0.8, "Анастасия": 3.5, "Яэ Мико": 2.4, "Одетта": 2.4}
+#: Доп. N2 у Крио ГГ — заполнитель: ротация не короче отката взрывов
+#: Анастасии и Даники (бета, 18 с). 3 × N2 → ротация 18.0 с.
+CMC_EXTRA_N2 = 3
 
-ROTATION = "Анастасия EQ/Одетта EQE/Яэ EEE/Крио ГГ N2 N2 C Q N2 "
+TIMES = {"Крио ГГ": CMC_SC_DD_E_TIME + CMC_EXTRA_N2 * CMC_N2_TIME, "Анастасия": 3.5, "Яэ Мико": 2.4, "Одетта": 2.4}
+
+ROTATION = "Анастасия EQ/Одетта EQE/Яэ EEE/Крио ГГ N2 N2 C Q N2 + N2×3"
 
 MAIN_ATK = {S.ATK_PCT: 0.466 * 2, S.CRIT_VALUE: 0.622}       # АТК/АТК/крит
 MAIN_EM = {S.BASE_EM: 187.0 * 2, S.CRIT_VALUE: 0.622}        # МС/МС/крит
 FULL_ATK = {S.ATK_PCT: 0.466 * 3}                            # АТК/АТК/АТК (Даника)
 
 #: Комбо с +1 стаком Polestar (Requiem Анастасии)
-CMC = CMC_COMBO_DICT["cmc_sc_dd_combo"]
+CMC = CMC_COMBO_DICT[f"cmc_sc_dd_combo_{CMC_EXTRA_N2}n2"]   # + доп. N2, баффы те же
 ANASTASIA = anastasia_support("sc", [occ(CROWN_HITS, OFF)])
 YAE = YAE_COMBO_DICT["yae_sc_short_combo"]   # ротация ~17 с — короткое комбо
 ODETTE = ODETTE_COMBO_DICT["odette_ssc_combo"]

@@ -18,7 +18,7 @@ import html
 from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Tuple
 
-from .cards import CSS, fmt, split_weapon
+from .cards import CSS, SCROLL_JS, fmt, split_weapon
 from .icons import IconStore
 
 #: какие поля раскладки сравниваем (время ротации сознательно не берём:
@@ -313,7 +313,7 @@ def render_page(sections: Sequence, title: str = "Ростеры", columns: int 
             f'<title>{html.escape(title)}</title><style>{CSS}{ROSTER_CSS}</style></head><body>'
             f'<h1>{html.escape(title)}</h1>'
             f'<div class="rgrid" style="--cols:{max(1, columns)}">{"".join(cards)}</div>'
-            f'</body></html>')
+            f'{SCROLL_JS}</body></html>')
 
 
 # --------------------------------------------------------------------------- #

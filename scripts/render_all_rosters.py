@@ -29,7 +29,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from gi_damage.visual.cards import CSS, fmt
+from gi_damage.visual.cards import CSS, SCROLL_JS, fmt
 from gi_damage.visual.icons import IconStore
 from gi_damage.visual.rosters import ROSTER_CSS, RosterBook, render_roster, render_swaps
 from gi_damage.visual.standard_rosters import add_standard_sections
@@ -80,7 +80,17 @@ details.team>summary:before{content:"▸ ";color:var(--line)}
 details.team[open]>summary:before{content:"▾ "}
 details.team>summary .d{float:right;color:var(--mute);font-weight:400}
 details.team .folder{color:var(--mute);font-weight:400;font-size:12px;margin-left:8px}
-details.team .rgrid{padding:0 8px 8px}
+details.team .rgrid{padding:0 8px 8px;clear:both}
+/* DPS в заголовке отряда висит справа (float) — на узком экране отдельной строкой,
+   иначе он «свисает» в тело отряда и сужает сетку карточек */
+@media(max-width:600px){
+  details.team{margin:8px 6px}
+  details.team>summary{padding:8px 10px}
+  details.team>summary .d{float:none;display:block;margin-top:2px}
+  details.team .folder{display:block;margin:2px 0 0}
+  details.team .rgrid{padding:0 4px 6px}
+  .toc{margin:8px 12px 14px}.tools{margin:0 12px 10px}h2.grp{margin:22px 12px 6px;font-size:19px}
+}
 .err{color:#f08080;margin:4px 12px 10px}
 """
 
@@ -175,7 +185,7 @@ def main() -> int:
             f"<button onclick=\"document.querySelectorAll('details.team')"
             f".forEach(e=>e.open=false)\">Свернуть всё</button></div>"
             f"<nav class='toc'>{''.join(toc)}</nav>{''.join(body)}"
-            f"{store.script()}</body></html>")
+            f"{store.script()}{SCROLL_JS}</body></html>")
     out = Path(args.out)
     out.write_text(page, encoding="utf-8")
     print(f"HTML: {out.resolve()}  ({out.stat().st_size / 1e6:.1f} МБ, "

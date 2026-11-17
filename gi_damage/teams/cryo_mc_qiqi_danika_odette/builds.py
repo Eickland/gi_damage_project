@@ -8,7 +8,7 @@
 C6 Крио ГГ (окно FROSTGLOW, 15 с после взрыва): все удары остальных — с FROSTGLOW.
 Бафф Ци Ци (SEVEN_SACRED) — только звёздное рассеивание, на проводник не влияет.
 Даника — единственный электро: Двуручный меч фавония, часы на ВЭ (АТК/АТК/ВЭ).
-C2 Даники (danika_c=2): стаки — Крио ГГ 10, Одетта 7.
+C2 Даники (danika_c=2): стаки — Крио ГГ 10, Одетта 10.
 
 Артефакты: Ци Ци — Миллелит, Даника — Сердце горна, Одетта — Звёздный сет,
 Крио ГГ — Разочарование.
@@ -27,7 +27,7 @@ from ...core.utilits import merge_dicts
 from ...data.artifacts import *
 from ...data.artifacts_presets import *
 from ...data.tags import *
-from ...data.characters.cryo_mc import CMC_COMBO_DICT, CMC_SC_DD_TIME, CMC_SC_DD_E_TIME
+from ...data.characters.cryo_mc import CMC_COMBO_DICT, CMC_SC_DD_TIME, CMC_SC_DD_E_TIME, CMC_N2_TIME
 from ...data.characters.odette import (odette_burst_buffs, ODETTE_BURST_TIME,
                                        ODETTE_COMBO_DICT, ODETTE_BURST_SOURCES)
 from ...data.characters.danika import (DANIKA_COMBO_DICT, C2_ACTIVE_STACKS,
@@ -41,9 +41,13 @@ TEAM_BUFFS = (
 )
 
 #: Время каждого персонажа в ротации (секунды)
-TIMES = {"Крио ГГ": CMC_SC_DD_TIME-1, "Ци Ци": 1.5, "Даника": 3.25, "Одетта": 2.4}
+#: Доп. N2 у Крио ГГ — заполнитель: ротация не короче отката взрывов
+#: Анастасии и Даники (бета, 18 с). 1 × N2 → ротация 18.45 с.
+CMC_EXTRA_N2 = 1
 
-ROTATION = "Даника EQ/Ци Ци E/Одетта EQE/Крио ГГ E N2 N2 C Q N2"
+TIMES = {"Крио ГГ": CMC_SC_DD_TIME + CMC_EXTRA_N2 * CMC_N2_TIME, "Ци Ци": 1.5, "Даника": 3.25, "Одетта": 2.4}
+
+ROTATION = "Даника EQ/Ци Ци E/Одетта EQE/Крио ГГ E N2 N2 C Q N2 + N2×1"
 
 MAIN_ATK = {S.ATK_PCT: 0.466 * 2, S.CRIT_VALUE: 0.622}       # АТК/АТК/крит
 MAIN_EM = {S.BASE_EM: 187.0 * 2, S.CRIT_VALUE: 0.622}        # МС/МС/крит
@@ -52,7 +56,7 @@ MAIN_EM = {S.BASE_EM: 187.0 * 2, S.CRIT_VALUE: 0.622}        # МС/МС/кри�
 DANIKA_MAIN_ER = {S.ATK_PCT: 0.466 * 2}
 
 #: Короткое ДД-комбо Крио ГГ: E N2 N2 C Q N2 (6.4 с)
-CMC = CMC_COMBO_DICT["cmc_sc_dd_combo"]
+CMC = CMC_COMBO_DICT[f"cmc_sc_dd_combo_{CMC_EXTRA_N2}n2"]   # + доп. N2, баффы те же
 QIQI = QIQI_COMBO_DICT["off_field"]
 DANIKA = DANIKA_COMBO_DICT["support_eq"]
 ODETTE = ODETTE_COMBO_DICT["odette_ssc_short_combo_cryo_mc"]

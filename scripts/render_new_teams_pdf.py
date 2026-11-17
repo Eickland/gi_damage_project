@@ -35,7 +35,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from gi_damage.data.baseline import baseline_team
 from gi_damage.visual import IconStore
-from gi_damage.visual.cards import CSS, fmt, render_card
+from gi_damage.visual.cards import CSS, SCROLL_JS, fmt, render_card
 
 #: (заголовок раздела, [папки в gi_damage/teams]).
 #: «папка:функция» — взять отряды не из all_teams(), а из этой функции
@@ -139,10 +139,20 @@ PRINT_CSS = """
 @page{size:{W}px {H}px;margin:0}
 html,body{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .card{break-inside:avoid;page-break-inside:avoid}
-.body{flex-wrap:nowrap}
-.mid{flex:1 1 250px;min-width:250px}
-.mid th,.mid td{padding:4px 5px;white-space:nowrap;font-size:12.5px}
-.info{flex:0 0 180px;min-width:180px}
+/* раскладка карточки «в одну строку» — только для PDF и широких экранов;
+   на телефоне она обрезала таблицу урона на уровне DPS */
+@media print,(min-width:901px){
+  .body{flex-wrap:nowrap}
+  .mid{flex:1 1 250px;min-width:250px}
+  .mid th,.mid td{padding:4px 5px;white-space:nowrap;font-size:12.5px}
+  .info{flex:0 0 180px;min-width:180px}
+}
+@media(max-width:600px){
+  .group h1{margin:14px 12px 0;font-size:19px}
+  .group .sub{margin:4px 12px 0}
+  .summary{margin:0 8px 20px;width:calc(100% - 16px)}
+  .summary td.bar{width:22%}
+}
 .group{break-before:page;page-break-before:always}
 .group h1{margin:18px 20px 0;font-size:22px}
 .group .sub{margin:4px 20px 0;color:var(--mute);font-size:12px}
@@ -249,8 +259,9 @@ def render(groups, columns: int, title: str, changes: dict | None = None) -> str
 
     css = CSS + PRINT_CSS.replace("{W}", str(PAGE_WIDTH)).replace("{H}", str(PAGE_HEIGHT))
     return (f"<!doctype html><html lang='ru'><head><meta charset='utf-8'>"
+            f"<meta name='viewport' content='width=device-width,initial-scale=1'>"
             f"<title>{html.escape(title)}</title><style>{css}</style></head><body>"
-            f"{cover}{''.join(sections)}</body></html>")
+            f"{cover}{''.join(sections)}{SCROLL_JS}</body></html>")
 
 
 def render_changes(groups, changes: dict | None) -> str:

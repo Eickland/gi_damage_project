@@ -24,16 +24,23 @@ per-team через core.entities.with_rotation(), см. data/teams/*.py.
 Комбо «ДД через звёздный проводник, с навыком» (cmc_sc_dd_e_combo), 6.4 с:
     E N2 N2 C Q N2  — навык (урон применения), 3 × (N1 + N2), спец. заряженная
     атака, взрыв. Стаки и окна — как в cmc_sc_dd_combo.
+
+Комбо с заполнителем (cmc_sc_dd_combo_<k>n2, k = 1…CMC_FILLER_MAX):
+    cmc_sc_dd_combo + k дополнительных N2 (N1 + N2) по CMC_N2_TIME = 0.6 с.
+    Доп. удары получают те же окна баффов, что и остальные N1/N2 комбо.
+    Нужны, чтобы ротация была не короче отката взрывов Анастасии и Даники
+    (бета: 18 с) — вместо ручных добавок ко времени Крио ГГ.
 """
 
 from __future__ import annotations
+import math
 from dataclasses import replace  # noqa: F401 — для patches= в файлах отрядов
 
 from ...core.buffs import OTHERS, SELF, TEAM, Buff, temp
 from ...core.entities import Character, Constellation, with_rotation
 from ...core.stats import S
 from ..tags import *
-from ...core.sources import elemental, occ, stellar_swirl, stellar_conduct
+from ...core.sources import Occurrence, elemental, occ, stellar_swirl, stellar_conduct
 
 # --------------------------------------------------------------------------- #
 #  Множители (в долях АТК)                                                     #
@@ -60,6 +67,9 @@ BURST_SC_MV_C4 = SPEAR_SC_MV_C4 + FROSTGLOW_STACKS * FROSTGLOW_SC_PER_STACK_C4
 CMC_SC_DD_TIME = 9.2
 #: Комбо cmc_sc_dd_e_combo: E N2 N2 C Q N2
 CMC_SC_DD_E_TIME = 6.4
+#: Время одного дополнительного N2 (N1 + N2) — заполнитель ротации
+CMC_N2_TIME = 0.6
+CMC_FILLER_MAX = 6
 
 CRYO_MC_KIT = Character(
     name="Крио ГГ",
@@ -217,3 +227,40 @@ CMC_COMBO_DICT = {
     ),
 ),
 }
+
+
+# --------------------------------------------------------------------------- #
+#  Заполнитель времени ротации: дополнительные N2                              #
+# --------------------------------------------------------------------------- #
+_N2_SOURCES = ("Обычная атака 1 (крио)", "Обычная атака 2 (крио)")
+
+
+def cmc_extra_n2(combo: Character, extra: int) -> Character:
+    """Комбо + `extra` дополнительных N2 (N1 + N2).
+
+    Доп. удары добавляются к вхождению N1/N2 с наибольшим числом тегов
+    (окна баффов — те же, что у остальных N1/N2 комбо). Время ротации
+    увеличивайте отдельно: extra × CMC_N2_TIME.
+    """
+    if extra <= 0:
+        return combo
+    sources = []
+    for src in combo.sources:
+        if src.name in _N2_SOURCES and src.occurrences:
+            occs = list(src.occurrences)
+            i = max(range(len(occs)), key=lambda k: len(occs[k].state))
+            occs[i] = Occurrence(occs[i].state, occs[i].count + extra)
+            src = replace(src, occurrences=occs)
+        sources.append(src)
+    assert sum(s.name in _N2_SOURCES for s in sources) == 2, "в комбо нет N1/N2"
+    return replace(combo, sources=tuple(sources))
+
+
+def cmc_filler_n2(rotation_time: float, min_time: float) -> int:
+    """Сколько доп. N2 нужно, чтобы ротация была не короче min_time."""
+    return max(0, math.ceil((min_time - rotation_time) / CMC_N2_TIME - 1e-9))
+
+
+for _k in range(1, CMC_FILLER_MAX + 1):
+    CMC_COMBO_DICT[f"cmc_sc_dd_combo_{_k}n2"] = cmc_extra_n2(
+        CMC_COMBO_DICT["cmc_sc_dd_combo"], _k)

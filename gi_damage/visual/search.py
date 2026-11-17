@@ -14,7 +14,7 @@ import html
 from pathlib import Path
 from typing import List, Optional, Sequence
 
-from .cards import (CSS, HEADER_COLORS, HEADER_TEXT, _character_column, fmt,
+from .cards import (CSS, SCROLL_JS, HEADER_COLORS, HEADER_TEXT, _character_column, fmt,
                     split_weapon)
 from .icons import IconStore
 from .rosters import ROSTER_CSS, _artifacts_html, _weapon_html
@@ -200,7 +200,7 @@ class SearchBook:
                 f'<style>{CSS}{ROSTER_CSS}{SEARCH_CSS}</style></head><body>'
                 f'<h1>{html.escape(title)}</h1>'
                 f'<div class="rgrid" style="--cols:{max(1, columns)}">{"".join(self._cards)}</div>'
-                f'</body></html>')
+                f'{SCROLL_JS}</body></html>')
 
     def save(self, path: str | Path, title: str = "Поиск по отрядам", columns: int = 1) -> Path:
         path = Path(path)
