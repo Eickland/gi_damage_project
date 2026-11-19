@@ -146,8 +146,8 @@ def c3_atk_buffs(snapshot_tags: Sequence[str] = (ON,)):
 def c6_buffs(stat_tags: Sequence[str] = (OFF,)):
     st = frozenset(stat_tags)
     return (
-        Buff(S.SC_BONUS, C6_SC_BONUS, target=TEAM,
-             source="C6 Даники: якорь, +15% урона звёздного проводника отряду"),
+        Buff("elevation.stellar_conduct", C6_SC_BONUS, target=TEAM,
+             source="C6 Даники: якорь, +15% возвышения звёздного проводника отряду"),
         Buff(S.SC_BONUS,
              lambda ctx: min(C6_ON_FIELD_CAP,
                              C6_ON_FIELD_PER_1000 * ctx.stat(DANIKA_NAME, "atk", st) / 1000.0),

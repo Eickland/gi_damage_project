@@ -23,14 +23,15 @@ DIONA_KIT = Character(
         S.CRIT_VALUE: 0.6,
         "dmg_bonus.cryo":0.24,
     },
-    buffs = (temp(S.BASE_EM, 200, requires=(ON,CATS_TAIL), target=TEAM,
+
+    sources=(),
+    constellations = {6: Constellation(number=6, name='C6',
+            buffs=(temp(S.BASE_EM, 200, requires=(ON,CATS_TAIL), target=TEAM,
                      source="С6 Диона, +200 МС активному персонажу"),
              temp(S.SSW_BONUS, 0.4, requires=(ON,CATS_TAIL), target=TEAM,
                     source="С6 Диона, +40% урона к звездным реакциям активному"),
              temp(S.SC_BONUS, 0.4, requires=(ON,CATS_TAIL), target=TEAM,
-                    source="С6 Диона, +40% урона к звездным реакциям активному")),
-
-    sources=(),
+                    source="С6 Диона, +40% урона к звездным реакциям активному")),)},
     note="",
 )
 

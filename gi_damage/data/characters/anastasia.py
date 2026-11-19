@@ -27,8 +27,8 @@
       взрыва запечатывает себя — её Слава делится на остальных троих
       (+16% им), у самой — только в ударах на поле.
     * An Unfinished Requiem:
-        - SC: +2 стака Polestar отряду всегда (polar_always=2, стаки считает
-          Team.polar_plan());
+        - SC: +1 стак Polestar отряду всегда (polar_always=1, стаки считает
+          Team.polar_plan(); бета-хотфикс: было 2);
         - SSW: базовый множитель реакций SSW ×1.10 (requiem_reactions(); бета, было ×1.15) и
           +4 вихря 2 уровня (requiem_vortex()).
 
@@ -194,7 +194,7 @@ ANASTASIA_KIT = Character(
     element="cryo",
     weapon_type="bow",
     default_field=OFF,
-    polar_always=2.0,   # стаки Polestar отряду: An Unfinished Requiem, +2 всегда
+    polar_always=1.0,   # стаки Polestar отряду: An Unfinished Requiem, +1 всегда
     crit_mode="balance",
     stats={
         S.BASE_ATK: 356.0,
@@ -437,7 +437,7 @@ def _dd_glory_others(factor: float, tag: str):
 ANASTASIA_DD_KIT = replace(
     ANASTASIA_KIT,
     default_field=ON,
-    polar_on_field=3.0,    # стаки Polestar: +3 на поле (и +2 всегда от Requiem)
+    polar_on_field=3.0,    # стаки Polestar: +3 на поле (и +1 всегда от Requiem)
     buffs=(
         # Stellar Benediction — как в саппорт-режиме
         ANASTASIA_KIT.buffs[2],
