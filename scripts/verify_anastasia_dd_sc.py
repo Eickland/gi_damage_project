@@ -75,6 +75,12 @@ def main() -> int:
             errors.append(f"{folder}: такой набор персонажей уже есть в репозитории")
 
         support_builds = [b for b in team.builds if b.name != "Анастасия"]
+        electro = [b for b in support_builds if b.name in {"Алеша", "Митя", "Даника"}]
+        for b in support_builds:
+            if b.name == "Даника" and len(electro) == 1 and b.weapon.name != "Двуручный меч фавония":
+                errors.append(f"{folder}: Даника — единственный электро, но оружие {b.weapon.name}")
+            if b.name == "Водяница" and b.weapon.name == "Ода водоворота":
+                errors.append(f"{folder}: у Водяницы Ода водоворота, её убрали")
         for b in support_builds:
             # Водянице разрешён 2+2 на HP, Мите — 2+2 на МС/Разочарование
             # как сет на урон с низким приоритетом. Остальные — 4-шт. набор.

@@ -73,13 +73,14 @@ from ..data.weapons import (
     ARTEMISIA,
     ATONEMENT,
     FAV_BOW,
+    FAV_GREATSWORD,
     FAV_LANCE,
     FAV_SWORD,
-    MAELSTROM,
     SACFRAG,
     SILVER_LIGHT,
     TTDS_FULL_CATALYSATOR,
     TTDS_HALF_CATALYSATOR,
+    WANDERING_STAR
 )
 
 # --------------------------------------------------------------------------- #
@@ -528,11 +529,11 @@ def module_for(supports: Sequence[str]) -> dict:
     artifacts = _assign_artifacts(supports)
 
     weapons = {s.name: s.default_weapon for s in specs}
-    if "Водяница" in supports:
+    if "Митя" in supports:
         # Два Эпоса в одном отряде не нужны: если Митя уже с Эпосом,
         # Водяница берёт сигну/саппорт-оружие без второго окна Эпоса.
-        weapons["Водяница"] = (
-            MAELSTROM.at(1) if "Митя" in supports else TTDS_HALF_CATALYSATOR
+        weapons["Митя"] = (
+            WANDERING_STAR.at(1) if "Водяница" in supports else TTDS_HALF_CATALYSATOR
         )
     if "Сахароза" in supports:
         # Как и с Водяницей: второй Эпос в отряде не нужен.
@@ -541,6 +542,10 @@ def module_for(supports: Sequence[str]) -> dict:
         )
 
     electro_count = sum(1 for s in specs if SUPPORT_ELEMENT[s.name] == "electro")
+    if "Даника" in supports and electro_count == 1:
+        # Единственный электро в отряде — Даника играет от энергии:
+        # базово двуручный меч фавония.
+        weapons["Даника"] = FAV_GREATSWORD
     resonance = 0.15 if electro_count >= 2 else 0.30
     resonance_note = (
         " (ослаблен ×0.5: 2+ электро в отряде)" if electro_count >= 2 else ""
@@ -554,7 +559,7 @@ def module_for(supports: Sequence[str]) -> dict:
     )
 
     def team_name() -> str:
-        parts = ["C0R1 Анастасия (ДД, полное)"]
+        parts = ["C0R0 Анастасия"]
         for spec in specs:
             w = weapons[spec.name]
             parts.append(f"C{spec.default_constellation}R{w.refinement} {spec.name}")
